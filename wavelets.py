@@ -58,7 +58,7 @@ def dwt(a0, h, g, M, level):
     ai = (a0, base_ai)
     for i in range(level):
         (ah, base_ai) = ai
-        #(ag, _) = ai
+        (ag, _) = ai
         #ah = np.pad(ai, ((padh_x, padh_x), (padh_y, padh_y)), 'edge')
         #ag = np.pad(ai, ((padg_x, padg_x), (padg_y, padg_y)), 'edge')
         #print("ag", ag)
@@ -100,9 +100,9 @@ def idwt(an, d, h, g, M):
         ai = (ai + di, base_ai)
     return ai
 
-#data = iio.imread('http://upload.wikimedia.org/wikipedia/commons/d/de/Wikipedia_Logo_1.0.png')
+data = iio.imread('http://upload.wikimedia.org/wikipedia/commons/d/de/Wikipedia_Logo_1.0.png')
 #print(data)
-data = np.array([[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]])
+#data = np.array([[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]])
 
 M = np.array([[1, -1], [1,1]])
 
