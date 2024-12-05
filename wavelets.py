@@ -5,7 +5,6 @@ import imageio.v3 as iio
 
 def downscale(a, Minv, base):
 
-    #Здесь и в апскейлинге добавить сдвиг по координате!!!!! 
     xmin = np.inf
     xmax = -np.inf
     ymin = np.inf
@@ -59,10 +58,10 @@ def dwt(a0, h, g, M, level):
     ai = (a0, base_ai)
     for i in range(level):
         (ah, base_ai) = ai
-        (ag, _) = ai
+        #(ag, _) = ai
         #ah = np.pad(ai, ((padh_x, padh_x), (padh_y, padh_y)), 'edge')
         #ag = np.pad(ai, ((padg_x, padg_x), (padg_y, padg_y)), 'edge')
-        print("ag", ag)
+        #print("ag", ag)
         print("ah", ah)
         di = downscale(convolve(ag, g, 'full', method='direct'), Minv, base_di)
         base_di = di[1]
@@ -86,7 +85,7 @@ def idwt(an, d, h, g, M):
         (ag, _) = ai #np.pad(ai, ((padg_x, padg_x), (padg_y, padg_y)), 'edge')
         iio.imwrite('ai.png', (ag / 10).astype(np.uint8))
         iio.imwrite('aiup.png', (upscale(ag,M, base_ai))[0].astype(np.uint8))
-        #(di, base_di) = upscale(di, M, base_di)
+        (di, base_di) = upscale(di, M, base_di)
         di = convolve(di, g, 'full', method='direct')
 
 
