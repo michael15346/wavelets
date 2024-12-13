@@ -34,36 +34,6 @@ def convolve(a: OffsetMatrix, b: OffsetMatrix):
     new_matrix = scipy.signal.convole(a.matrix, b.matrix, 'full')
     return OffsetMatrix(new_matrix, new_coords)
 
-def downscale(a, Minv):
-    ares = np.zeros((int(xmax - xmin + 1), int(ymax - ymin + 1)))
-    for i in range(a.shape[0]):
-        for j in range(a.shape[1]):
-            x = Minv @ np.array([i, j])
-            ares[int(x[0] - xmin), int(x[1] - ymin)] = a[i, j]
-    base = Minv @ base
-    return (ares, base)
-
-
-def upscale(a, M, base):
-    xmin = np.inf
-    xmax = -np.inf
-    ymin = np.inf
-    ymax = -np.inf
-    for i in range(a.shape[0]):
-        for j in range(a.shape[1]):
-            x = M @ np.array([i, j])
-            xmin = min(xmin, x[0])
-            xmax = max(xmax, x[0])
-            ymin = min(ymin, x[1])
-            ymax = max(ymax, x[1])
-    ares = np.zeros((int(xmax - xmin + 1), int(ymax - ymin + 1)))
-    for i in range(a.shape[0]): 
-        for j in range(a.shape[1]):
-            x = M @ np.array([i, j])
-            ares[int(base[0] + x[0] - xmin), int(base[1] + x[1] - ymin)] = a[i, j]
-    base = M @ base
-    return (ares, base)
-
 
 def transition(a: OffsetMatrix, mask: OffsetMatrix, M: np.ndarray):
     Minv = np.linalg.inv(M)
