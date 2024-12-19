@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.signal
 import imageio.v3 as iio
-from dataclasses import Dataclass
+from dataclasses import dataclass
 
 
 class OffsetMatrix:
@@ -20,7 +20,7 @@ class OffsetMatrix:
         return OffsetMatrix(left_padded + right_padded, (0, 0))
 
 
-@Dataclass
+@dataclass
 class Wavelet:
     h: np.ndarray
     g: np.ndarray
@@ -29,19 +29,61 @@ class Wavelet:
     M: np.ndarray
 
 
+# 
+def downsample(a: OffsetMatrix, M: np.ndarray):
+
+    x1 = M @ np.array([a.coords[0], a.coords[1]])
+    x2 = M @ np.array([a.coords[0] + a.matrix.shape[0], a.coords[1]])
+    x3 = M @ np.array([a.coords[0] , a.coords[1] + a.matrix.shape[1]])
+    x4 = M @ np.array([a.coords[0] + a.matrix.shape[0], a.coords[1] + a.matrix.shape[1]])
+    xmin = min(x1[0], x2[0], x3[0], x4[0])
+    xmax = max(x1[0], x2[0], x3[0], x4[0])
+    ymin = min(x1[1], x2[1], x3[1], x4[1])
+    ymax = max(x1[1], x2[1], x4[1], x4[1]) ## try mesh grid, and use integer maths
+                                            # try matrix idea (get matrix by all indices and then filter non-needed)
+
+    ares = np.zeros((int(xmax - xmin + 1), int(ymax - ymin + 1)))
+    for i in range(a.matrix.shape[0]): # range is wrong
+        for j in range(a.matrix.shape[1]):
+            x = M @ np.array([i, j])
+            ares[int(x[0] - xmin), int(x[1] - ymin)] = a.matrix[i, j]
+    base = M @ a.coords
+    return OffsetMatrix(ares, base)
+    
+def upsample(a: OffsetMatrix, M: np.ndarray):
+    xmin = np.inf
+    xmax = -np.inf
+    ymin = np.inf
+    ymax = -np.inf
+    x1 = M @ np.array([a.coords[0], a.coords[1]])
+    x2 = M @ np.array([a.coords[0] + a.matrix.shape[0], a.coords[1]])
+    x3 = M @ np.array([a.coords[0] , a.coords[1] + a.matrix.shape[1]])
+    x4 = M @ np.array([a.coords[0] + a.matrix.shape[0], a.coords[1] + a.matrix.shape[1]])
+    xmin = min(x1[0], x2[0], x3[0], x4[0])
+    xmax = max(x1[0], x2[0], x3[0], x4[0])
+    ymin = min(x1[1], x2[1], x3[1], x4[1])
+    ymax = max(x1[1], x2[1], x4[1], x4[1]) ## try mesh grid, and use integer maths
+    ares = np.zeros((int(xmax - xmin + 1), int(ymax - ymin + 1)))
+    for i in range(a.matrix.shape[0]): # range is wrong
+        for j in range(a.matrix.shape[1]):
+            x = M @ np.array([i, j])
+            ares[int(x[0] - xmin), int(x[1] - ymin)] = a.matrix[i, j]
+    base = M @ a.coords
+    return OffsetMatrix(ares, base)
+
 def convolve(a: OffsetMatrix, b: OffsetMatrix):
-    new_coords = (a.coords[0] + b.coords[0], a.coords[1] + b.coords[1])
-    new_matrix = scipy.signal.convole(a.matrix, b.matrix, 'full')
+    new_coords = (a.coords[0] + b.coords[0], a.coords[1] + b.coords[1]) # на самом деле нужно вычитать правый нижний угол B
+    new_matrix = scipy.signal.convolve(a.matrix, b.matrix, 'full')
     return OffsetMatrix(new_matrix, new_coords)
 
 
 def transition(a: OffsetMatrix, mask: OffsetMatrix, M: np.ndarray):
     Minv = np.linalg.inv(M)
-    return downscale(convolve(a, mask), Minv)
+    return downsample(convolve(a, mask), Minv)
 
 
 def subdivision(a: OffsetMatrix, mask: OffsetMatrix, M: np.ndarray):
-    return convolve(upscale(a, M), mask)
+    return convolve(upsample(a, M), mask)
 
 
 def dwt(a: OffsetMatrix, w: Wavelet):
@@ -49,25 +91,27 @@ def dwt(a: OffsetMatrix, w: Wavelet):
     d0 = subdivision(a, w.g, w.M)
     return (a0, d0)
 
-
+ 
 def idwt(a0: OffsetMatrix, d: OffsetMatrix, w: Wavelet):
-    ai = transition(a0, w.h, w.M)
-    di = transition(d, w.g, w.M)
+    ai = transition(a0, w.hdual, w.M)
+    di = transition(d, w.gdual, w.M)
     return (ai + di)
 #TODO: сохранять координаты параллелограмма и по ним обрезать итоговое изображение
 #data = iio.imread('http://upload.wikimedia.org/wikipedia/commons/d/de/Wikipedia_Logo_1.0.png')
-data = 255 * np.array([[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]])
+data = OffsetMatrix(255 * np.array([[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]]), np.array([0,0]))
 
 print(data)
 M = np.array([[1, -1], [1,1]])
 
-h = OffsetMatrix(np.array([[0.25], [0.5], [0.25]]), )
-g = np.array([[-0.125], [-0.25], [0.75], [-0.25], [-0.125]])
-hdual = np.array([[-0.125], [0.25], [0.75], [0.25], [-0.125]])
-gdual = np.array([[-0.25], [0.5], [-0.25]])
+h = OffsetMatrix(np.array([[0.25], [0.5], [0.25]]), np.array([0,-1]))
+g = OffsetMatrix(np.array([[-0.125], [-0.25], [0.75], [-0.25], [-0.125]]), np.array([0,-1]))
+hdual = OffsetMatrix(np.array([[-0.125], [0.25], [0.75], [0.25], [-0.125]]),np.array([0,-2]))
+gdual = OffsetMatrix(np.array([[-0.25], [0.5], [-0.25]]),np.array([0,0]))
 
-ai, d = dwt(data, h, g, M, 5)
-print(ai, d)
-a = idwt(ai, d, hdual, gdual, M)
+w = Wavelet(h, g, hdual, gdual, M)
+
+ai, d = dwt(data, w)
+print(ai.matrix, d.matrix)
+a = idwt(ai, d, w)
 iio.imwrite('image.png', a.astype(np.uint8))
 
