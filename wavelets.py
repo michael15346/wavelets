@@ -2,6 +2,7 @@ import numpy as np
 import scipy.signal
 import imageio.v3 as iio
 from dataclasses import dataclass
+from math import ceil, floor
 
 
 class OffsetMatrix:
@@ -42,12 +43,15 @@ def downsample(a: OffsetMatrix, M: np.ndarray):
     ymax = max(x1[1], x2[1], x4[1], x4[1]) ## try mesh grid, and use integer maths
                                             # try matrix idea (get matrix by all indices and then filter non-needed)
 
-    ares = np.zeros((int(xmax - xmin + 1), int(ymax - ymin + 1)))
+    print(xmin, xmax, ymin, ymax)
+
+    ares = np.zeros((ceil(xmax - xmin + 1), ceil(ymax - ymin + 1)))
+    base = M @ a.coords
     for i in range(a.matrix.shape[0]): # range is wrong
         for j in range(a.matrix.shape[1]):
             x = M @ np.array([i, j])
-            ares[int(x[0] - xmin), int(x[1] - ymin)] = a.matrix[i, j]
-    base = M @ a.coords
+            print(x[0] - xmin - base[0], x[1] - ymin - base[1])
+            ares[floor(x[0] - xmin - base[0]), floor(x[1] - ymin - base[1])] = a.matrix[i, j]
     return OffsetMatrix(ares, base)
     
 def upsample(a: OffsetMatrix, M: np.ndarray):
@@ -63,16 +67,16 @@ def upsample(a: OffsetMatrix, M: np.ndarray):
     xmax = max(x1[0], x2[0], x3[0], x4[0])
     ymin = min(x1[1], x2[1], x3[1], x4[1])
     ymax = max(x1[1], x2[1], x4[1], x4[1]) ## try mesh grid, and use integer maths
-    ares = np.zeros((int(xmax - xmin + 1), int(ymax - ymin + 1)))
+    ares = np.zeros((ceil(xmax - xmin + 1), ceil(ymax - ymin + 1)))
+    base = M @ a.coords
     for i in range(a.matrix.shape[0]): # range is wrong
         for j in range(a.matrix.shape[1]):
             x = M @ np.array([i, j])
-            ares[int(x[0] - xmin), int(x[1] - ymin)] = a.matrix[i, j]
-    base = M @ a.coords
+            ares[floor(x[0] - xmin - base[0]), floor(x[1] - ymin - base[1])] = a.matrix[i, j]
     return OffsetMatrix(ares, base)
 
 def convolve(a: OffsetMatrix, b: OffsetMatrix):
-    new_coords = (a.coords[0] + b.coords[0], a.coords[1] + b.coords[1]) # на самом деле нужно вычитать правый нижний угол B
+    new_coords = (a.coords[0] + b.coords[0] - b.matrix.shape[0], a.coords[1] + b.coords[1] - b.matrix.shape[1]) # на самом деле нужно вычитать правый нижний угол B
     new_matrix = scipy.signal.convolve(a.matrix, b.matrix, 'full')
     return OffsetMatrix(new_matrix, new_coords)
 
@@ -111,7 +115,8 @@ gdual = OffsetMatrix(np.array([[-0.25], [0.5], [-0.25]]),np.array([0,0]))
 w = Wavelet(h, g, hdual, gdual, M)
 
 ai, d = dwt(data, w)
-print(ai.matrix, d.matrix)
+print(ai.matrix)
+print(d.matrix)
 a = idwt(ai, d, w)
 iio.imwrite('image.png', a.astype(np.uint8))
 
