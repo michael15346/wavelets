@@ -31,25 +31,25 @@ class Wavelet:
 
 
 # 
-def downsample(a: OffsetMatrix, M: np.ndarray):
+def downsample(a: OffsetMatrix, Minv: np.ndarray):
 
-    x1 = M @ np.array([a.coords[0], a.coords[1]])
-    x2 = M @ np.array([a.coords[0] + a.matrix.shape[0], a.coords[1]])
-    x3 = M @ np.array([a.coords[0] , a.coords[1] + a.matrix.shape[1]])
-    x4 = M @ np.array([a.coords[0] + a.matrix.shape[0], a.coords[1] + a.matrix.shape[1]])
-    xmin = min(x1[0], x2[0], x3[0], x4[0])
-    xmax = max(x1[0], x2[0], x3[0], x4[0])
-    ymin = min(x1[1], x2[1], x3[1], x4[1])
-    ymax = max(x1[1], x2[1], x4[1], x4[1]) ## try mesh grid, and use integer maths
+    x1 = Minv @ np.array([a.coords[0], a.coords[1]])
+    x2 = Minv @ np.array([a.coords[0] + a.matrix.shape[0], a.coords[1]])
+    x3 = Minv @ np.array([a.coords[0] , a.coords[1] + a.matrix.shape[1]])
+    x4 = Minv @ np.array([a.coords[0] + a.matrix.shape[0], a.coords[1] + a.matrix.shape[1]])
+    xmin = floor(min(x1[0], x2[0], x3[0], x4[0]))
+    xmax = ceil(max(x1[0], x2[0], x3[0], x4[0]))
+    ymin = floor(min(x1[1], x2[1], x3[1], x4[1]))
+    ymax = ceil(max(x1[1], x2[1], x3[1], x4[1])) ## try mesh grid, and use integer maths
                                             # try matrix idea (get matrix by all indices and then filter non-needed)
 
     print(xmin, xmax, ymin, ymax)
 
     ares = np.zeros((ceil(xmax - xmin + 1), ceil(ymax - ymin + 1)))
-    base = M @ a.coords
+    base = Minv @ a.coords
     for i in range(a.matrix.shape[0]): # range is wrong
         for j in range(a.matrix.shape[1]):
-            x = M @ np.array([i, j])
+            x = Minv @ np.array([i, j])
             print(x[0] - xmin - base[0], x[1] - ymin - base[1])
             ares[floor(x[0] - xmin - base[0]), floor(x[1] - ymin - base[1])] = a.matrix[i, j]
     return OffsetMatrix(ares, base)
@@ -63,10 +63,10 @@ def upsample(a: OffsetMatrix, M: np.ndarray):
     x2 = M @ np.array([a.coords[0] + a.matrix.shape[0], a.coords[1]])
     x3 = M @ np.array([a.coords[0] , a.coords[1] + a.matrix.shape[1]])
     x4 = M @ np.array([a.coords[0] + a.matrix.shape[0], a.coords[1] + a.matrix.shape[1]])
-    xmin = min(x1[0], x2[0], x3[0], x4[0])
-    xmax = max(x1[0], x2[0], x3[0], x4[0])
-    ymin = min(x1[1], x2[1], x3[1], x4[1])
-    ymax = max(x1[1], x2[1], x4[1], x4[1]) ## try mesh grid, and use integer maths
+    xmin = floor(min(x1[0], x2[0], x3[0], x4[0]))
+    xmax = ceil(max(x1[0], x2[0], x3[0], x4[0]))
+    ymin = floor(min(x1[1], x2[1], x3[1], x4[1]))
+    ymax = ceil(max(x1[1], x2[1], x3[1], x4[1])) ## try mesh grid, and use integer maths
     ares = np.zeros((ceil(xmax - xmin + 1), ceil(ymax - ymin + 1)))
     base = M @ a.coords
     for i in range(a.matrix.shape[0]): # range is wrong
