@@ -5,20 +5,39 @@ from dataclasses import dataclass
 from math import ceil, floor
 
 
+
 class OffsetMatrix:
     matrix: np.ndarray
-    coords: tuple
+    offset: tuple
 
-    def __init__(self, matrix, coords):
+    def __init__(self, matrix, offset):
         self.matrix = matrix
-        self.coords = coords
+        self.offset = offset
 
     def __add__(self, other):
-        left_coords = (max(other.coords[0] - self.coords[0], 0), max(other.coords[1] - self.coords[1], 1))
-        right_coords = (max(self.coords[0] - other.coords[0], 0), max(self.coords[1] - other.coords[1], 1))
-        left_padded = np.pad(self.matrix, left_coords)
-        right_padded = np.pad(other.matrix, right_coords)
-        return OffsetMatrix(left_padded + right_padded, (0, 0))
+        print("offsets:", self.offset, other.offset)
+        print("self shape:", self.matrix.shape)
+        print(self.matrix)
+        print("other shape:", other.matrix.shape)
+        print(other.matrix)
+
+        self_left = max(self.offset[0] - other.offset[0] + 3, 0)
+        self_top = max(self.offset[1] - other.offset[1] - 1, 0)
+        other_left = max(other.offset[0] - self.offset[0] - 3, 0) 
+        other_top = max(other.offset[1] - self.offset[1] + 1, 0)
+        self_right = max((other.matrix.shape[0] + other_left) -
+                         (self.matrix.shape[0] + self_left), 0)
+        other_right = max((self.matrix.shape[0] + self_left) -
+                          (other.matrix.shape[0] + other_left), 0)
+        self_bottom = max((other.matrix.shape[1] + other_top) -
+                          (self.matrix.shape[1] + self_top), 0)
+        other_bottom = max((self.matrix.shape[1] + self_top) -
+                           (other.matrix.shape[1] + other_top), 0)
+        print("self offsets: l t r b", self_left, self_top, self_right, self_bottom)
+        print("other offsets: l t r b", other_left, other_top, other_right, other_bottom)
+        self_padded = np.pad(self.matrix, ((self_left, self_right), (self_top, self_bottom)))
+        other_padded = np.pad(other.matrix, ((other_left, other_right),(other_top, other_bottom)))
+        return OffsetMatrix(self_padded + other_padded, (0, 0))
 
 
 @dataclass
@@ -30,77 +49,82 @@ class Wavelet:
     M: np.ndarray
 
 
-# 
-def downsample(a: OffsetMatrix, Minv: np.ndarray):
+def to_python(x, y, offset):
+    return offset[1]-y, x-offset[0]
 
-    x1 = Minv @ np.array([a.coords[0], a.coords[1]])
-    x2 = Minv @ np.array([a.coords[0] + a.matrix.shape[0], a.coords[1]])
-    x3 = Minv @ np.array([a.coords[0] , a.coords[1] + a.matrix.shape[1]])
-    x4 = Minv @ np.array([a.coords[0] + a.matrix.shape[0], a.coords[1] + a.matrix.shape[1]])
-    xmin = floor(min(x1[0], x2[0], x3[0], x4[0]))
-    xmax = ceil(max(x1[0], x2[0], x3[0], x4[0]))
-    ymin = floor(min(x1[1], x2[1], x3[1], x4[1]))
-    ymax = ceil(max(x1[1], x2[1], x3[1], x4[1])) ## try mesh grid, and use integer maths
-                                            # try matrix idea (get matrix by all indices and then filter non-needed)
 
-    print(xmin, xmax, ymin, ymax)
+def to_coord(row, col, offset):
+    return offset[0]+col, offset[1]-row
 
-    ares = np.zeros((ceil(xmax - xmin + 1), ceil(ymax - ymin + 1)))
-    base = Minv @ a.coords
-    for i in range(a.matrix.shape[0]): # range is wrong
-        for j in range(a.matrix.shape[1]):
-            x = Minv @ np.array([i, j])
-            print(x[0] - xmin - base[0], x[1] - ymin - base[1])
-            ares[floor(x[0] - xmin - base[0]), floor(x[1] - ymin - base[1])] = a.matrix[i, j]
-    return OffsetMatrix(ares, base)
-    
+
+def downsample(a: OffsetMatrix, M: np.ndarray):
+
+    x1 = M @ np.array([a.offset[0], a.offset[1]])
+    x2 = M @ np.array([a.offset[0] + a.matrix.shape[1]-1, a.offset[1]])
+    x3 = M @ np.array([a.offset[0], a.offset[1] - a.matrix.shape[0]+1])
+    x4 = M @ np.array([a.offset[0] + a.matrix.shape[1]-1, a.offset[1] - a.matrix.shape[0]+1])
+    xmin = ceil(min(x1[0], x2[0], x3[0], x4[0]))
+    xmax = floor(max(x1[0], x2[0], x3[0], x4[0]))
+    ymin = ceil(min(x1[1], x2[1], x3[1], x4[1]))
+    ymax = floor(max(x1[1], x2[1], x4[1], x4[1]))
+
+    downsampled = OffsetMatrix(np.zeros((ymax - ymin + 1, xmax - xmin + 1)), np.array([xmin, ymax]))
+    print(downsampled.offset)
+    for x in range(a.offset[0], a.offset[0] + a.matrix.shape[1]): 
+        for y in range(a.offset[1], a.offset[1] - a.matrix.shape[0], -1):
+
+            scaled = M @ np.array([x, y])
+            if np.linalg.norm(scaled-scaled.astype(int)) < 0.0001:
+                scaled = scaled.astype(int)
+                downsampled.matrix[to_python(scaled[0], scaled[1], downsampled.offset)] = a.matrix[to_python(x, y, a.offset)]
+    return downsampled
+
 def upsample(a: OffsetMatrix, M: np.ndarray):
-    xmin = np.inf
-    xmax = -np.inf
-    ymin = np.inf
-    ymax = -np.inf
-    x1 = M @ np.array([a.coords[0], a.coords[1]])
-    x2 = M @ np.array([a.coords[0] + a.matrix.shape[0], a.coords[1]])
-    x3 = M @ np.array([a.coords[0] , a.coords[1] + a.matrix.shape[1]])
-    x4 = M @ np.array([a.coords[0] + a.matrix.shape[0], a.coords[1] + a.matrix.shape[1]])
-    xmin = floor(min(x1[0], x2[0], x3[0], x4[0]))
-    xmax = ceil(max(x1[0], x2[0], x3[0], x4[0]))
-    ymin = floor(min(x1[1], x2[1], x3[1], x4[1]))
-    ymax = ceil(max(x1[1], x2[1], x3[1], x4[1])) ## try mesh grid, and use integer maths
-    ares = np.zeros((ceil(xmax - xmin + 1), ceil(ymax - ymin + 1)))
-    base = M @ a.coords
-    for i in range(a.matrix.shape[0]): # range is wrong
-        for j in range(a.matrix.shape[1]):
-            x = M @ np.array([i, j])
-            ares[floor(x[0] - xmin - base[0]), floor(x[1] - ymin - base[1])] = a.matrix[i, j]
-    return OffsetMatrix(ares, base)
+    x1 = M @ np.array([a.offset[0], a.offset[1]])
+    x2 = M @ np.array([a.offset[0] + a.matrix.shape[0] - 1, a.offset[1]])
+    x3 = M @ np.array([a.offset[0], a.offset[1] - a.matrix.shape[0]+1])
+    x4 = M @ np.array([a.offset[0] + a.matrix.shape[1]  - 1, a.offset[1] - a.matrix.shape[0] + 1])
+    xmin = ceil(min(x1[0], x2[0], x3[0], x4[0]))
+    xmax = floor(max(x1[0], x2[0], x3[0], x4[0]))
+    ymin = ceil(min(x1[1], x2[1], x3[1], x4[1]))
+    ymax = floor(max(x1[1], x2[1], x3[1], x4[1]))
+    upsampled = OffsetMatrix(np.zeros((ymax - ymin + 1, xmax - xmin + 1)), np.array([xmin, ymax]))
+    for x in range(a.offset[0], a.offset[0] + a.matrix.shape[1]): 
+        for y in range(a.offset[1], a.offset[1] - a.matrix.shape[0], -1):
+            scaled = M @ np.array([x, y])
+            if np.linalg.norm(scaled-scaled.astype(int)) < 0.0001:
+                scaled = scaled.astype(int)
+                upsampled.matrix[to_python(scaled[0], scaled[1], upsampled.offset)] = a.matrix[to_python(x, y, a.offset)]
+    return upsampled
 
 def convolve(a: OffsetMatrix, b: OffsetMatrix):
-    new_coords = (a.coords[0] + b.coords[0] - b.matrix.shape[0], a.coords[1] + b.coords[1] - b.matrix.shape[1]) # на самом деле нужно вычитать правый нижний угол B
+    new_offset = (a.offset[0] + b.offset[1] - b.matrix.shape[1] - 1, a.offset[1] + b.offset[0] - b.matrix.shape[0] - 1)
     new_matrix = scipy.signal.convolve(a.matrix, b.matrix, 'full')
-    return OffsetMatrix(new_matrix, new_coords)
+    return OffsetMatrix(new_matrix, new_offset)
 
 
 def transition(a: OffsetMatrix, mask: OffsetMatrix, M: np.ndarray):
-    Minv = np.linalg.inv(M)
-    return downsample(convolve(a, mask), Minv)
+    return downsample(convolve(a, mask), M)
 
 
 def subdivision(a: OffsetMatrix, mask: OffsetMatrix, M: np.ndarray):
-    return convolve(upsample(a, M), mask)
+    Minv = np.linalg.inv(M)
+    return convolve(upsample(a, Minv), mask)
 
 
 def dwt(a: OffsetMatrix, w: Wavelet):
-    a0 = subdivision(a, w.h, w.M)
-    d0 = subdivision(a, w.g, w.M)
+    a0 = transition(a, w.hdual, w.M)
+    d0 = transition(a, w.gdual, w.M)
     return (a0, d0)
 
  
 def idwt(a0: OffsetMatrix, d: OffsetMatrix, w: Wavelet):
-    ai = transition(a0, w.hdual, w.M)
-    di = transition(d, w.gdual, w.M)
+    ai = subdivision(a0, w.h, w.M)
+    di = subdivision(d, w.g, w.M)
+    print(ai.matrix)
+    print(di.matrix)
     return (ai + di)
-#TODO: сохранять координаты параллелограмма и по ним обрезать итоговое изображение
+
 #data = iio.imread('http://upload.wikimedia.org/wikipedia/commons/d/de/Wikipedia_Logo_1.0.png')
 data = OffsetMatrix(255 * np.array([[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]]), np.array([0,0]))
 
@@ -118,5 +142,6 @@ ai, d = dwt(data, w)
 print(ai.matrix)
 print(d.matrix)
 a = idwt(ai, d, w)
-iio.imwrite('image.png', a.astype(np.uint8))
+print(a.matrix)
+iio.imwrite('image.png', a.matrix.astype(np.uint8))
 
