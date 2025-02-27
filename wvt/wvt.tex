@@ -1,0 +1,291 @@
+\documentclass[a4paper,article,14pt]{extarticle}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{titling}
+\usepackage{centernot}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{chngcntr}
+\usepackage{ragged2e}
+\usepackage{blindtext}
+\usepackage[left=30mm, top=20mm, right=15mm, bottom=20mm,nohead, includefoot,footskip=35pt]{geometry}
+\usepackage{bm}
+\usepackage[dvipsnames]{xcolor}
+\definecolor{cyan}{HTML}{2aa198}
+\definecolor{base}{HTML}{586e75}
+\sloppy
+\definecolor{magenta}{HTML}{d33682}
+\usepackage{fontspec}
+\usepackage[russian]{babel}
+\setmainfont[Ligatures=TeX]{CMU Serif}
+\counterwithin*{equation}{subsection}
+\author{Задорский Михаил Сергеевич}
+\date{23 декабря 2024}
+\title{Технология параллельного программирования MPI}
+\begin{document}
+\newgeometry{left=30mm, top=20mm, right=15mm, bottom=20mm, nohead, nofoot}
+\begin{titlepage}
+\begin{center}
+
+\textbf{Санкт--Петербургский}
+\textbf{государственный университет}
+
+\vspace{35mm}
+
+\textbf{\textit{\large Задорский Михаил Сергеевич}} \\[8mm]
+% Название
+\textbf{\textit{\large Сравнительный анализ систем всплесков в задачах обработки изображений}}
+
+\vspace{20mm}
+
+
+% Научный руководитель, рецензент
+\begin{flushright}
+\begin{minipage}[t]{0.65\textwidth}
+{Научный руководитель:} \\
+к.ф.-м.н., доцент Кривошеин А. В.
+\vspace{10mm}
+
+{Заведующий кафедрой:} \\
+д.ф.-м.н., профессор Егоров Н. В.
+\end{minipage}
+\end{flushright}
+
+\vfill 
+
+{Санкт-Петербург}
+\par{\the\year{} г.}
+\end{center}
+\end{titlepage}
+% Возвращаем настройки geometry обратно (то, что объявлено в преамбуле)
+\restoregeometry
+% Добавляем 1 к счетчику страниц ПОСЛЕ titlepage, чтобы исключить 
+% влияние titlepage environment
+\addtocounter{page}{1}
+\tableofcontents
+
+\pagebreak
+\section{Введение}
+
+С развитием вычислительной техники особую важность приобретает задача цифровой обработки изображений. Задачи такого рода возникают, например, при разработке инструментов цифрового искусства, построении моделей машинного обучения и создании инструментов сжатия изображений. Традиционные подходы к решению таких задач основаны на принципах преобразования Фурье, метода, который с момента его создания стал де-факто стандартом для первичной обработки любых непрерывных сигналов, в том числе изображений. Принцип преобразования Фурье заключается в приведении получаемого сигнала из временной области в частотную путем разложения по ортогональной системе синусов. Физический смысл такого преобразования интуитивно понятен и заключается в разбиении сигнала на частотные составляющие, что напрямую соответствует некоторым биологическим процессам, а также сопровождается широкой теоретической основой для работы с таким видом функций.
+
+Системы всплесков, или вейвлетов, расширяют метод преобразования Фурье путем введения возможности разложения не только по системе синусов, а по намного более широкому множеству ортогональных базисов. Это позволяет добиться для всплеск-преобразований намного большей гибкости, а также потенциально более сложной внутренней структуры. Поэтому вопрос изучения свойств всплеск-систем при рассмотрении различных базисов стал сегодня важным направлением передовых исследований.
+
+В данной работе проводится сравнительный анализ таких систем всплесков, а также рассматривается вопрос применимости всплесков к конкретным прикладным задачам и конкретные методы их реализации. Кроме того, реализуется программный пакет для работы с в том числе несепарабельными системами всплесков, что представляет собой практический интерес ввиду отсутствия подобных инструментов в открытом доступе.
+
+\justifying
+\pagebreak
+\section{Всплеск-системы}
+
+\subsection{Кратномасштабный анализ}
+
+Кратномасштабным анализом называется цепочка множеств $\{V_j\} \subset L_2(\mathbb{R}^d), j \in \mathbb{Z}$, где каждое $V_j$ раскладывается в прямую сумму ортогональных подпространств:
+
+\[
+	V_j = V_{j-1} \oplus W_{j-1}, ~ V_{j-1} \perp W_{j-1}
+\]
+
+Пространства $V_j$ и $W_j$ порождаются соответственно функциями $\varphi$ и $\psi$, называемыми соответственно \textbf{масштабируемой функцией} и \textbf{всплеск-функцией}. Это производится с помощью задания базисов пространств $V_j, W_j$ соответственно как $\{\varphi_{j,N}\}$ и $\{\psi_{j,N}\}, N \in \mathbb{Z}^d, j \in \mathbb{Z}$, где:
+
+\[
+	\begin{split}
+	\varphi_{j,k} (x) = (\det M)^{\frac{j}{2}} \varphi(M^j x - k) \\
+	\psi_{j,k} (x) = (\det M)^{\frac{j}{2}} \psi(M^j x - k)
+\end{split},
+\]
+а $M$ - квадратная целочисленная матрица, все собственные числа которой по модулю больше единицы, называемая \textbf{матричным коэффициентом растяжения}. Полученные $\varphi_{j,K}, \psi_{j,K}$ являются масштабированными путем применения к их координатам $M$ как линейного оператора, а затем сдвига на $K$.
+
+
+\subsection{Биортогональные системы}
+
+Вместо пары $\varphi, \psi$ можно рассмотреть четыре функции $\varphi, \widetilde{\varphi}, \psi^{(v)}, \widetilde{\psi}^{(v)}$. Биортонормальной пара $\varphi, \widetilde{\varphi}$ является, если для почти всех $\xi \in \mathbb{R}^d$:
+
+\[
+\sum_{k \in \mathbb{Z}^d} \widehat{\varphi}(\xi + k) \overline{\widehat{\widetilde{\varphi}}(\xi+k)}=1
+\]
+
+Преимущество таких систем заключается в том, что для них произвольная функция разложима по пространствам $W_j$:
+
+\[
+	f = \sum_{j \in \mathbb{Z}} \sum_{n \in \mathbb{Z}^d} \left< f, \widetilde{\psi}_{j,n}\right> \psi_{j,n},
+\]
+и это разложение называется \textbf{всплеск-преобразованием}. 
+
+Проекция $f$ на фиксированное $V_j$:
+\[
+	\sum_{n \in \mathbb{Z}^d} \left< f, \varphi_{j,n}\right> \varphi_{j,n}
+\]
+
+называется \textbf{уровнем приближения}.
+
+Далее будут рассмотрены практические аспекты совершения такого преобразования.
+\subsection{Маски}
+Пусть:
+
+\[
+	m_0(\xi) = \frac{1}{\sqrt{m}} \sum_{k \in \mathbb{Z}^d} h(k)^{(0)} e^{2 \pi i (k,\xi)} \tag{1}
+\]
+где $m = \det M$, и рассмотрим уравнение, называемое \textbf{масштабирующим уравнением}:
+
+\[
+	\widehat{\varphi}(\xi) = m_0\left( \frac{\xi}{2}\right) \widehat{\varphi} \left( \frac{\xi}{2}\right) \tag{2}
+\]
+
+
+Рассмотрим обратное преобразование Фурье от (2) с учетом (1):
+
+\[
+	\varphi = \sum_{k \in \mathbb{Z}^d} h^{(0)}(k) \varphi_{1,k} \tag{3}
+\]
+
+При существовании такой 1-периодической $m_0$ пространства $\{V_j\}$, порождаемые $\varphi$, будут удовлетворять аксиомам кратномасштабного анализа, $m_0$ будет называться \textbf{маской}, а ее коэффициенты $h_n^{(0)}$ - \textbf{фильтром} масштабирующей функции $\varphi$. Если к (3) применить $j$ раз операцию сжатия, а затем сдвинуть на $k$, то получим формулы перехода с уровня на уровень для $\varphi$:
+
+\[
+	\varphi_{j,n} = \sqrt{m}\sum_{k \in \mathbb{Z}^d} h(k-Mn) \varphi_{j+1,k}
+\]
+
+Аналогичным способом можно определить маску $m_1$ и соответствующие коэффициенты $h_n^{(1)}$ для всплеск-функции, а также соответствующие компоненты для $\widetilde{\varphi}, \widetilde{\psi}$:
+
+\[
+	\begin{split}
+	&\psi = \sum_{k \in \mathbb{Z}^d} h^{(1)}(k) \varphi_{1,k} \\
+	&\psi_{j,n} = \sqrt{m}\sum_{k \in \mathbb{Z}^d} h^{(1)}(k-Mn) \varphi_{j+1,l} \\
+	&\widetilde{\varphi}= \sum_{k \in \mathbb{Z}^d} \widetilde{h}^{(0)}(k) \widetilde{\varphi}_{1,l} \\
+	&\widetilde{\varphi}_{j,k} = \sum_{l \in \mathbb{Z}^d} \widetilde{h}^{(0)} (l-Mk) \widetilde{\varphi}_{j+1,l} \\
+	&\widetilde{\psi} = \sum_{k \in \mathbb{Z}^d} \widetilde{h}^{(1)} (k) \widetilde{\varphi}_{1,l} \\
+	&\widetilde{\psi}_{j,k} = \sum_{l \in \mathbb{Z}^d} \widetilde{h}^{(1)} (l-Mk) \widetilde{\varphi}_{j+1,l}
+\end{split}
+\]
+
+Если $\varphi$ имеют \textbf{компактный носитель}, т.е. ее наименьшее по включению множество, на дополнении которого она равна нулю, компактно, то $h^{(0)}, h^{(1)}$ будут иметь только конечное число ненулевых коэффициентов. Это свойство полезно при практических вычислениях. $\varphi$ с компактным носителем также называются \textbf{финитными}. Аналогичное свойство справедливо для $\widetilde{\varphi}$ и $\widetilde{h}^{(0)}, \widetilde{h}^{(1)}$.
+
+
+
+\subsection{Операторы Transition и Subdivision}
+
+Введём операторы, отвечающие за переход с уровня на уровень.
+
+\[
+	\begin{split}
+		T_{h,M} v(n) = m \sum_{k \in \mathbb{Z}^d} v(k) \overline{h(k-Mn)} \\
+		S_{h,M} v(n) = m \sum_{k \in \mathbb{Z}^d} v(k) h(n-Mk)
+	\end{split}
+\]
+Рассмотрим преобразования Фурье от этих операторов:
+
+\[
+	\begin{split}
+		\widehat{T}_{h,M} v(\xi) = m \sum_{n \in \mathbb{Z}^d} \sum_{k \in \mathbb{Z}^d} v(Mn+k) \overline{h(k)} e^{2 \pi i(n, \xi)} \\
+		\widehat{S}_{h,M} v(\xi) = m \sum_{n \in \mathbb{Z}^d} \sum_{k \in \mathbb{Z}^d} v(k) h(n-Mk) e^{2 \pi i(n,\xi)}
+	\end{split}
+\]
+
+Эти операторы можно записать через комбинацию операторов свертки $\star$ и апсемплинга/даунсемплинга $\uparrow/\downarrow$, т.е.:
+
+\[
+	\begin{split}
+		&h \star v(n) = \sum_{k \in \mathbb{Z}^d} v(k) h(n-k) \\
+		&(v \downarrow M)(n) = v(Mn) \\
+		&(v \uparrow M)(n) = \left\{ \begin{aligned} &0 ~& \text{ если }M^{-1} n \notin \mathbb{Z}^d \\ &v(M^{-1} n) ~& \text{ если } M^{-1} n \in \mathbb{Z}^d\end{aligned}\right.
+	\end{split} \tag{4}
+\]
+
+Тогда:
+
+\[
+	\begin{split}
+		&T_{h,M} v(n) = m \left( \left( v \star \overline{h^-}\right)\downarrow M\right) (n) \\
+		&S_{h,M} v(n) = m \left( \left(v \uparrow M \right) \star h \right) (n)
+	\end{split}
+\]
+где $h^-(n)=h(-n)$.
+
+Такая запись позволяет эффективно вычислять эти операторы с помощью существующих реализаций свертки и ап/даунсемплинга.
+
+\subsection{Операторы $T,S$ для дискретного всплеск-преобразования}
+
+Рассмотрим переход с уровня на уровень:
+
+\[
+	\sum_{k \in \mathbb{Z}^d} \left< f, \widetilde{\varphi}_{j+1,k}\right> \varphi_{j+1,k} = \sum_{k \in \mathbb{Z}^d} \left< f, \widetilde{\varphi}_{j,k}\right> \varphi_{j,k} + \sum_{k \in \mathbb{Z}^d} \left< f, \widetilde{\psi}_{j,k}\right>\psi_{j,k}
+\]
+
+Т.к.:
+
+\[
+	\begin{split}
+		\widetilde{\varphi}_{j,k} = \sqrt{m}\sum_{l \in \mathbb{Z}^d} \widetilde{h}^{(0)} (l-Mk) \widetilde{\varphi}_{j+1,l} \\
+		\widetilde{\psi}_{j,k} = \sqrt{m}\sum_{l \in \mathbb{Z}^d} \widetilde{h}^{(1)} (l-Mk) \widetilde{\varphi}_{j+1,l}
+	\end{split}
+\]
+то скалярные произведения в разложении можно представить в виде:
+
+\[
+	\begin{split}
+		&A_j (k) = \left< f, \widetilde{\varphi}_{j,k}\right> = \sqrt{m}\sum_{l \in \mathbb{Z}^d} \overline{\widetilde{h}^{(0)}(l-Mk)}\left<f, \widetilde{\varphi}_{j+1,l} \right> = \frac{1}{\sqrt{m}} T_{\widetilde{h}^{(0)},M} A_{j+1} (k) \\
+		&D_j (k) = \left< f, \widetilde{\psi}_{j,k}\right> = \sqrt{m} \sum_{l \in \mathbb{Z}^d} \overline{\widetilde{h}^{(1)}(l-Mk)} \left< f, \widetilde{\varphi}_{j+1,l}\right> = \frac{1}{\sqrt{m}} T_{\widetilde{h}^{(1)},M} A_{j+1} (k)
+	\end{split},
+\]
+
+Обратное разложение выглядит следующим образом:
+
+\[
+	\begin{split}
+		A_{j+1} (l) = \sum_{k \in \mathbb{Z}^d}h^{(0)}(l-Mk) \left< f, \widetilde{\varphi}_{j,k}\right> + \sum_{k \in \mathbb{Z}^d} h^{(1)} (l-Mk) \left< f, \widetilde{\psi}_{j,k}\right> = \\
+		= \frac{1}{m} \left( S_{h^{(0)}} A_j (l) + S_{h^{(1)}} D_j (l)\right)
+\end{split}
+\]
+
+В полученных формулах при условии компактности носителя $\varphi$ можно заменить бесконечные суммы на конечные. Это напрямую приводит нас к рекурсивному виду вычисления разложений.
+
+\subsubsection{Выбор начальных $A_j$}
+
+Для достаточно больших $j$ $\varphi_{j,k}, \widetilde{\varphi}_{j,k}$ обычно будет очень близки к дельта-функциям (т.к. они в практических задачах выбирается финитными), поэтому в качестве $A_j$ можно выбрать исходную дискретизированную функцию. Возможно также и более точное вычисление $A_j$ в случае известной непрерывной $f$, но такой способ требует численного интегрирования и редко целесообразен.
+
+\subsection{Возможность использования нескольких всплеск-функций}
+
+Вместо использования одной всплеск-функции $\psi$ возможно построить систему с несколькими всплеск-функциями $\{\psi^{(v)}\}_{v=1}^r$. Тогда разложение будет выглядеть так:
+
+\[
+	f = \sum_{v = 1}^r \sum_{j \in \mathbb{Z}} \sum_{k \in \mathbb{Z}^d} \left< f, \widetilde{\psi}_{j,k}^{(v)}\right> \psi_{j,k}^{(v)},
+\]
+а переход с уровня на уровень примет вид:
+\[
+	\sum_{k \in \mathbb{Z}^d} \left< f, \widetilde{\varphi}_{j+1,k}\right> \varphi_{j+1,k} = \sum_{k \in \mathbb{Z}^d} \left< f, \widetilde{\varphi}_{j,k}\right> \varphi_{j,k} + \sum_{v=1}^r \sum_{k \in \mathbb{Z}^d} \left< f, \widetilde{\psi}_{j,k}^{(v)}\right>\psi_{j,k}^{(v)}
+\]
+У каждой такой функции $\widetilde{\psi}^{(v)}$ будет свой собственный фильтр $\widetilde{h}^{(v)}$, определяемый аналогично случаю с одной $\widetilde{\psi}$. Вид $A_j(k)$ не изменится, а вместо $D_j(k)$ рассматривается $r$ $d$-мерных матриц $D_j^{(v)}$:
+
+\[
+	D_j^{(v)} (k) = \left< f, \widetilde{\psi}_{j,k}^{(v)}\right> = \sqrt{m} \sum_{l \in \mathbb{Z}^d} \overline{\widetilde{h}^{(v)}(l-Mk)} \left< f, \widetilde{\varphi}_{j+1,l}\right> = \frac{1}{\sqrt{m}} T_{\widetilde{h}^{(v)},M} A_{j+1} (k)
+\]
+
+Обратное разложение приобретет $r$ компонент, связанных с $D_j^{(v)}$:
+
+\[
+	\begin{split}
+		A_{j+1} (l) = \sum_{k \in \mathbb{Z}^d}h^{(0)}(l-Mk) \left< f, \widetilde{\varphi}_{j,k}\right> + \sum_{v=1}^r\sum_{k \in \mathbb{Z}^d} h^{(v)} (l-Mk) \left< f, \widetilde{\psi}_{j,k}^{(v)}\right> = \\
+		= \frac{1}{m} \left( S_{h^{(0)}} A_j (l) + \sum_{v=1}^rS_{h^{(v)}} D_j (l)\right)
+\end{split}
+\]
+\pagebreak
+
+\section{Дальнейшие детали реализации}
+Как было описано ранее, $A_j, D_j^{(v)}$ в програмной реализации возможно реализовать с помощью $d$-мерных целочисленных матриц, при условии, что рассматриваются системы с компактным носителем. Фильтры $h^{(0)}. \widetilde{h}^{(0)}, h^{(1)}, \widetilde{h^{(1)}}$ рассматриваются в виде матриц, состоящих из их ненулевых коэффициентов. Это позволяет обходиться исключительно пакетом линейной алгебры для реализации всплеск-преобразования, без прибегания к символьным вычислениям.
+
+Отдельный интерес представляет програмная реализация апсемплинга. Апсемплинг требует проверки целочисленности получающихся координат для точной реализации методов (4). Наивная реализация предполагает проверку целочисленности путем взятия дробной части, сохраненной в типе \textit{float}, и отсеивание координат, норма чьих дробных частей превышает заданный порог. Такой подход легко реализовать, но он может приводить к ошибочным отсеиваниям, если точности формата не хватает для сохранения дробной части, либо если выбран неподходящий порог отсеивания.
+
+Другой вариант - рассматривать дробную арифметику. Операция даунсемплинга в таком случае может быть реализована напрямую, а для даунсемплинга целочисленность можно проверять в обратную сторону, рассматривая вместо, например, координат $z=M^{-1} n$, не обязательно целочисленные из-за компоненты $M^{-1}$, равенство $Mz = n$, рассматривая только те пары координат, для которых оно выполняется точно. Подробный анализ перспектив работы с дробными масками будет рассмотрен в дальнейшей работе.
+
+
+\pagebreak
+\section{Литература}
+\begin{enumerate}
+\item{Nickolas P. Wavelets: a student guide. – Cambridge University Press, 2017. – Т. 24.}
+\item{Han B. Framelets and wavelets //Algorithms, Analysis, and Applications, Applied and Numerical Harmonic Analysis. Birkhäuser xxxiii Cham. – 2017.}
+\item{Новиков И. Я., Протасов В. Ю., Скопина М. А. Теория всплесков. – 2005.}
+\item{Krivoshein A., Protasov V. I., Skopina M. Multivariate wavelet frames. – Springer Nature., 2016.}
+\item{Christensen O. An Introduction to Frames and Riesz Bases. – 2003.}
+\end{enumerate}
+
+
+\end{document} 
