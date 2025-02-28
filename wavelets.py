@@ -115,7 +115,7 @@ def subdivision(a: OffsetMatrix, mask: OffsetMatrix, M: np.ndarray):
 
 def dwt(a: OffsetMatrix, w: Wavelet):
     d = list()
-    for i in range(2):
+    for i in range(5):
         d.append(transition(a, w.gdual, w.M))
         iio.imwrite(f'd{i}.png', d[-1].matrix.astype(np.uint8))
         a = transition(a, w.hdual, w.M)
@@ -129,6 +129,7 @@ def idwt(a0: OffsetMatrix, d: list[OffsetMatrix], w: Wavelet):
         ai = subdivision(ai, w.h, w.M)
         dd = subdivision(di, w.g, w.M)
         ai = (ai + dd)
+        ai.matrix *= 2
         print(ai.matrix)
         print(dd.matrix)
         iio.imwrite(f'a{i}.png', ai.matrix.astype(np.uint8))
