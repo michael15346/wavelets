@@ -125,11 +125,12 @@ def dwt(a: OffsetMatrix, w: Wavelet):
 def idwt(a0: OffsetMatrix, d: list[OffsetMatrix], w: Wavelet):
     ai = a0
     i = 0
+    m = np.linalg.det(w.M)
     for di in reversed(d):
         ai = subdivision(ai, w.h, w.M)
         dd = subdivision(di, w.g, w.M)
         ai = (ai + dd)
-        ai.matrix *= 2
+        ai.matrix *= m
         print(ai.matrix)
         print(dd.matrix)
         iio.imwrite(f'a{i}.png', ai.matrix.astype(np.uint8))
@@ -138,8 +139,8 @@ def idwt(a0: OffsetMatrix, d: list[OffsetMatrix], w: Wavelet):
     print(di.matrix)
     return ai
 
-#data = OffsetMatrix(iio.imread('http://upload.wikimedia.org/wikipedia/commons/d/de/Wikipedia_Logo_1.0.png'), np.array([0,0]))
-data = OffsetMatrix(255 * np.array([[1, 1], [1, 1]]), np.array([0,0]))
+data = OffsetMatrix(iio.imread('http://upload.wikimedia.org/wikipedia/commons/d/de/Wikipedia_Logo_1.0.png'), np.array([0,0]))
+#data = OffsetMatrix(255 * np.array([[1, 1], [1, 1]]), np.array([0,0]))
 
 print(data)
 M = np.array([[1, -1], [1,1]])
