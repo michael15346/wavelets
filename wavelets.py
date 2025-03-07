@@ -43,11 +43,12 @@ class OffsetMatrix:
 
 @dataclass
 class Wavelet:
-    h: np.ndarray
-    g: np.ndarray
-    hdual: np.ndarray
-    gdual: np.ndarray
-    M: np.ndarray
+    h: OffsetMatrix
+    g: OffsetMatrix
+    hdual: OffsetMatrix
+    gdual: OffsetMatrix
+    M: OffsetMatrix
+    m: float
 
 
 def to_python(x, y, offset):
@@ -115,52 +116,54 @@ def subdivision(a: OffsetMatrix, mask: OffsetMatrix, M: np.ndarray):
 
 def dwt(a: OffsetMatrix, w: Wavelet):
     d = list()
-    for i in range(5):
-        d.append(transition(a, w.gdual, w.M))
-        iio.imwrite(f'd{i}.png', d[-1].matrix.astype(np.uint8))
-        a = transition(a, w.hdual, w.M)
+    for gdual in w.gdual:
+        d.append(transition(a, gdual, w.M))
+    a = transition(a, w.hdual, w.M)
     return (a, d)
 
  
-def idwt(a0: OffsetMatrix, d: list[OffsetMatrix], w: Wavelet):
-    ai = a0
-    i = 0
-    m = np.linalg.det(w.M)
-    for di in reversed(d):
-        ai = subdivision(ai, w.h, w.M)
-        dd = subdivision(di, w.g, w.M)
-        ai = (ai + dd)
-        ai.matrix *= m
-        print(ai.matrix)
-        print(dd.matrix)
-        iio.imwrite(f'a{i}.png', ai.matrix.astype(np.uint8))
-        i += 1
-    print(ai.matrix)
-    print(di.matrix)
+def idwt(a: OffsetMatrix, d: tuple[OffsetMatrix, ...], w: Wavelet):
+    ai = subdivision(a, w.h, w.M)
+
+    for i in range(len(w.g)):
+        ai += subdivision(d[i], w.g[i], w.M)
+    ai.matrix *= w.m
     return ai
 
-data = OffsetMatrix(iio.imread('http://upload.wikimedia.org/wikipedia/commons/d/de/Wikipedia_Logo_1.0.png'), np.array([0,0]))
-#data = OffsetMatrix(255 * np.array([[1, 1], [1, 1]]), np.array([0,0]))
+
+def wavedec(a0: OffsetMatrix, n: int, w: Wavelet):
+    a = a0
+    d = list()
+    for i in range(n):
+        (a, di) = dwt(a, w)
+        d.append(di)
+    return (a, d)
+
+
+def waverec(a: OffsetMatrix, d: list[OffsetMatrix], w: Wavelet):
+    ai = a
+    for di in reversed(d):
+        ai = idwt(ai, di, w)
+
+    return ai
+
+#data = OffsetMatrix(iio.imread('http://upload.wikimedia.org/wikipedia/commons/d/de/Wikipedia_Logo_1.0.png'), np.array([0,0]))
+data = OffsetMatrix(255 * np.array([[1, 1], [1, 1]]), np.array([0,0]))
 
 print(data)
 M = np.array([[1, -1], [1,1]])
 
 h = OffsetMatrix(np.array([[0.25], [0.5], [0.25]]), np.array([0,1]))
-g = OffsetMatrix(np.array([[-0.125], [-0.25], [0.75], [-0.25], [-0.125]]), np.array([0,3]))
+g = (OffsetMatrix(np.array([[-0.125], [-0.25], [0.75], [-0.25], [-0.125]]), np.array([0,3])),)
 hdual = OffsetMatrix(np.array([[-0.125], [0.25], [0.75], [0.25], [-0.125]]),np.array([0,2]))
-gdual = OffsetMatrix(np.array([[-0.25], [0.5], [-0.25]]),np.array([0,2]))
+gdual = (OffsetMatrix(np.array([[-0.25], [0.5], [-0.25]]),np.array([0,2])),)
 
 hdual_conj = OffsetMatrix(np.array([[-0.125], [0.25], [0.75], [0.25], [-0.125]]),np.array([0,2]))
-gdual_conj = OffsetMatrix(np.array([[-0.25], [0.5], [-0.25]]),np.array([0,0]))
-#подумать над тем, как флипать маски, чтобы все координаты оставались питоновскими и все работало
-w = Wavelet(h, g, hdual_conj, gdual_conj, M)
+gdual_conj = (OffsetMatrix(np.array([[-0.25], [0.5], [-0.25]]),np.array([0,0])),)
+w = Wavelet(h, g, hdual_conj, gdual_conj, M, np.abs(np.linalg.det(M)))
 
-ai, d = dwt(data, w)
-print(ai.matrix)
-#print(d.matrix)
-iio.imwrite('a.png', ai.matrix.astype(np.uint8))
-iio.imwrite('d.png', ai.matrix.astype(np.uint8))
-a = idwt(ai, d, w)
+(ai, d) = wavedec(data, 3, w)
+
+a = waverec(ai, d, w)
 print(a.matrix)
-iio.imwrite('image.png', a.matrix.astype(np.uint8))
 
