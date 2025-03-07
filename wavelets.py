@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from math import ceil, floor
 
 
-
 class OffsetMatrix:
     matrix: np.ndarray
     offset: tuple
@@ -170,14 +169,14 @@ def upsample_corners(a: OffsetMatrix, coords: tuple[float, float, float, float],
     return (dl, dr, ul, ur)
 
 
-def wavedec(a0: OffsetMatrix, n: int, w: Wavelet):
+def wavedec(a0: OffsetMatrix, rank: int, w: Wavelet):
     a = a0
     d = list()
     x0 = a0.offset[0]
     y0 = a0.offset[0]
     (m, n) = a0.matrix.shape
     corners = ((x0, y0), (x0, y0 + n), (x0 + m, y0), (x0 + m, y0 + n))
-    for i in range(n):
+    for i in range(rank):
         corners = downsample_corners(a, corners, w)
         (a, di) = dwt(a, w)
         d.append(di)
@@ -206,7 +205,7 @@ hdual_conj = OffsetMatrix(np.array([[-0.125], [0.25], [0.75], [0.25], [-0.125]])
 gdual_conj = (OffsetMatrix(np.array([[-0.25], [0.5], [-0.25]]),np.array([0,0])),)
 w = Wavelet(h, g, hdual_conj, gdual_conj, M, np.abs(np.linalg.det(M)))
 
-(ai, d, corners_dec) = wavedec(data, 5, w)
+(ai, d, corners_dec) = wavedec(data, 2, w)
 
 (a, corners) = waverec(ai, d, w, corners_dec)
 print(a.matrix)
