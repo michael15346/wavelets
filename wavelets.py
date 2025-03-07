@@ -43,10 +43,10 @@ class OffsetMatrix:
 @dataclass
 class Wavelet:
     h: OffsetMatrix
-    g: OffsetMatrix
+    g: tuple[OffsetMatrix, ...]
     hdual: OffsetMatrix
-    gdual: OffsetMatrix
-    M: OffsetMatrix
+    gdual: tuple[OffsetMatrix, ...]
+    M: np.ndarray
     m: float
 
 
@@ -130,7 +130,7 @@ def idwt(a: OffsetMatrix, d: tuple[OffsetMatrix, ...], w: Wavelet):
     return ai
 
 
-def downsample_corners(a: OffsetMatrix, coords: tuple[float, float, float, float], w: Wavelet):
+def downsample_corners(a: OffsetMatrix, coords: tuple[tuple[float, float], ...], w: Wavelet):
     Minv = np.linalg.inv(w.M)
     x1 = Minv @ np.array([a.offset[0], a.offset[1]])
     x2 = Minv @ np.array([a.offset[0] + a.matrix.shape[1]-1, a.offset[1]])
@@ -150,7 +150,7 @@ def downsample_corners(a: OffsetMatrix, coords: tuple[float, float, float, float
     return (dl, dr, ul, ur)
 
 
-def upsample_corners(a: OffsetMatrix, coords: tuple[float, float, float, float], w: Wavelet):
+def upsample_corners(a: OffsetMatrix, coords: tuple[tuple[float, float], ...], w: Wavelet):
     x1 = M @ np.array([a.offset[0], a.offset[1]])
     x2 = M @ np.array([a.offset[0] + a.matrix.shape[0] - 1, a.offset[1]])
     x3 = M @ np.array([a.offset[0], a.offset[1] - a.matrix.shape[0]+1])
@@ -183,7 +183,7 @@ def wavedec(a0: OffsetMatrix, rank: int, w: Wavelet):
     return (a, d, corners)
 
 
-def waverec(a: OffsetMatrix, d: list[OffsetMatrix], w: Wavelet, corners: tuple[tuple[float, float], ...]):
+def waverec(a: OffsetMatrix, d: list[tuple[OffsetMatrix, ...]], w: Wavelet, corners: tuple[tuple[float, float], ...]):
     ai = a
     for di in reversed(d):
         corners = upsample_corners(ai, corners, w)
@@ -205,10 +205,13 @@ hdual_conj = OffsetMatrix(np.array([[-0.125], [0.25], [0.75], [0.25], [-0.125]])
 gdual_conj = (OffsetMatrix(np.array([[-0.25], [0.5], [-0.25]]),np.array([0,0])),)
 w = Wavelet(h, g, hdual_conj, gdual_conj, M, np.abs(np.linalg.det(M)))
 
-(ai, d, corners_dec) = wavedec(data, 2, w)
+(ai, d, corners_dec) = wavedec(data, 1, w)
 
 (a, corners) = waverec(ai, d, w, corners_dec)
 print(a.matrix)
 print(corners)
+print(to_python(corners[0][0], corners[0][1], a.offset))
 print(to_python(corners[1][0], corners[1][1], a.offset))
+print(to_python(corners[2][0], corners[2][1], a.offset))
+print(to_python(corners[3][0], corners[3][1], a.offset))
 
