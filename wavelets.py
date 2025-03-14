@@ -155,14 +155,31 @@ def waverec(a: OffsetMatrix, d: list[tuple[OffsetMatrix, ...]], w: Wavelet, orig
 
 
 def clamp(a: OffsetMatrix, d: OffsetMatrix):
+    clamped = np.sum(np.abs(ai.matrix) <= 10)
     ai.matrix = np.where(np.abs(ai.matrix) > 10, ai.matrix, 0)
+    total = ai.matrix.size
+    print(total, clamped)
     for di in d:
         for dj in di:
+            total += dj.matrix.size
+            clamped += np.sum(np.abs(dj.matrix) <= 10)
             dj.matrix = np.where(np.abs(dj.matrix) > 10, dj.matrix, 0)
+    print("clamp stats: total ", total, " clamped ", clamped, " clamped/total ", clamped / total)
 
 
-data = OffsetMatrix(iio.imread('http://upload.wikimedia.org/wikipedia/commons/d/de/Wikipedia_Logo_1.0.png'), np.array([0,0]))
-#data = OffsetMatrix(255 * np.array([[1, 1], [1, 1]]), np.array([0,0]))
+def rmse(a: np.ndarray, b: np.ndarray) -> float:
+    assert a.shape == b.shape
+    a_flat = a.flatten()
+    b_flat = b.flatten()
+    se = 0.
+    for i in range(a_flat.size):
+        se += (a_flat[i] - b_flat[i]) ** 2
+
+    return np.sqrt(se / a_flat.size)
+    
+
+#data = OffsetMatrix(iio.imread('http://upload.wikimedia.org/wikipedia/commons/d/de/Wikipedia_Logo_1.0.png'), np.array([0,0]))
+data = OffsetMatrix(255 * np.array([[1, 1], [1, 1]]), np.array([0,0]))
 
 print(data)
 M = np.array([[1, -1], [1,1]])
@@ -176,9 +193,11 @@ hdual_conj = OffsetMatrix(np.array([[-0.125], [0.25], [0.75], [0.25], [-0.125]])
 gdual_conj = (OffsetMatrix(np.array([[-0.25], [0.5], [-0.25]]),np.array([0,0])),)
 w = Wavelet(h, g, hdual_conj, gdual_conj, M, np.abs(np.linalg.det(M)))
 
-ai, d = wavedec(data, 3, w)
+ai, d = wavedec(data, 2, w)
 clamp(ai, d)
 
 a = waverec(ai, d, w, data.matrix.shape)
 print(a)
-iio.imwrite('restored.png', a.astype(np.uint8))
+print(np.clip(a, 0, 255).astype(np.uint8))
+print("RMSE:", rmse(data.matrix, np.clip(a, 0, 255)))
+iio.imwrite('restored.png', np.clip(a, 0, 255).astype(np.uint8))
