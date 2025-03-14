@@ -105,7 +105,6 @@ def convolve(a: OffsetMatrix, b: OffsetMatrix):
 
 def transition(a: OffsetMatrix, mask: OffsetMatrix, M: np.ndarray):
 
-    #здесь считать сопряженный фильтр. дуальные фильтры флипаются
     return downsample(convolve(a, mask), M)
 
 
@@ -120,7 +119,7 @@ def dwt(a: OffsetMatrix, w: Wavelet):
     a = transition(a, w.hdual, w.M)
     return (a, d)
 
- 
+
 def idwt(a: OffsetMatrix, d: tuple[OffsetMatrix, ...], w: Wavelet):
     ai = subdivision(a, w.h, w.M)
 
@@ -128,45 +127,6 @@ def idwt(a: OffsetMatrix, d: tuple[OffsetMatrix, ...], w: Wavelet):
         ai += subdivision(d[i], w.g[i], w.M)
     ai.matrix *= w.m
     return ai
-
-
-def downsample_corners(a: OffsetMatrix, coords: tuple[tuple[float, float], ...], w: Wavelet):
-    Minv = np.linalg.inv(w.M)
-    x1 = Minv @ np.array([a.offset[0], a.offset[1]])
-    x2 = Minv @ np.array([a.offset[0] + a.matrix.shape[1]-1, a.offset[1]])
-    x3 = Minv @ np.array([a.offset[0], a.offset[1] - a.matrix.shape[0]+1])
-    x4 = Minv @ np.array([a.offset[0] + a.matrix.shape[1]-1, a.offset[1] - a.matrix.shape[0]+1])
-    xmin = ceil(min(x1[0], x2[0], x3[0], x4[0]))
-    ymax = floor(max(x1[1], x2[1], x4[1], x4[1]))
-    ((x1, y1), (x2, y2), (x3, y3), (x4, y4)) = coords
-    scaled_dl = (Minv @ np.array([x1, y1]))
-    scaled_dr = (Minv @ np.array([x2, y2]))
-    scaled_ul = (Minv @ np.array([x3, y3]))
-    scaled_ur = (Minv @ np.array([x4, y4]))
-    dl = tuple(to_python(scaled_dl[0], scaled_dl[1], np.array([xmin, ymax])))
-    dr = tuple(to_python(scaled_dr[0], scaled_dr[1], np.array([xmin, ymax])))
-    ul = tuple(to_python(scaled_ul[0], scaled_ul[1], np.array([xmin, ymax])))
-    ur = tuple(to_python(scaled_ur[0], scaled_ur[1], np.array([xmin, ymax])))
-    return (dl, dr, ul, ur)
-
-
-def upsample_corners(a: OffsetMatrix, coords: tuple[tuple[float, float], ...], w: Wavelet):
-    x1 = M @ np.array([a.offset[0], a.offset[1]])
-    x2 = M @ np.array([a.offset[0] + a.matrix.shape[0] - 1, a.offset[1]])
-    x3 = M @ np.array([a.offset[0], a.offset[1] - a.matrix.shape[0]+1])
-    x4 = M @ np.array([a.offset[0] + a.matrix.shape[1]  - 1, a.offset[1] - a.matrix.shape[0] + 1])
-    xmin = int(min(x1[0], x2[0], x3[0], x4[0]))
-    ymax = int(max(x1[1], x2[1], x3[1], x4[1]))
-    ((x1, y1), (x2, y2), (x3, y3), (x4, y4)) = coords
-    scaled_dl = (M @ np.array([x1, y1]))
-    scaled_dr = (M @ np.array([x2, y2]))
-    scaled_ul = (M @ np.array([x3, y3]))
-    scaled_ur = (M @ np.array([x4, y4]))
-    dl = tuple(to_python(scaled_dl[0], scaled_dl[1], np.array([xmin, ymax])))
-    dr = tuple(to_python(scaled_dr[0], scaled_dr[1], np.array([xmin, ymax])))
-    ul = tuple(to_python(scaled_ul[0], scaled_ul[1], np.array([xmin, ymax])))
-    ur = tuple(to_python(scaled_ur[0], scaled_ur[1], np.array([xmin, ymax])))
-    return (dl, dr, ul, ur)
 
 
 def wavedec(a0: OffsetMatrix, rank: int, w: Wavelet):
@@ -177,21 +137,32 @@ def wavedec(a0: OffsetMatrix, rank: int, w: Wavelet):
     (m, n) = a0.matrix.shape
     corners = ((x0, y0), (x0, y0 + n), (x0 + m, y0), (x0 + m, y0 + n))
     for i in range(rank):
-        corners = downsample_corners(a, corners, w)
-        (a, di) = dwt(a, w)
+        a, di = dwt(a, w)
         d.append(di)
-    return (a, d, corners)
+    return (a, d)
 
 
-def waverec(a: OffsetMatrix, d: list[tuple[OffsetMatrix, ...]], w: Wavelet, corners: tuple[tuple[float, float], ...]):
+def waverec(a: OffsetMatrix, d: list[tuple[OffsetMatrix, ...]], w: Wavelet, original_shape: tuple[int, ...]) -> np.ndarray:
     ai = a
     for di in reversed(d):
-        corners = upsample_corners(ai, corners, w)
         ai = idwt(ai, di, w)
-    return (ai, corners)
+    x1 = ai.offset[1]
+    y1 = -ai.offset[0]
+    x2 = x1 + original_shape[0]
+    y2 = y1 + original_shape[1]
+    ai = ai.matrix[x1:x2, y1:y2]
+    return ai
 
-#data = OffsetMatrix(iio.imread('http://upload.wikimedia.org/wikipedia/commons/d/de/Wikipedia_Logo_1.0.png'), np.array([0,0]))
-data = OffsetMatrix(255 * np.array([[1, 1], [1, 1]]), np.array([0,0]))
+
+def clamp(a: OffsetMatrix, d: OffsetMatrix):
+    ai.matrix = np.where(np.abs(ai.matrix) > 10, ai.matrix, 0)
+    for di in d:
+        for dj in di:
+            dj.matrix = np.where(np.abs(dj.matrix) > 10, dj.matrix, 0)
+
+
+data = OffsetMatrix(iio.imread('http://upload.wikimedia.org/wikipedia/commons/d/de/Wikipedia_Logo_1.0.png'), np.array([0,0]))
+#data = OffsetMatrix(255 * np.array([[1, 1], [1, 1]]), np.array([0,0]))
 
 print(data)
 M = np.array([[1, -1], [1,1]])
@@ -205,13 +176,9 @@ hdual_conj = OffsetMatrix(np.array([[-0.125], [0.25], [0.75], [0.25], [-0.125]])
 gdual_conj = (OffsetMatrix(np.array([[-0.25], [0.5], [-0.25]]),np.array([0,0])),)
 w = Wavelet(h, g, hdual_conj, gdual_conj, M, np.abs(np.linalg.det(M)))
 
-(ai, d, corners_dec) = wavedec(data, 1, w)
+ai, d = wavedec(data, 3, w)
+clamp(ai, d)
 
-(a, corners) = waverec(ai, d, w, corners_dec)
-print(a.matrix)
-print(corners)
-print(to_python(corners[0][0], corners[0][1], a.offset))
-print(to_python(corners[1][0], corners[1][1], a.offset))
-print(to_python(corners[2][0], corners[2][1], a.offset))
-print(to_python(corners[3][0], corners[3][1], a.offset))
-
+a = waverec(ai, d, w, data.matrix.shape)
+print(a)
+iio.imwrite('restored.png', a.astype(np.uint8))
