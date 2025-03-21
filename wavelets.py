@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.signal
+from skimage.metrics import structural_similarity as ssim
 import imageio.v3 as iio
 from dataclasses import dataclass
 from math import ceil, floor
@@ -131,7 +132,6 @@ def dwt(a: OffsetMatrix, w: Wavelet):
 def idwt(a: OffsetMatrix, d: tuple[OffsetMatrix, ...], w: Wavelet):
     ai = subdivision(a, w.h, w.M)
 
-    print(d, w.g)
     for i in range(len(w.g)):
         ai += subdivision(d[i], w.g[i], w.M)
     ai.matrix *= w.m
@@ -164,10 +164,9 @@ def waverec(a: OffsetMatrix, d: list[tuple[OffsetMatrix, ...]], w: Wavelet, orig
 
 
 def clamp(a: OffsetMatrix, d: OffsetMatrix):
-    clamped = np.sum(np.abs(ai.matrix) <= 100)
-    ai.matrix = np.where(np.abs(ai.matrix) > 100, ai.matrix, 0)
+    clamped = np.sum(np.abs(ai.matrix) <= 10)
+    ai.matrix = np.where(np.abs(ai.matrix) > 10, ai.matrix, 0)
     total = ai.matrix.size
-    print(total, clamped)
     for di in d:
         for dj in di:
             total += dj.matrix.size
@@ -185,6 +184,12 @@ def rmse(a: np.ndarray, b: np.ndarray) -> float:
         se += (a_flat[i] - b_flat[i]) ** 2
 
     return np.sqrt(se / a_flat.size)
+
+
+def psnr(a: np.ndarray, b: np.ndarray) -> float:
+    assert a.shape == b.shape
+    a_flat = a.flatten()
+    return 20 * np.log10(np.max(a_flat) / rmse(a, b))
 
 
 def OffsetMatrix2CoefCoords(a: OffsetMatrix):
@@ -238,11 +243,13 @@ gdual_conj = (OffsetMatrix(np.array([[-0.25], [0.5], [-0.25]]),np.array([0,0])),
 
 w = Wavelet(h, g, hdual, gdual, M, np.abs(np.linalg.det(M)))
 
-ai, d = wavedec(data, 2, w)
+ai, d = wavedec(data, 1, w)
 clamp(ai, d)
 
 a = waverec(ai, d, w, data.matrix.shape)
 print(a)
 print(np.clip(a, 0, 255).astype(np.uint8))
 print("RMSE:", rmse(data.matrix, np.clip(a, 0, 255)))
+print("PSNR:", psnr(data.matrix, np.clip(a, 0, 255)))
+print("SSIM:", ssim(data.matrix, np.clip(a, 0, 255), data_range=255))
 iio.imwrite('restored.png', np.clip(a, 0, 255).astype(np.uint8))
