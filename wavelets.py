@@ -49,6 +49,14 @@ class Wavelet:
     M: np.ndarray
     m: float
 
+    def __init__(self, h, g, hdual, gdual, M, m):
+        self.h = h
+        self.g = g
+        self.hdual = OffsetMatrixConjugate(hdual)
+        self.gdual = tuple(map(OffsetMatrixConjugate, gdual))
+        self.M = M
+        self.m = m
+
 
 def to_python(x, y, offset):
     return offset[1]-y, x-offset[0]
@@ -123,6 +131,7 @@ def dwt(a: OffsetMatrix, w: Wavelet):
 def idwt(a: OffsetMatrix, d: tuple[OffsetMatrix, ...], w: Wavelet):
     ai = subdivision(a, w.h, w.M)
 
+    print(d, w.g)
     for i in range(len(w.g)):
         ai += subdivision(d[i], w.g[i], w.M)
     ai.matrix *= w.m
@@ -155,8 +164,8 @@ def waverec(a: OffsetMatrix, d: list[tuple[OffsetMatrix, ...]], w: Wavelet, orig
 
 
 def clamp(a: OffsetMatrix, d: OffsetMatrix):
-    clamped = np.sum(np.abs(ai.matrix) <= 10)
-    ai.matrix = np.where(np.abs(ai.matrix) > 10, ai.matrix, 0)
+    clamped = np.sum(np.abs(ai.matrix) <= 100)
+    ai.matrix = np.where(np.abs(ai.matrix) > 100, ai.matrix, 0)
     total = ai.matrix.size
     print(total, clamped)
     for di in d:
@@ -176,7 +185,41 @@ def rmse(a: np.ndarray, b: np.ndarray) -> float:
         se += (a_flat[i] - b_flat[i]) ** 2
 
     return np.sqrt(se / a_flat.size)
-    
+
+
+def OffsetMatrix2CoefCoords(a: OffsetMatrix):
+    shape = a.matrix.shape
+    offset = a.offset
+    coef = []
+    coords = []
+    for i in range(shape[0]):
+        for j in range(shape[1]):
+            if a.matrix[i, j] != 0:
+                coef.append(a.matrix[i, j])
+                coords.append([offset[0]+j, offset[1]-i])
+    return (np.array(coef), np.array(coords))
+
+
+def CoefCoords2OffsetMatrix(a):  # a filter in coef-coords form
+    coef = a[0]
+    coords = a[1]
+    x_left, y_bottom = list(np.min(np.transpose(coords), axis=1))
+    x_right, y_up = list(np.max(np.transpose(coords), axis=1))
+    shape = [y_up-y_bottom+1, x_right-x_left+1]
+    offset = np.array([x_left, y_up])
+    matrix = np.zeros(shape)
+    for ind, coord in enumerate(coords):
+        row, col = to_python(coord[0], coord[1], offset)
+        matrix[row, col] = coef[ind]
+    return OffsetMatrix(matrix, offset)
+
+
+def OffsetMatrixConjugate(a: OffsetMatrix):
+    coef, coords = OffsetMatrix2CoefCoords(a)
+    coords = - coords
+    a_conj = CoefCoords2OffsetMatrix((coef, coords))
+    return a_conj
+
 
 data = OffsetMatrix(iio.imread('http://upload.wikimedia.org/wikipedia/commons/d/de/Wikipedia_Logo_1.0.png'), np.array([0,0]))
 #data = OffsetMatrix(255 * np.array([[1, 1], [1, 1]]), np.array([0,0]))
@@ -191,9 +234,11 @@ gdual = (OffsetMatrix(np.array([[-0.25], [0.5], [-0.25]]),np.array([0,2])),)
 
 hdual_conj = OffsetMatrix(np.array([[-0.125], [0.25], [0.75], [0.25], [-0.125]]),np.array([0,2]))
 gdual_conj = (OffsetMatrix(np.array([[-0.25], [0.5], [-0.25]]),np.array([0,0])),)
-w = Wavelet(h, g, hdual_conj, gdual_conj, M, np.abs(np.linalg.det(M)))
 
-ai, d = wavedec(data, 3, w)
+
+w = Wavelet(h, g, hdual, gdual, M, np.abs(np.linalg.det(M)))
+
+ai, d = wavedec(data, 2, w)
 clamp(ai, d)
 
 a = waverec(ai, d, w, data.matrix.shape)
