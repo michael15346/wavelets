@@ -98,8 +98,8 @@ def upsample(a: OffsetMatrix, M: np.ndarray):
     return upsampled
 
 def convolve(a: OffsetMatrix, b: OffsetMatrix):
-    new_offset = (a.offset[0] - (b.offset[0] + b.matrix.shape[1] - 1), a.offset[1] - (b.offset[1] - (b.matrix.shape[0] - 1)))
-    new_matrix = scipy.signal.convolve(a.matrix, b.matrix, 'full')
+    new_offset = (a.offset[0] + b.offset[0], a.offset[1] + b.offset[1])
+    new_matrix = scipy.signal.convolve2d(a.matrix, b.matrix, mode = 'full', boundary = 'symm')
     return OffsetMatrix(new_matrix, new_offset)
 
 
@@ -178,8 +178,8 @@ def rmse(a: np.ndarray, b: np.ndarray) -> float:
     return np.sqrt(se / a_flat.size)
     
 
-#data = OffsetMatrix(iio.imread('http://upload.wikimedia.org/wikipedia/commons/d/de/Wikipedia_Logo_1.0.png'), np.array([0,0]))
-data = OffsetMatrix(255 * np.array([[1, 1], [1, 1]]), np.array([0,0]))
+data = OffsetMatrix(iio.imread('http://upload.wikimedia.org/wikipedia/commons/d/de/Wikipedia_Logo_1.0.png'), np.array([0,0]))
+#data = OffsetMatrix(255 * np.array([[1, 1], [1, 1]]), np.array([0,0]))
 
 print(data)
 M = np.array([[1, -1], [1,1]])
@@ -193,7 +193,7 @@ hdual_conj = OffsetMatrix(np.array([[-0.125], [0.25], [0.75], [0.25], [-0.125]])
 gdual_conj = (OffsetMatrix(np.array([[-0.25], [0.5], [-0.25]]),np.array([0,0])),)
 w = Wavelet(h, g, hdual_conj, gdual_conj, M, np.abs(np.linalg.det(M)))
 
-ai, d = wavedec(data, 2, w)
+ai, d = wavedec(data, 3, w)
 clamp(ai, d)
 
 a = waverec(ai, d, w, data.matrix.shape)
