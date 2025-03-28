@@ -4,6 +4,7 @@ from skimage.metrics import structural_similarity as ssim
 import imageio.v3 as iio
 from dataclasses import dataclass
 from math import ceil, floor
+import kmeans1d
 
 
 class OffsetMatrix:
@@ -66,45 +67,6 @@ def to_python(x, y, offset):
 def to_coord(row, col, offset):
     return offset[0]+col, offset[1]-row
 
-
-def downsample(a: OffsetMatrix, M: np.ndarray):
-
-    Minv = np.linalg.inv(M)
-    x1 = Minv @ np.array([a.offset[0], a.offset[1]])
-    x2 = Minv @ np.array([a.offset[0] + a.matrix.shape[1]-1, a.offset[1]])
-    x3 = Minv @ np.array([a.offset[0], a.offset[1] - a.matrix.shape[0]+1])
-    x4 = Minv @ np.array([a.offset[0] + a.matrix.shape[1]-1, a.offset[1] - a.matrix.shape[0]+1])
-    xmin = ceil(min(x1[0], x2[0], x3[0], x4[0]))
-    xmax = floor(max(x1[0], x2[0], x3[0], x4[0]))
-    ymin = ceil(min(x1[1], x2[1], x3[1], x4[1]))
-    ymax = floor(max(x1[1], x2[1], x4[1], x4[1]))
-
-    downsampled = OffsetMatrix(np.zeros((ymax - ymin + 1, xmax - xmin + 1)), np.array([xmin, ymax]))
-    print(downsampled.offset)
-    for x in range(a.offset[0], a.offset[0] + a.matrix.shape[1]): 
-        for y in range(a.offset[1], a.offset[1] - a.matrix.shape[0], -1):
-
-            scaled = Minv @ np.array([x, y])
-            if np.linalg.norm(scaled-scaled.astype(int)) < 0.0001:
-                scaled = scaled.astype(int)
-                downsampled.matrix[to_python(scaled[0], scaled[1], downsampled.offset)] = a.matrix[to_python(x, y, a.offset)]
-    return downsampled
-
-def upsample(a: OffsetMatrix, M: np.ndarray):
-    x1 = M @ np.array([a.offset[0], a.offset[1]])
-    x2 = M @ np.array([a.offset[0] + a.matrix.shape[0] - 1, a.offset[1]])
-    x3 = M @ np.array([a.offset[0], a.offset[1] - a.matrix.shape[0]+1])
-    x4 = M @ np.array([a.offset[0] + a.matrix.shape[1]  - 1, a.offset[1] - a.matrix.shape[0] + 1])
-    xmin = int(min(x1[0], x2[0], x3[0], x4[0]))
-    xmax = int(max(x1[0], x2[0], x3[0], x4[0]))
-    ymin = int(min(x1[1], x2[1], x3[1], x4[1]))
-    ymax = int(max(x1[1], x2[1], x3[1], x4[1]))
-    upsampled = OffsetMatrix(np.zeros((ymax - ymin + 1, xmax - xmin + 1)), np.array([xmin, ymax]))
-    for x in range(a.offset[0], a.offset[0] + a.matrix.shape[1]): 
-        for y in range(a.offset[1], a.offset[1] - a.matrix.shape[0], -1):
-            scaled = (M @ np.array([x, y])).astype(int)
-            upsampled.matrix[to_python(scaled[0], scaled[1], upsampled.offset)] = a.matrix[to_python(x, y, a.offset)]
-    return upsampled
 
 def convolve(a: OffsetMatrix, b: OffsetMatrix):
     new_offset = (a.offset[0] + b.offset[0], a.offset[1] + b.offset[1])
@@ -225,6 +187,54 @@ def OffsetMatrixConjugate(a: OffsetMatrix):
     a_conj = CoefCoords2OffsetMatrix((coef, coords))
     return a_conj
 
+def to_python_vect(coords, offset):
+    # all_x, all_y
+    return offset[1]-coords.T[1], coords.T[0]-offset[0]
+
+def downsample(a: OffsetMatrix, M: np.ndarray):
+    Minv_pre = np.array([[M[1,1],-M[0,1]],[-M[1,0],M[0,0]]])
+    m = int(np.abs(np.linalg.det(M)))
+    Minv = np.linalg.inv(M)
+    x1 = Minv @ np.array([a.offset[0], a.offset[1]])
+    x2 = Minv @ np.array([a.offset[0] + a.matrix.shape[1]-1, a.offset[1]])
+    x3 = Minv @ np.array([a.offset[0], a.offset[1] - a.matrix.shape[0]+1])
+    x4 = Minv @ np.array([a.offset[0] + a.matrix.shape[1]-1, a.offset[1] - a.matrix.shape[0]+1])
+    xmin = ceil(min(x1[0], x2[0], x3[0], x4[0]))
+    xmax = floor(max(x1[0], x2[0], x3[0], x4[0]))
+    ymin = ceil(min(x1[1], x2[1], x3[1], x4[1]))
+    ymax = floor(max(x1[1], x2[1], x4[1], x4[1]))
+
+    downsampled = OffsetMatrix(np.empty((ymax - ymin + 1, xmax - xmin + 1)), np.array([xmin, ymax]))
+
+    lattice_coords = np.mgrid[a.offset[0]:(a.offset[0] + a.matrix.shape[1]), (a.offset[1] - a.matrix.shape[0]+1):(a.offset[1]+1)].reshape(2, -1)  
+    print(lattice_coords)
+    downs_coords = Minv_pre @ lattice_coords
+    mask = np.all(np.mod(downs_coords, m) == 0, axis=0)
+    lattice_coords = to_python_vect(lattice_coords.T[mask], a.offset)
+    downs_coords = to_python_vect(downs_coords.T[mask]//m, downsampled.offset)
+
+    downsampled.matrix[downs_coords[0], downs_coords[1]] = a.matrix[lattice_coords[0], lattice_coords[1]]
+    return downsampled
+
+def upsample(a: OffsetMatrix, M: np.ndarray):
+    x1 = M @ np.array([a.offset[0], a.offset[1]])
+    x2 = M @ np.array([a.offset[0] + a.matrix.shape[0] - 1, a.offset[1]])
+    x3 = M @ np.array([a.offset[0], a.offset[1] - a.matrix.shape[0]+1])
+    x4 = M @ np.array([a.offset[0] + a.matrix.shape[1]  - 1, a.offset[1] - a.matrix.shape[0] + 1])
+    xmin = int(min(x1[0], x2[0], x3[0], x4[0]))
+    xmax = int(max(x1[0], x2[0], x3[0], x4[0]))
+    ymin = int(min(x1[1], x2[1], x3[1], x4[1]))
+    ymax = int(max(x1[1], x2[1], x3[1], x4[1]))
+    upsampled = OffsetMatrix(np.zeros((ymax - ymin + 1, xmax - xmin + 1)), np.array([xmin, ymax]))
+    lattice_coords = np.mgrid[a.offset[0]:a.offset[0]+a.matrix.shape[1],
+                              a.offset[1]-a.matrix.shape[0]+1:a.offset[1]+1]\
+                       .reshape(2, -1)
+
+    ups_coords = M @ lattice_coords
+    lattice_coords = to_python_vect(lattice_coords.T, a.offset)
+    ups_coords = to_python_vect(ups_coords.T, upsampled.offset)
+    upsampled.matrix[ups_coords[0], ups_coords[1]] = a.matrix[lattice_coords[0], lattice_coords[1]]
+    return upsampled
 
 data = OffsetMatrix(iio.imread('http://upload.wikimedia.org/wikipedia/commons/d/de/Wikipedia_Logo_1.0.png'), np.array([0,0]))
 #data = OffsetMatrix(255 * np.array([[1, 1], [1, 1]]), np.array([0,0]))
@@ -243,8 +253,8 @@ gdual_conj = (OffsetMatrix(np.array([[-0.25], [0.5], [-0.25]]),np.array([0,0])),
 
 w = Wavelet(h, g, hdual, gdual, M, np.abs(np.linalg.det(M)))
 
-ai, d = wavedec(data, 1, w)
-clamp(ai, d)
+ai, d = wavedec(data, 2, w)
+#clamp(ai, d)
 
 a = waverec(ai, d, w, data.matrix.shape)
 print(a)
