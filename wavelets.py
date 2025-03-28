@@ -11,8 +11,10 @@ class OffsetMatrix:
     matrix: np.ndarray
     offset: tuple
 
-    def __init__(self, matrix, offset):
+    def __init__(self, matrix: np.ndarray, offset):
         self.matrix = matrix
+        if (matrix.ndim == 3):
+            self.matrix = matrix[:, :, 0]
         self.offset = offset
 
     def __add__(self, other):
@@ -70,7 +72,7 @@ def to_coord(row, col, offset):
 
 def convolve(a: OffsetMatrix, b: OffsetMatrix):
     new_offset = (a.offset[0] + b.offset[0], a.offset[1] + b.offset[1])
-    new_matrix = scipy.signal.convolve2d(a.matrix, b.matrix, mode = 'full', boundary = 'symm')
+    new_matrix = scipy.signal.convolve2d(a.matrix, b.matrix, mode = 'full', boundary = 'fill')
     return OffsetMatrix(new_matrix, new_offset)
 
 
@@ -115,8 +117,9 @@ def wavedec(a0: OffsetMatrix, rank: int, w: Wavelet):
 
 def waverec(a: OffsetMatrix, d: list[tuple[OffsetMatrix, ...]], w: Wavelet, original_shape: tuple[int, ...]) -> np.ndarray:
     ai = a
-    for di in reversed(d):
+    for i, di in enumerate(reversed(d)):
         ai = idwt(ai, di, w)
+        iio.imwrite(f'a{i}.png', np.clip(ai.matrix, 0, 255).astype(np.uint8))
     x1 = ai.offset[1]
     y1 = -ai.offset[0]
     x2 = x1 + original_shape[0]
@@ -204,7 +207,7 @@ def downsample(a: OffsetMatrix, M: np.ndarray):
     ymin = ceil(min(x1[1], x2[1], x3[1], x4[1]))
     ymax = floor(max(x1[1], x2[1], x4[1], x4[1]))
 
-    downsampled = OffsetMatrix(np.empty((ymax - ymin + 1, xmax - xmin + 1)), np.array([xmin, ymax]))
+    downsampled = OffsetMatrix(np.empty((ymax - ymin + 1, xmax - xmin + 1), dtype=np.float64), np.array([xmin, ymax]))
 
     lattice_coords = np.mgrid[a.offset[0]:(a.offset[0] + a.matrix.shape[1]), (a.offset[1] - a.matrix.shape[0]+1):(a.offset[1]+1)].reshape(2, -1)  
     print(lattice_coords)
@@ -225,7 +228,7 @@ def upsample(a: OffsetMatrix, M: np.ndarray):
     xmax = int(max(x1[0], x2[0], x3[0], x4[0]))
     ymin = int(min(x1[1], x2[1], x3[1], x4[1]))
     ymax = int(max(x1[1], x2[1], x3[1], x4[1]))
-    upsampled = OffsetMatrix(np.zeros((ymax - ymin + 1, xmax - xmin + 1)), np.array([xmin, ymax]))
+    upsampled = OffsetMatrix(np.zeros((ymax - ymin + 1, xmax - xmin + 1), dtype=np.float64), np.array([xmin, ymax]))
     lattice_coords = np.mgrid[a.offset[0]:a.offset[0]+a.matrix.shape[1],
                               a.offset[1]-a.matrix.shape[0]+1:a.offset[1]+1]\
                        .reshape(2, -1)
@@ -236,7 +239,7 @@ def upsample(a: OffsetMatrix, M: np.ndarray):
     upsampled.matrix[ups_coords[0], ups_coords[1]] = a.matrix[lattice_coords[0], lattice_coords[1]]
     return upsampled
 
-data = OffsetMatrix(iio.imread('http://upload.wikimedia.org/wikipedia/commons/d/de/Wikipedia_Logo_1.0.png'), np.array([0,0]))
+data = OffsetMatrix(iio.imread('test/Sunrise.bmp'), np.array([0,0]))
 #data = OffsetMatrix(255 * np.array([[1, 1], [1, 1]]), np.array([0,0]))
 
 print(data)
@@ -253,7 +256,12 @@ gdual_conj = (OffsetMatrix(np.array([[-0.25], [0.5], [-0.25]]),np.array([0,0])),
 
 w = Wavelet(h, g, hdual, gdual, M, np.abs(np.linalg.det(M)))
 
-ai, d = wavedec(data, 2, w)
+ai, d = wavedec(data, 5, w)
+
+iio.imwrite('a.png', np.clip(ai.matrix, 0, 255).astype(np.uint8))
+for i, di in enumerate(d):
+    for j, dij in enumerate(di):
+        iio.imwrite(f'd{i}-{j}.png', np.clip(dij.matrix * (w.m ** (5 -i )), 0, 255).astype(np.uint8))
 #clamp(ai, d)
 
 a = waverec(ai, d, w, data.matrix.shape)
