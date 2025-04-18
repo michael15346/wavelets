@@ -250,7 +250,7 @@ def wavedec_multilevel_at_once(a: OffsetMatrix, w: Wavelet, level: int):
     for _ in range(1, level):
         masks.append(
                 list(
-                    map(upsample,
+                    map(downsample,
                         map(convolve, [cur_mask] * nmasks, w.gdual),
                         [cur_M] * nmasks)
                     )
