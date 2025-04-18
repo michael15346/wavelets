@@ -261,7 +261,7 @@ def wavedec_multilevel_at_once(a: OffsetMatrix, w: Wavelet, level: int):
 
     details = []
     for m in masks:
-        details.append(list(map(convolve, a, m)))
+        details.append(list(map(convolve, [a] * len(m), m)))
 
     return details
 
@@ -273,9 +273,8 @@ def wavedec_multilevel_at_once(a: OffsetMatrix, w: Wavelet, level: int):
 
 
 
-
-data = OffsetMatrix(iio.imread('test/lenna.bmp'), np.array([0,0]))
-#data = OffsetMatrix(255 * np.array([[1, 1], [1, 1]]), np.array([0,0]))
+#data = OffsetMatrix(iio.imread('test/lenna.bmp'), np.array([0,0]))
+data = OffsetMatrix(255 * np.array([[1, 1], [1, 1]]), np.array([0,0]))
 
 print(data)
 M = np.array([[1, -1], [1,1]])
@@ -292,6 +291,16 @@ gdual_conj = (OffsetMatrix(np.array([[-0.25], [0.5], [-0.25]]),np.array([0,0])),
 w = Wavelet(h, g, hdual, gdual, M, np.abs(np.linalg.det(M)))
 
 ai, d = wavedec(data, 5, w)
+details = wavedec_multilevel_at_once(data, w, 5)
+print(ai)
+for dd in d:
+    for ddd in dd:
+        print(ddd.matrix)
+
+print()
+for dd in details:
+    for c in dd:
+        print(c.matrix)
 
 iio.imwrite('a.png', np.clip(ai.matrix, 0, 255).astype(np.uint8))
 for i, di in enumerate(d):
