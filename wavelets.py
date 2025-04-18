@@ -5,6 +5,7 @@ import imageio.v3 as iio
 from dataclasses import dataclass
 from math import ceil, floor
 import kmeans1d
+import line_profiler
 
 
 class OffsetMatrix:
@@ -17,6 +18,7 @@ class OffsetMatrix:
             self.matrix = matrix[:, :, 0]
         self.offset = offset
 
+    @line_profiler.profile
     def __add__(self, other):
         print("offsets:", self.offset, other.offset)
         print("self shape:", self.matrix.shape)
@@ -105,10 +107,7 @@ def idwt(a: OffsetMatrix, d: tuple[OffsetMatrix, ...], w: Wavelet):
 def wavedec(a0: OffsetMatrix, rank: int, w: Wavelet):
     a = a0
     d = list()
-    x0 = a0.offset[0]
-    y0 = a0.offset[0]
     (m, n) = a0.matrix.shape
-    corners = ((x0, y0), (x0, y0 + n), (x0 + m, y0), (x0 + m, y0 + n))
     for i in range(rank):
         a, di = dwt(a, w)
         d.append(di)
@@ -194,6 +193,7 @@ def to_python_vect(coords, offset):
     # all_x, all_y
     return offset[1]-coords.T[1], coords.T[0]-offset[0]
 
+
 def downsample(a: OffsetMatrix, M: np.ndarray):
     Minv_pre = np.array([[M[1,1],-M[0,1]],[-M[1,0],M[0,0]]])
     m = int(np.abs(np.linalg.det(M)))
@@ -207,7 +207,7 @@ def downsample(a: OffsetMatrix, M: np.ndarray):
     ymin = ceil(min(x1[1], x2[1], x3[1], x4[1]))
     ymax = floor(max(x1[1], x2[1], x4[1], x4[1]))
 
-    downsampled = OffsetMatrix(np.empty((ymax - ymin + 1, xmax - xmin + 1), dtype=np.float64), np.array([xmin, ymax]))
+    downsampled = OffsetMatrix(np.zeros((ymax - ymin + 1, xmax - xmin + 1), dtype=np.float64), np.array([xmin, ymax]))
 
     lattice_coords = np.mgrid[a.offset[0]:(a.offset[0] + a.matrix.shape[1]), (a.offset[1] - a.matrix.shape[0]+1):(a.offset[1]+1)].reshape(2, -1)  
     print(lattice_coords)
@@ -218,6 +218,7 @@ def downsample(a: OffsetMatrix, M: np.ndarray):
 
     downsampled.matrix[downs_coords[0], downs_coords[1]] = a.matrix[lattice_coords[0], lattice_coords[1]]
     return downsampled
+
 
 def upsample(a: OffsetMatrix, M: np.ndarray):
     x1 = M @ np.array([a.offset[0], a.offset[1]])
@@ -239,7 +240,41 @@ def upsample(a: OffsetMatrix, M: np.ndarray):
     upsampled.matrix[ups_coords[0], ups_coords[1]] = a.matrix[lattice_coords[0], lattice_coords[1]]
     return upsampled
 
-data = OffsetMatrix(iio.imread('test/Sunrise.bmp'), np.array([0,0]))
+
+def wavedec_multilevel_at_once(a: OffsetMatrix, w: Wavelet, level: int):
+    masks = []
+    masks.append(w.gdual)
+    cur_mask = w.hdual
+    nmasks = len(w.gdual)
+    cur_M = w.M
+    for _ in range(1, level):
+        masks.append(
+                list(
+                    map(upsample,
+                        map(convolve, [cur_mask] * nmasks, w.gdual),
+                        [cur_M] * nmasks)
+                    )
+                )
+        cur_mask = convolve(cur_mask, w.hdual)
+        cur_M @= w.M
+    masks.append([cur_mask])
+
+    details = []
+    for m in masks:
+        details.append(list(map(convolve, a, m)))
+
+    return details
+
+
+
+
+
+
+
+
+
+
+data = OffsetMatrix(iio.imread('test/lenna.bmp'), np.array([0,0]))
 #data = OffsetMatrix(255 * np.array([[1, 1], [1, 1]]), np.array([0,0]))
 
 print(data)
