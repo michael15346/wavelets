@@ -197,7 +197,7 @@ def to_python_vect(coords, offset):
 
 def downsample(a: OffsetMatrix, M: np.ndarray):
     #print(M)
-    Minv_pre = np.array([[M[1,1],-M[0,1]],[-M[1,0],M[0,0]]])
+    #Minv_pre = np.array([[M[1,1],-M[0,1]],[-M[1,0],M[0,0]]])
     m = int(np.abs(np.linalg.det(M)))
     Minv = np.linalg.inv(M)
     x1 = Minv @ np.array([a.offset[0], a.offset[1]])
@@ -213,8 +213,9 @@ def downsample(a: OffsetMatrix, M: np.ndarray):
 
     lattice_coords = np.mgrid[a.offset[0]:(a.offset[0] + a.matrix.shape[1]), (a.offset[1] - a.matrix.shape[0]+1):(a.offset[1]+1)].reshape(2, -1)  
     print(lattice_coords)
-    downs_coords = Minv_pre @ lattice_coords
+    downs_coords = (Minv @ lattice_coords)
     mask = np.all(np.mod(downs_coords, m) == 0, axis=0)
+    downs_coords = downs_coords.astype(np.int64)
     lattice_coords = to_python_vect(lattice_coords.T[mask], a.offset)
     downs_coords = to_python_vect(downs_coords.T[mask]//m, downsampled.offset)
 
@@ -264,17 +265,17 @@ def wavedec_multilevel_at_once(a: OffsetMatrix, w: Wavelet, level: int):
     for j in range(level-1, 0, -1):
         cur_mask = convolve(upsample(w.hdual, other_M), cur_mask)
         other_M @= w.M
-    masks.append([OffsetMatrixConjugate(cur_mask), OffsetMatrixConjugate(cur_mask)])
+    masks[-1].append(OffsetMatrixConjugate(cur_mask))
 
 
     details = []
     cur_M = w.M.copy()
     for m in masks:
-        #print(cur_M)
-        details.append(list(map(
-            transition, [a] * len(m), m, [cur_M] * len(m))))
+        print(cur_M)
         print("cur m  * len m: ", [cur_M] * len(m))
         print("cur m: ", cur_M)
+        details.append(list(map(
+            transition, [a] * len(m), m, [cur_M] * len(m))))
         cur_M @= w.M
 
     return details
@@ -309,7 +310,7 @@ details = wavedec_multilevel_at_once(data, w, 2)
 print(details)
 for i, d in enumerate(details):
     for j, dd in enumerate(d):
-        iio.imwrite(f'd{i}-{j}.png', np.clip(dd.matrix* (w.m ** (i +2)), 0, 255).astype(np.uint8))
+        iio.imwrite(f'd{i}-{j}.png', np.clip(dd.matrix, 0, 255).astype(np.uint8))
 #print(ai)
 #for dd in d:
 #    for ddd in dd:
