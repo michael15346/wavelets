@@ -58,8 +58,8 @@ class Wavelet:
     def __init__(self, h, g, hdual, gdual, M, m):
         self.h = h
         self.g = g
-        self.hdual = OffsetMatrixConjugate(hdual)
-        self.gdual = tuple(map(OffsetMatrixConjugate, gdual))
+        self.hdual = hdual
+        self.gdual = gdual
         self.M = M
         self.m = m
 
@@ -155,7 +155,7 @@ def psnr(a: np.ndarray, b: np.ndarray) -> float:
     a_flat = a.flatten()
     return 20 * np.log10(np.max(a_flat) / rmse(a, b))
 
-
+# UPDATE!!!
 def OffsetMatrix2CoefCoords(a: OffsetMatrix):
     shape = a.matrix.shape
     offset = a.offset
@@ -166,8 +166,9 @@ def OffsetMatrix2CoefCoords(a: OffsetMatrix):
             if a.matrix[i, j] != 0:
                 coef.append(a.matrix[i, j])
                 coords.append([offset[0]+j, offset[1]-i])
+    if len(coef) == 0:
+        coef, coords = [0], [[0,0]]
     return (np.array(coef), np.array(coords))
-
 
 def CoefCoords2OffsetMatrix(a):  # a filter in coef-coords form
     coef = a[0]
@@ -195,6 +196,7 @@ def to_python_vect(coords, offset):
 
 
 def downsample(a: OffsetMatrix, M: np.ndarray):
+    #print(M)
     Minv_pre = np.array([[M[1,1],-M[0,1]],[-M[1,0],M[0,0]]])
     m = int(np.abs(np.linalg.det(M)))
     Minv = np.linalg.inv(M)
@@ -242,26 +244,38 @@ def upsample(a: OffsetMatrix, M: np.ndarray):
 
 
 def wavedec_multilevel_at_once(a: OffsetMatrix, w: Wavelet, level: int):
-    masks = []
-    masks.append(w.gdual)
-    cur_mask = w.hdual
+    masks = [list(map(OffsetMatrixConjugate, w.gdual))]
     nmasks = len(w.gdual)
-    cur_M = w.M
-    for _ in range(1, level):
-        masks.append(
-                list(
-                    map(downsample,
-                        map(convolve, [cur_mask] * nmasks, w.gdual),
-                        [cur_M] * nmasks)
-                    )
-                )
-        cur_mask = convolve(cur_mask, w.hdual)
-        cur_M @= w.M
-    masks.append([cur_mask])
+
+    for i in range(1, level):
+        gmasks = []
+        for g in w.gdual:
+            cur_mask = w.hdual
+            cur_M = w.M.copy()
+            for j in range(i-1, 0, -1):
+                cur_mask = convolve(upsample(w.hdual, cur_M), cur_mask)
+                cur_M @= w.M
+            cur_mask = convolve(upsample(g, cur_M), cur_mask)
+            gmasks.append(cur_mask)
+        masks.append(gmasks)
+    
+    cur_mask = w.hdual
+    other_M = w.M.copy()
+    for j in range(level-1, 0, -1):
+        cur_mask = convolve(upsample(w.hdual, other_M), cur_mask)
+        other_M @= w.M
+    masks.append([OffsetMatrixConjugate(cur_mask), OffsetMatrixConjugate(cur_mask)])
+
 
     details = []
+    cur_M = w.M.copy()
     for m in masks:
-        details.append(list(map(convolve, [a] * len(m), m)))
+        #print(cur_M)
+        details.append(list(map(
+            transition, [a] * len(m), m, [cur_M] * len(m))))
+        print("cur m  * len m: ", [cur_M] * len(m))
+        print("cur m: ", cur_M)
+        cur_M @= w.M
 
     return details
 
@@ -273,8 +287,8 @@ def wavedec_multilevel_at_once(a: OffsetMatrix, w: Wavelet, level: int):
 
 
 
-#data = OffsetMatrix(iio.imread('test/lenna.bmp'), np.array([0,0]))
-data = OffsetMatrix(255 * np.array([[1, 1], [1, 1]]), np.array([0,0]))
+data = OffsetMatrix(iio.imread('test/lenna.bmp'), np.array([0,0]))
+#data = OffsetMatrix(255 * np.array([[1, 1], [1, 1]]), np.array([0,0]))
 
 print(data)
 M = np.array([[1, -1], [1,1]])
@@ -290,28 +304,29 @@ gdual_conj = (OffsetMatrix(np.array([[-0.25], [0.5], [-0.25]]),np.array([0,0])),
 
 w = Wavelet(h, g, hdual, gdual, M, np.abs(np.linalg.det(M)))
 
-ai, d = wavedec(data, 5, w)
-details = wavedec_multilevel_at_once(data, w, 5)
-print(ai)
-for dd in d:
-    for ddd in dd:
-        print(ddd.matrix)
-
-print()
-for dd in details:
-    for c in dd:
-        print(c.matrix)
-
-iio.imwrite('a.png', np.clip(ai.matrix, 0, 255).astype(np.uint8))
-for i, di in enumerate(d):
-    for j, dij in enumerate(di):
-        iio.imwrite(f'd{i}-{j}.png', np.clip(dij.matrix * (w.m ** (5 -i )), 0, 255).astype(np.uint8))
-#clamp(ai, d)
-
-a = waverec(ai, d, w, data.matrix.shape)
-print(a)
-print(np.clip(a, 0, 255).astype(np.uint8))
-print("RMSE:", rmse(data.matrix, np.clip(a, 0, 255)))
-print("PSNR:", psnr(data.matrix, np.clip(a, 0, 255)))
-print("SSIM:", ssim(data.matrix, np.clip(a, 0, 255), data_range=255))
-iio.imwrite('restored.png', np.clip(a, 0, 255).astype(np.uint8))
+#ai, d = wavedec(data, 5, w)
+details = wavedec_multilevel_at_once(data, w, 2)
+print(details)
+for i, d in enumerate(details):
+    for j, dd in enumerate(d):
+        iio.imwrite(f'd{i}-{j}.png', np.clip(dd.matrix* (w.m ** (i +2)), 0, 255).astype(np.uint8))
+#print(ai)
+#for dd in d:
+#    for ddd in dd:
+#        print(ddd.matrix)
+#
+#print()
+#
+#iio.imwrite('a.png', np.clip(ai.matrix, 0, 255).astype(np.uint8))
+#for i, di in enumerate(d):
+#    for j, dij in enumerate(di):
+#        iio.imwrite(f'd{i}-{j}.png', np.clip(dij.matrix * (w.m ** (5 -i )), 0, 255).astype(np.uint8))
+##clamp(ai, d)
+#
+#a = waverec(ai, d, w, data.matrix.shape)
+#print(a)
+#print(np.clip(a, 0, 255).astype(np.uint8))
+#print("RMSE:", rmse(data.matrix, np.clip(a, 0, 255)))
+#print("PSNR:", psnr(data.matrix, np.clip(a, 0, 255)))
+#print("SSIM:", ssim(data.matrix, np.clip(a, 0, 255), data_range=255))
+#iio.imwrite('restored.png', np.clip(a, 0, 255).astype(np.uint8))
