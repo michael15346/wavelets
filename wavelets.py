@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.signal
+from copy import deepcopy
 from skimage.metrics import structural_similarity as ssim
 import imageio.v3 as iio
 from dataclasses import dataclass
@@ -20,11 +21,6 @@ class OffsetMatrix:
 
     @line_profiler.profile
     def __add__(self, other):
-        print("offsets:", self.offset, other.offset)
-        print("self shape:", self.matrix.shape)
-        #print(self.matrix)
-        print("other shape:", other.matrix.shape)
-        #print(other.matrix)
 
         self_left = max(self.offset[0] - other.offset[0], 0)
         other_left = max(other.offset[0] - self.offset[0], 0)
@@ -39,12 +35,13 @@ class OffsetMatrix:
                           (other.offset[1] - other.matrix.shape[0]), 0)
         other_bottom = max((other.offset[1] - other.matrix.shape[0]) -
                            (self.offset[1] - self.matrix.shape[0]), 0)
-        print("self offsets: l t r b", self_left, self_top, self_right, self_bottom)
-        print("other offsets: l t r b", other_left, other_top, other_right, other_bottom)
         self_padded = np.pad(self.matrix, ((self_top, self_bottom), (self_left, self_right)))
         other_padded = np.pad(other.matrix, ((other_top, other_bottom),(other_left, other_right)))
         return OffsetMatrix(self_padded + other_padded, (self.offset[0] - self_left, self.offset[1] + self_top))
 
+    def __mul__(self, other):
+        matrix = self.matrix * other
+        return OffsetMatrix(matrix, self.offset)
 
 @dataclass
 class Wavelet:
@@ -79,7 +76,7 @@ def convolve(a: OffsetMatrix, b: OffsetMatrix):
 
 
 def transition(a: OffsetMatrix, mask: OffsetMatrix, M: np.ndarray):
-
+    mask = OffsetMatrixConjugate(mask)
     return downsample(convolve(a, mask), M)
 
 
@@ -136,7 +133,6 @@ def clamp(a: OffsetMatrix, d: OffsetMatrix):
             total += dj.matrix.size
             clamped += np.sum(np.abs(dj.matrix) <= 10)
             dj.matrix = np.where(np.abs(dj.matrix) > 10, dj.matrix, 0)
-    print("clamp stats: total ", total, " clamped ", clamped, " clamped/total ", clamped / total)
 
 
 def rmse(a: np.ndarray, b: np.ndarray) -> float:
@@ -196,8 +192,7 @@ def to_python_vect(coords, offset):
 
 
 def downsample(a: OffsetMatrix, M: np.ndarray):
-    #print(M)
-    #Minv_pre = np.array([[M[1,1],-M[0,1]],[-M[1,0],M[0,0]]])
+    Minv_pre = np.array([[M[1,1],-M[0,1]],[-M[1,0],M[0,0]]])
     m = int(np.abs(np.linalg.det(M)))
     Minv = np.linalg.inv(M)
     x1 = Minv @ np.array([a.offset[0], a.offset[1]])
@@ -212,10 +207,8 @@ def downsample(a: OffsetMatrix, M: np.ndarray):
     downsampled = OffsetMatrix(np.zeros((ymax - ymin + 1, xmax - xmin + 1), dtype=np.float64), np.array([xmin, ymax]))
 
     lattice_coords = np.mgrid[a.offset[0]:(a.offset[0] + a.matrix.shape[1]), (a.offset[1] - a.matrix.shape[0]+1):(a.offset[1]+1)].reshape(2, -1)  
-    print(lattice_coords)
-    downs_coords = (Minv @ lattice_coords)
+    downs_coords = (Minv_pre @ lattice_coords)
     mask = np.all(np.mod(downs_coords, m) == 0, axis=0)
-    downs_coords = downs_coords.astype(np.int64)
     lattice_coords = to_python_vect(lattice_coords.T[mask], a.offset)
     downs_coords = to_python_vect(downs_coords.T[mask]//m, downsampled.offset)
 
@@ -254,31 +247,55 @@ def wavedec_multilevel_at_once(a: OffsetMatrix, w: Wavelet, level: int):
             cur_mask = w.hdual
             cur_M = w.M.copy()
             for j in range(i-1, 0, -1):
-                cur_mask = convolve(upsample(w.hdual, cur_M), cur_mask)
+                cur_mask = subdivision(w.hdual, cur_mask, cur_M)
                 cur_M @= w.M
-            cur_mask = convolve(upsample(g, cur_M), cur_mask)
+            cur_mask = subdivision(g, cur_mask, cur_M)
             gmasks.append(cur_mask)
         masks.append(gmasks)
-    
     cur_mask = w.hdual
     other_M = w.M.copy()
     for j in range(level-1, 0, -1):
-        cur_mask = convolve(upsample(w.hdual, other_M), cur_mask)
+        cur_mask = subdivision(w.hdual, cur_mask, other_M)
         other_M @= w.M
-    masks[-1].append(OffsetMatrixConjugate(cur_mask))
+    mask_an = OffsetMatrixConjugate(cur_mask)
+    #masks[-1].append(OffsetMatrixConjugate(cur_mask))
 
 
     details = []
-    cur_M = w.M.copy()
+    cur_M = np.eye(w.M.shape[0], dtype=int)
     for m in masks:
-        print(cur_M)
-        print("cur m  * len m: ", [cur_M] * len(m))
-        print("cur m: ", cur_M)
+        cur_M @= w.M
         details.append(list(map(
             transition, [a] * len(m), m, [cur_M] * len(m))))
-        cur_M @= w.M
+    an = transition(a, mask_an, cur_M)
 
-    return details
+    return an, details
+
+def waverec_multilevel_at_once(a: OffsetMatrix, d: list[tuple[OffsetMatrix, ...]], w: Wavelet, original_shape: tuple[int, ...]):
+    res = OffsetMatrix(np.empty((0, 0)), [0, 0])
+    m = w.m
+    #mask = list(map(OffsetMatrix.__mul__, deepcopy(w.g), [m] * len(w.g)))
+    mask = list(w.g)
+
+    cur_M = np.eye(w.M.shape[0], dtype=int)
+    for i, di in enumerate(d):
+        for j, dij in enumerate(di):
+
+            cur_M @= w.M
+            sss = subdivision(dij, mask[j], w.M)
+            res += sss
+            mask[j] = subdivision(w.h, mask[j], w.M)
+            m *= w.m
+    mask_h = w.h
+    cur_M = w.M.copy()
+    m = w.m
+    for i in range(len(d) - 1):
+        mask_h = subdivision(mask_h, w.h, w.M) * m
+    sss = subdivision(a, mask_h, cur_M)
+    print(sss.matrix)
+    res += sss
+    print(res.matrix)
+    return res
 
 
 
@@ -288,10 +305,9 @@ def wavedec_multilevel_at_once(a: OffsetMatrix, w: Wavelet, level: int):
 
 
 
-data = OffsetMatrix(iio.imread('test/lenna.bmp'), np.array([0,0]))
-#data = OffsetMatrix(255 * np.array([[1, 1], [1, 1]]), np.array([0,0]))
+#data = OffsetMatrix(iio.imread('test/lenna.bmp'), np.array([0,0]))
+data = OffsetMatrix(np.array([[1, 1], [1, 1]]), np.array([0,0]))
 
-print(data)
 M = np.array([[1, -1], [1,1]])
 
 h = OffsetMatrix(np.array([[0.25], [0.5], [0.25]]), np.array([0,1]))
@@ -305,9 +321,12 @@ gdual_conj = (OffsetMatrix(np.array([[-0.25], [0.5], [-0.25]]),np.array([0,0])),
 
 w = Wavelet(h, g, hdual, gdual, M, np.abs(np.linalg.det(M)))
 
-#ai, d = wavedec(data, 5, w)
-details = wavedec_multilevel_at_once(data, w, 2)
-print(details)
+ai, details = wavedec_multilevel_at_once(data, w, 2)
+ai2, details2 = wavedec(data, w, 2)
+res = waverec(ai, details, w, (10, 10))
+print(res)
+res = waverec_multilevel_at_once(ai, details, w, 0)
+iio.imwrite('ress.png', np.clip(res.matrix, 0, 255).astype(np.uint8))
 for i, d in enumerate(details):
     for j, dd in enumerate(d):
         iio.imwrite(f'd{i}-{j}.png', np.clip(dd.matrix, 0, 255).astype(np.uint8))
