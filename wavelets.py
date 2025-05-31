@@ -238,7 +238,8 @@ def upsample(a: OffsetMatrix, M: np.ndarray):
 
 
 def wavedec_multilevel_at_once(a: OffsetMatrix, w: Wavelet, level: int):
-    masks = [list(map(OffsetMatrixConjugate, w.gdual))]
+    #masks = [list(map(OffsetMatrixConjugate, w.gdual))]
+    masks = [list(w.gdual)]
     nmasks = len(w.gdual)
 
     for i in range(1, level):
@@ -248,7 +249,7 @@ def wavedec_multilevel_at_once(a: OffsetMatrix, w: Wavelet, level: int):
             cur_M = w.M.copy()
             for j in range(i-1, 0, -1):
                 cur_mask = subdivision(w.hdual, cur_mask, cur_M)
-                cur_M @= w.M
+                cur_M @=w.M
             cur_mask = subdivision(g, cur_mask, cur_M)
             gmasks.append(cur_mask)
         masks.append(gmasks)
@@ -260,41 +261,40 @@ def wavedec_multilevel_at_once(a: OffsetMatrix, w: Wavelet, level: int):
     mask_an = OffsetMatrixConjugate(cur_mask)
     #masks[-1].append(OffsetMatrixConjugate(cur_mask))
 
-
     details = []
     cur_M = np.eye(w.M.shape[0], dtype=int)
     for m in masks:
         cur_M @= w.M
         details.append(list(map(
             transition, [a] * len(m), m, [cur_M] * len(m))))
+    print(cur_M)
     an = transition(a, mask_an, cur_M)
+    print(an.matrix)
 
     return an, details
 
 def waverec_multilevel_at_once(a: OffsetMatrix, d: list[tuple[OffsetMatrix, ...]], w: Wavelet, original_shape: tuple[int, ...]):
-    res = OffsetMatrix(np.empty((0, 0)), [0, 0])
+    res = OffsetMatrix(np.zeros((1, 1)), np.array([0, 0]))
     m = w.m
-    #mask = list(map(OffsetMatrix.__mul__, deepcopy(w.g), [m] * len(w.g)))
-    mask = list(w.g)
-
-    cur_M = np.eye(w.M.shape[0], dtype=int)
+    wmasks = [OffsetMatrix(wmask.matrix * m, wmask.offset) for wmask in w.g]
+    cur_M = w.M.copy()
     for i, di in enumerate(d):
         for j, dij in enumerate(di):
-
+            res += subdivision(dij, wmasks[j], cur_M)
+            wmasks[j] = subdivision(wmasks[j], w.h, w.M)
+            wmasks[j].matrix = wmasks[j].matrix * m
             cur_M @= w.M
-            sss = subdivision(dij, mask[j], w.M)
-            res += sss
-            mask[j] = subdivision(w.h, mask[j], w.M)
-            m *= w.m
-    mask_h = w.h
+
+    mask_h = OffsetMatrix(w.h.matrix * m, w.h.offset)
     cur_M = w.M.copy()
-    m = w.m
-    for i in range(len(d) - 1):
-        mask_h = subdivision(mask_h, w.h, w.M) * m
-    sss = subdivision(a, mask_h, cur_M)
-    print(sss.matrix)
-    res += sss
-    print(res.matrix)
+    for i in range(len(d)-1):
+        mask_h = subdivision(mask_h, w.h, w.M)
+        mask_h.matrix = mask_h.matrix * m
+        cur_M @= w.M
+    res += subdivision(a, mask_h, cur_M)
+
+
+    #res = res.matrix[*tuple(map(slice, tuple(-res.offset), tuple(-res.offset+original_shape)))]
     return res
 
 
@@ -304,9 +304,8 @@ def waverec_multilevel_at_once(a: OffsetMatrix, d: list[tuple[OffsetMatrix, ...]
 
 
 
-
-#data = OffsetMatrix(iio.imread('test/lenna.bmp'), np.array([0,0]))
-data = OffsetMatrix(np.array([[1, 1], [1, 1]]), np.array([0,0]))
+data = OffsetMatrix(iio.imread('test/lenna.bmp'), np.array([0,0]))
+#data = OffsetMatrix(np.array(256 * [[1, 1], [1, 1]]), np.array([0,0]))
 
 M = np.array([[1, -1], [1,1]])
 
@@ -318,15 +317,15 @@ gdual = (OffsetMatrix(np.array([[-0.25], [0.5], [-0.25]]),np.array([0,2])),)
 hdual_conj = OffsetMatrix(np.array([[-0.125], [0.25], [0.75], [0.25], [-0.125]]),np.array([0,2]))
 gdual_conj = (OffsetMatrix(np.array([[-0.25], [0.5], [-0.25]]),np.array([0,0])),)
 
-
 w = Wavelet(h, g, hdual, gdual, M, np.abs(np.linalg.det(M)))
 
-ai, details = wavedec_multilevel_at_once(data, w, 2)
-ai2, details2 = wavedec(data, w, 2)
-res = waverec(ai, details, w, (10, 10))
-print(res)
+ai_, details_ = wavedec(data, 4, w)
+ai, details = wavedec_multilevel_at_once(data, w, 4)
+print(ai.matrix)
+#print(ai_.matrix)
 res = waverec_multilevel_at_once(ai, details, w, 0)
-iio.imwrite('ress.png', np.clip(res.matrix, 0, 255).astype(np.uint8))
+iio.imwrite('ress.png', np.clip(ai.matrix, 0, 255).astype(np.uint8))
+iio.imwrite('ress_.png', np.clip(ai_.matrix, 0, 255).astype(np.uint8))
 for i, d in enumerate(details):
     for j, dd in enumerate(d):
         iio.imwrite(f'd{i}-{j}.png', np.clip(dd.matrix, 0, 255).astype(np.uint8))
