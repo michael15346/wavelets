@@ -57,7 +57,7 @@ class Wavelet:
 
 
 def to_python(x, y, offset):
-    return offset[1]-y, x-offset[0]
+    return x - offset[0], y - offset[1]#offset[1]-y, x-offset[0]
 
 
 def to_coord(row, col, offset):
@@ -82,7 +82,7 @@ def subdivision(a: OffsetMatrix, mask: OffsetMatrix, M: np.ndarray):
 def dwt(a: OffsetMatrix, w: Wavelet):
     d = list()
     for gdual in w.gdual:
-        d.append(transition(a, gdual, w.M))
+        d.append(transition(a, gdual, w.M))#
     a = transition(a, w.hdual, w.M)
     return (a, d)
 
@@ -168,8 +168,8 @@ def CoefCoords2OffsetMatrix(a):  # a filter in coef-coords form
     coords = a[1]
     x_left, y_bottom = list(np.min(np.transpose(coords), axis=1))
     x_right, y_up = list(np.max(np.transpose(coords), axis=1))
-    shape = [y_up-y_bottom+1, x_right-x_left+1]
-    offset = np.array([x_left, y_up])
+    shape = [x_right-x_left+1, y_up-y_bottom+1]
+    offset = np.array([x_left, y_bottom])
     matrix = np.zeros(shape)
     for ind, coord in enumerate(coords):
         row, col = to_python(coord[0], coord[1], offset)
@@ -211,7 +211,6 @@ def downsample(a: OffsetMatrix, M: np.ndarray):
     lattice_coords = np.mgrid[a.offset[0]:(a.offset[0] + a.matrix.shape[0] - 1), (a.offset[1]):(a.offset[1] + a.matrix.shape[1] - 1)].reshape(2, -1)  
     downs_coords = (Minv_pre @ lattice_coords)
     mask = np.all(np.mod(downs_coords, m) == 0, axis=0)
-    #lattice_coords = lattice_coords.T[mask].T
     print(lattice_coords)
     lattice_coords = to_python_vect(lattice_coords.T[mask], a.offset)
     
