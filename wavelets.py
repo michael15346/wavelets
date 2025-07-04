@@ -22,22 +22,17 @@ class OffsetMatrix:
     @line_profiler.profile
     def __add__(self, other):
 
-        self_left = max(self.offset[0] - other.offset[0], 0)
-        other_left = max(other.offset[0] - self.offset[0], 0)
-
-        self_top = max(other.offset[1] - self.offset[1], 0)
-        other_top = max(self.offset[1] - other.offset[1], 0)
-        self_right = max((other.matrix.shape[1] + other.offset[0]) -
-                         (self.matrix.shape[1] + self.offset[0]), 0)
-        other_right = max((self.matrix.shape[1] + self.offset[0]) -
-                          (other.matrix.shape[1] + other.offset[0]), 0)
-        self_bottom = max((self.offset[1] - self.matrix.shape[0]) -
-                          (other.offset[1] - other.matrix.shape[0]), 0)
-        other_bottom = max((other.offset[1] - other.matrix.shape[0]) -
-                           (self.offset[1] - self.matrix.shape[0]), 0)
-        self_padded = np.pad(self.matrix, ((self_top, self_bottom), (self_left, self_right)))
-        other_padded = np.pad(other.matrix, ((other_top, other_bottom),(other_left, other_right)))
-        return OffsetMatrix(self_padded + other_padded, (self.offset[0] - self_left, self.offset[1] + self_top))
+        near_size = [min(self.offset[i], other.offset[i]) for i in range(len(self.offset))]
+        far_size = [max(self.offset[i] + self.matrix.shape[i] - 1, other.offset[i] + other.matrix.shape[i] - 1) for i in range(len(self.offset))]
+        self_offsets = tuple(
+                [(self.offset[i] - near_size[i], far_size[i] - (self.offset[i] + self.matrix.shape[i] - 1)) for i in range(len(self.offset))]
+                )
+        other_offsets = tuple(
+                [(other.offset[i] - near_size[i], far_size[i] - (other.offset[i] + other.matrix.shape[i] - 1)) for i in range(len(other.offset))]
+                )
+        self_padded = np.pad(self.matrix, self_offsets)
+        other_padded = np.pad(other.matrix, other_offsets)
+        return OffsetMatrix(self_padded + other_padded, near_size)
 
     def __mul__(self, other):
         matrix = self.matrix * other
@@ -190,19 +185,18 @@ def OffsetMatrixConjugate(a: OffsetMatrix):
 
 def to_python_vect(coords, offset):
     # all_x, all_y
-    return offset[1]-coords.T[1], coords.T[0]-offset[0]
+    #return offset[1]-coords.T[1], coords.T[0]-offset[0]
+    return coords.T[0] - offset[0], coords.T[1]-offset[1]
 
 
 def downsample(a: OffsetMatrix, M: np.ndarray):
     Minv_pre = np.array([[M[1,1],-M[0,1]],[-M[1,0],M[0,0]]])
     m = round(np.abs(np.linalg.det(M)))
-    print(M)
-    print(m)
     Minv = np.linalg.inv(M)
     x1 = Minv @ np.array([a.offset[0], a.offset[1]])
-    x2 = Minv @ np.array([a.offset[0] + a.matrix.shape[1]-1, a.offset[1]])
-    x3 = Minv @ np.array([a.offset[0], a.offset[1] - a.matrix.shape[0]+1])
-    x4 = Minv @ np.array([a.offset[0] + a.matrix.shape[1]-1, a.offset[1] - a.matrix.shape[0]+1])
+    x2 = Minv @ np.array([a.offset[0] + a.matrix.shape[0]-1, a.offset[1]])
+    x3 = Minv @ np.array([a.offset[0], a.offset[1] + a.matrix.shape[1]-1])
+    x4 = Minv @ np.array([a.offset[0] + a.matrix.shape[0]-1, a.offset[1] + a.matrix.shape[1]-1])
     xmin = ceil(min(x1[0], x2[0], x3[0], x4[0]))
     xmax = floor(max(x1[0], x2[0], x3[0], x4[0]))
     ymin = ceil(min(x1[1], x2[1], x3[1], x4[1]))
@@ -210,19 +204,18 @@ def downsample(a: OffsetMatrix, M: np.ndarray):
 
     downsampled = OffsetMatrix(np.zeros((ymax - ymin + 1, xmax - xmin + 1), dtype=np.float64), np.array([xmin, ymax]))
 
-    lattice_coords = np.mgrid[a.offset[0]:(a.offset[0] + a.matrix.shape[1]), (a.offset[1] - a.matrix.shape[0]+1):(a.offset[1]+1)].reshape(2, -1)  
+    print(a.offset[0])
+    print(a.matrix.shape[0])
+    print(a.offset[1])
+    print(a.matrix.shape[1])
+    lattice_coords = np.mgrid[a.offset[0]:(a.offset[0] + a.matrix.shape[0] - 1), (a.offset[1]):(a.offset[1] + a.matrix.shape[1] - 1)].reshape(2, -1)  
     downs_coords = (Minv_pre @ lattice_coords)
     mask = np.all(np.mod(downs_coords, m) == 0, axis=0)
+    #lattice_coords = lattice_coords.T[mask].T
+    print(lattice_coords)
     lattice_coords = to_python_vect(lattice_coords.T[mask], a.offset)
-    true_offset_x = np.min(lattice_coords[0])
-
-
-    downs_coords = list(to_python_vect(downs_coords.T[mask]//m, downsampled.offset))
-    print(downs_coords)
-
     
-
-
+    downs_coords = list(to_python_vect(downs_coords.T[mask]//m, downsampled.offset))
     downsampled.matrix[downs_coords[0], downs_coords[1]] = a.matrix[lattice_coords[0], lattice_coords[1]]
     return downsampled
 
@@ -230,15 +223,15 @@ def downsample(a: OffsetMatrix, M: np.ndarray):
 def upsample(a: OffsetMatrix, M: np.ndarray):
     x1 = M @ np.array([a.offset[0], a.offset[1]])
     x2 = M @ np.array([a.offset[0] + a.matrix.shape[0] - 1, a.offset[1]])
-    x3 = M @ np.array([a.offset[0], a.offset[1] - a.matrix.shape[0]+1])
-    x4 = M @ np.array([a.offset[0] + a.matrix.shape[1]  - 1, a.offset[1] - a.matrix.shape[0] + 1])
+    x3 = M @ np.array([a.offset[0], a.offset[1] + a.matrix.shape[1]-1])
+    x4 = M @ np.array([a.offset[0] + a.matrix.shape[0]  - 1, a.offset[1] + a.matrix.shape[1] - 1])
     xmin = int(min(x1[0], x2[0], x3[0], x4[0]))
     xmax = int(max(x1[0], x2[0], x3[0], x4[0]))
     ymin = int(min(x1[1], x2[1], x3[1], x4[1]))
     ymax = int(max(x1[1], x2[1], x3[1], x4[1]))
     upsampled = OffsetMatrix(np.zeros((ymax - ymin + 1, xmax - xmin + 1), dtype=np.float64), np.array([xmin, ymax]))
-    lattice_coords = np.mgrid[a.offset[0]:a.offset[0]+a.matrix.shape[1],
-                              a.offset[1]-a.matrix.shape[0]+1:a.offset[1]+1]\
+    lattice_coords = np.mgrid[a.offset[0]:a.offset[0]+a.matrix.shape[0]-1,
+                              a.offset[1]:a.offset[1]+a.matrix.shape[1]-1]\
                        .reshape(2, -1)
 
     ups_coords = M @ lattice_coords
@@ -337,14 +330,14 @@ gdual_conj = (OffsetMatrix(np.array([[-0.25], [0.5], [-0.25]]),np.array([0,0])),
 
 w = Wavelet(h, g, hdual, gdual, M, np.abs(np.linalg.det(M)))
 
-ci_ = wavedec(data, 5, w)
-ci = wavedec_multilevel_at_once(data, w, 5)
+ci_ = wavedec(data, 6, w)
+ci = wavedec_multilevel_at_once(data, w, 3)
 print(ci[0].matrix)
 #print(ai_.matrix)
 res = waverec_multilevel_at_once(ci, w, [512, 512])
 iio.imwrite('res.png', np.clip(res.matrix, 0, 255).astype(np.uint8))
 iio.imwrite('ress.png', np.clip(ci[0].matrix, 0, 255).astype(np.uint8))
-iio.imwrite('ress_.png', np.clip(ci_[0].matrix, 0, 255).astype(np.uint8))
+#iio.imwrite('ress_.png', np.clip(ci_[0].matrix, 0, 255).astype(np.uint8))
 #print(ai)
 #for dd in d:
 #    for ddd in dd:
