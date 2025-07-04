@@ -202,7 +202,7 @@ def downsample(a: OffsetMatrix, M: np.ndarray):
     ymin = ceil(min(x1[1], x2[1], x3[1], x4[1]))
     ymax = floor(max(x1[1], x2[1], x4[1], x4[1]))
 
-    downsampled = OffsetMatrix(np.zeros((ymax - ymin + 1, xmax - xmin + 1), dtype=np.float64), np.array([xmin, ymax]))
+    downsampled = OffsetMatrix(np.zeros((xmax - xmin + 1, ymax - ymin + 1), dtype=np.float64), np.array([xmin, ymin]))
 
     print(a.offset[0])
     print(a.matrix.shape[0])
