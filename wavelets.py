@@ -76,7 +76,11 @@ def transition(a: OffsetMatrix, mask: OffsetMatrix, M: np.ndarray):
 
 
 def subdivision(a: OffsetMatrix, mask: OffsetMatrix, M: np.ndarray):
-    return convolve(upsample(a, M), mask)
+    u = upsample(a,M)
+    #print("u:",u.matrix)
+    c = convolve(u, mask)
+    #print("c:", c.matrix)
+    return c#convolve(upsample(a, M), mask)
 
 
 def dwt(a: OffsetMatrix, w: Wavelet):
@@ -182,15 +186,6 @@ def OffsetMatrixConjugate(a: OffsetMatrix):
     np.flip(a_conj.matrix)
     a_conj.offset = (-(a.offset[0] + a.matrix.shape[0] - 1), -(a.offset[1] + a.matrix.shape[1] - 1))
 
-    #coef, coords = OffsetMatrix2CoefCoords(a)
-    #coords = - coords
-    #a_conj = CoefCoords2OffsetMatrix((coef, coords))
-    print("This is the conjugate matrix")
-    print(a_conj.matrix)
-    print(a_conj.offset)
-    print(a.matrix)
-    print(a.offset)
-    print()
 
     return a_conj
 
@@ -201,7 +196,7 @@ def to_python_vect(coords, offset):
 
 
 def downsample(a: OffsetMatrix, M: np.ndarray):
-    print(a.matrix)
+    #print(a.matrix)
     Minv_pre = np.array([[M[1,1],-M[0,1]],[-M[1,0],M[0,0]]])
     m = round(np.abs(np.linalg.det(M)))
     Minv = np.linalg.inv(M)
@@ -227,9 +222,10 @@ def downsample(a: OffsetMatrix, M: np.ndarray):
     lattice_coords = to_python_vect(lattice_coords.T[mask], a.offset)
     
     downs_coords = list(to_python_vect(downs_coords.T[mask]//m, downsampled.offset))
-    print(downs_coords)
-    print(lattice_coords)
-    print(a.matrix[lattice_coords[0], lattice_coords[1]])
+    #print(downs_coords)
+    #print(downs_coords)
+    #print(lattice_coords)
+    #print(a.matrix[lattice_coords[0], lattice_coords[1]])
     downsampled.matrix[downs_coords[0], downs_coords[1]] = a.matrix[lattice_coords[0], lattice_coords[1]]
     return downsampled
 
@@ -244,6 +240,10 @@ def upsample(a: OffsetMatrix, M: np.ndarray):
     ymin = int(min(x1[1], x2[1], x3[1], x4[1]))
     ymax = int(max(x1[1], x2[1], x3[1], x4[1]))
     upsampled = OffsetMatrix(np.zeros((xmax - xmin + 1, ymax - ymin + 1), dtype=np.float64), np.array([xmin, ymax]))
+    #print(a.offset[0])
+    #print(a.matrix.shape[0])
+    #print(a.offset[1])
+    #print(a.matrix.shape[1])
     lattice_coords = np.mgrid[a.offset[0]:a.offset[0]+a.matrix.shape[0]-1,
                               a.offset[1]:a.offset[1]+a.matrix.shape[1]-1]\
                        .reshape(2, -1)
@@ -251,6 +251,7 @@ def upsample(a: OffsetMatrix, M: np.ndarray):
     ups_coords = M @ lattice_coords
     lattice_coords = to_python_vect(lattice_coords.T, a.offset)
     ups_coords = to_python_vect(ups_coords.T, upsampled.offset)
+    #print("ups_coords:", ups_coords)
     upsampled.matrix[ups_coords[0], ups_coords[1]] = a.matrix[lattice_coords[0], lattice_coords[1]]
     return upsampled
 
@@ -304,7 +305,9 @@ def waverec_multilevel_at_once(c: list, w: Wavelet, original_shape: tuple[int, .
     for i, di in enumerate(d):
         for j, dij in enumerate(di):
             res += subdivision(dij, wmasks[j], cur_M)
+            #print(wmasks[j].matrix)
             wmasks[j] = subdivision(wmasks[j], w.h, w.M)
+            #print(wmasks[j].matrix)
             wmasks[j].matrix = wmasks[j].matrix * m
             cur_M @= w.M
 
@@ -327,8 +330,8 @@ def waverec_multilevel_at_once(c: list, w: Wavelet, original_shape: tuple[int, .
 
 
 
-data = OffsetMatrix(iio.imread('test/lenna.bmp'), np.array([0,0]))
-#data = OffsetMatrix(np.array([[1, 2], [3, 4]]), np.array([0,0]))
+#data = OffsetMatrix(iio.imread('test/lenna.bmp'), np.array([0,0]))
+data = OffsetMatrix(28 * np.array([[1, 2, 3, 4, 5], [2, 3, 4, 5, 6], [3, 4, 5, 6, 7], [4, 5, 6, 7, 8], [5, 6, 7, 8, 9]]), np.array([0,0]))
 
 M = np.array([[1, -1], [1,1]])
 
@@ -342,13 +345,16 @@ gdual_conj = (OffsetMatrix(np.array([[-0.25], [0.5], [-0.25]]),np.array([0,0])),
 
 w = Wavelet(h, g, hdual, gdual, M, np.abs(np.linalg.det(M)))
 
-#ci = wavedec(data, 6, w)
-ci = wavedec_multilevel_at_once(data, w, 3)
-print(ci[0].matrix)
+ci_ = wavedec(data, 1, w)
+ci = wavedec_multilevel_at_once(data, w, 1)
 #print(ai_.matrix)
-res = waverec_multilevel_at_once(ci, w, [512, 512])
+res = waverec_multilevel_at_once(ci, w, [5, 5])
+print(res.matrix)
+ress = waverec(ci_, w, [5, 5])
+print(ress)
 iio.imwrite('res.png', np.clip(res.matrix, 0, 255).astype(np.uint8))
 iio.imwrite('ress.png', np.clip(ci[0].matrix, 0, 255).astype(np.uint8))
+iio.imwrite('resss.png', np.clip(ress, 0, 255).astype(np.uint8))
 #iio.imwrite('ress_.png', np.clip(ci_[0].matrix, 0, 255).astype(np.uint8))
 #print(ai)
 #for dd in d:
