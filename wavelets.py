@@ -122,9 +122,9 @@ def waverec(c: list, w: Wavelet, original_shape: tuple[int, ...]) -> np.ndarray:
 
 
 def clamp(a: OffsetMatrix, d: tuple[OffsetMatrix, ...]):
-    clamped = np.sum(np.abs(ai.matrix) <= 10)
-    ai.matrix = np.where(np.abs(ai.matrix) > 10, ai.matrix, 0)
-    total = ai.matrix.size
+    clamped = np.sum(np.abs(a.matrix) <= 10)
+    a.matrix = np.where(np.abs(a.matrix) > 10, a.matrix, 0)
+    total = a.matrix.size
     for di in d:
         for dj in di:
             total += dj.matrix.size
@@ -158,7 +158,7 @@ def OffsetMatrix2CoefCoords(a: OffsetMatrix):
         for j in range(shape[1]):
             if a.matrix[i, j] != 0:
                 coef.append(a.matrix[i, j])
-                coords.append([offset[0]+j, offset[1]-i])
+                coords.append([offset[0]+i, offset[1]+j])
     if len(coef) == 0:
         coef, coords = [0], [[0,0]]
     return (np.array(coef), np.array(coords))
@@ -178,9 +178,20 @@ def CoefCoords2OffsetMatrix(a):  # a filter in coef-coords form
 
 
 def OffsetMatrixConjugate(a: OffsetMatrix):
-    coef, coords = OffsetMatrix2CoefCoords(a)
-    coords = - coords
-    a_conj = CoefCoords2OffsetMatrix((coef, coords))
+    a_conj = deepcopy(a)
+    np.flip(a_conj.matrix)
+    a_conj.offset = (-(a.offset[0] + a.matrix.shape[0] - 1), -(a.offset[1] + a.matrix.shape[1] - 1))
+
+    #coef, coords = OffsetMatrix2CoefCoords(a)
+    #coords = - coords
+    #a_conj = CoefCoords2OffsetMatrix((coef, coords))
+    print("This is the conjugate matrix")
+    print(a_conj.matrix)
+    print(a_conj.offset)
+    print(a.matrix)
+    print(a.offset)
+    print()
+
     return a_conj
 
 def to_python_vect(coords, offset):
@@ -190,31 +201,35 @@ def to_python_vect(coords, offset):
 
 
 def downsample(a: OffsetMatrix, M: np.ndarray):
+    print(a.matrix)
     Minv_pre = np.array([[M[1,1],-M[0,1]],[-M[1,0],M[0,0]]])
     m = round(np.abs(np.linalg.det(M)))
     Minv = np.linalg.inv(M)
+    
     x1 = Minv @ np.array([a.offset[0], a.offset[1]])
-    x2 = Minv @ np.array([a.offset[0] + a.matrix.shape[0]-1, a.offset[1]])
-    x3 = Minv @ np.array([a.offset[0], a.offset[1] + a.matrix.shape[1]-1])
-    x4 = Minv @ np.array([a.offset[0] + a.matrix.shape[0]-1, a.offset[1] + a.matrix.shape[1]-1])
+    x2 = Minv @ np.array([a.offset[0] + a.matrix.shape[0] - 1, a.offset[1]])
+    x3 = Minv @ np.array([a.offset[0], a.offset[1] + a.matrix.shape[1] - 1])
+    x4 = Minv @ np.array([a.offset[0] + a.matrix.shape[0] - 1, a.offset[1] + a.matrix.shape[1] - 1])
     xmin = ceil(min(x1[0], x2[0], x3[0], x4[0]))
     xmax = floor(max(x1[0], x2[0], x3[0], x4[0]))
     ymin = ceil(min(x1[1], x2[1], x3[1], x4[1]))
-    ymax = floor(max(x1[1], x2[1], x4[1], x4[1]))
+    ymax = floor(max(x1[1], x2[1], x3[1], x4[1]))
 
     downsampled = OffsetMatrix(np.zeros((xmax - xmin + 1, ymax - ymin + 1), dtype=np.float64), np.array([xmin, ymin]))
 
-    print(a.offset[0])
-    print(a.matrix.shape[0])
-    print(a.offset[1])
-    print(a.matrix.shape[1])
-    lattice_coords = np.mgrid[a.offset[0]:(a.offset[0] + a.matrix.shape[0] - 1), (a.offset[1]):(a.offset[1] + a.matrix.shape[1] - 1)].reshape(2, -1)  
+
+    #print(list([a.offset[0]:(a.offset[0] + a.matrix.shape[0])]))
+    
+    lattice_coords = np.mgrid[a.offset[0]:a.offset[0] + a.matrix.shape[0],
+                              a.offset[1]:a.offset[1] + a.matrix.shape[1]].reshape(2, -1)  
     downs_coords = (Minv_pre @ lattice_coords)
     mask = np.all(np.mod(downs_coords, m) == 0, axis=0)
-    print(lattice_coords)
     lattice_coords = to_python_vect(lattice_coords.T[mask], a.offset)
     
     downs_coords = list(to_python_vect(downs_coords.T[mask]//m, downsampled.offset))
+    print(downs_coords)
+    print(lattice_coords)
+    print(a.matrix[lattice_coords[0], lattice_coords[1]])
     downsampled.matrix[downs_coords[0], downs_coords[1]] = a.matrix[lattice_coords[0], lattice_coords[1]]
     return downsampled
 
@@ -228,7 +243,7 @@ def upsample(a: OffsetMatrix, M: np.ndarray):
     xmax = int(max(x1[0], x2[0], x3[0], x4[0]))
     ymin = int(min(x1[1], x2[1], x3[1], x4[1]))
     ymax = int(max(x1[1], x2[1], x3[1], x4[1]))
-    upsampled = OffsetMatrix(np.zeros((ymax - ymin + 1, xmax - xmin + 1), dtype=np.float64), np.array([xmin, ymax]))
+    upsampled = OffsetMatrix(np.zeros((xmax - xmin + 1, ymax - ymin + 1), dtype=np.float64), np.array([xmin, ymax]))
     lattice_coords = np.mgrid[a.offset[0]:a.offset[0]+a.matrix.shape[0]-1,
                               a.offset[1]:a.offset[1]+a.matrix.shape[1]-1]\
                        .reshape(2, -1)
@@ -248,11 +263,9 @@ def wavedec_multilevel_at_once(data: OffsetMatrix, w: Wavelet, level: int):
         for gdual in w.gdual:
             cur_mask = w.hdual
             cur_M = w.M.copy()
-            print(cur_M)
             for j in range(i-1, 0, -1):
                 cur_mask = subdivision(w.hdual, cur_mask, cur_M)
                 cur_M @= w.M
-                print(cur_M)
             wave_mask = subdivision(gdual, cur_mask, cur_M)
             gmasks.append(wave_mask)
         masks.append(gmasks)
@@ -315,7 +328,7 @@ def waverec_multilevel_at_once(c: list, w: Wavelet, original_shape: tuple[int, .
 
 
 data = OffsetMatrix(iio.imread('test/lenna.bmp'), np.array([0,0]))
-#data = OffsetMatrix(np.array(256 * [[1, 1], [1, 1]]), np.array([0,0]))
+#data = OffsetMatrix(np.array([[1, 2], [3, 4]]), np.array([0,0]))
 
 M = np.array([[1, -1], [1,1]])
 
@@ -329,7 +342,7 @@ gdual_conj = (OffsetMatrix(np.array([[-0.25], [0.5], [-0.25]]),np.array([0,0])),
 
 w = Wavelet(h, g, hdual, gdual, M, np.abs(np.linalg.det(M)))
 
-ci_ = wavedec(data, 6, w)
+#ci = wavedec(data, 6, w)
 ci = wavedec_multilevel_at_once(data, w, 3)
 print(ci[0].matrix)
 #print(ai_.matrix)
