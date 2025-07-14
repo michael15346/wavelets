@@ -11,7 +11,7 @@ import line_profiler
 
 class OffsetMatrix:
     matrix: np.ndarray
-    offset: tuple
+    offset: np.ndarray
 
     def __init__(self, matrix: np.ndarray, offset):
         self.matrix = matrix
@@ -125,7 +125,9 @@ def waverec(c: list, w: Wavelet, original_shape: tuple[int, ...]) -> np.ndarray:
     return ai
 
 
-def clamp(a: OffsetMatrix, d: tuple[OffsetMatrix, ...]):
+def clamp(a):
+    d = a[1:]
+    a = a[0]
     clamped = np.sum(np.abs(a.matrix) <= 10)
     a.matrix = np.where(np.abs(a.matrix) > 10, a.matrix, 0)
     total = a.matrix.size
@@ -347,9 +349,10 @@ gdual = (OffsetMatrix(np.array([[-0.25, 0.5, -0.25]]),np.array([0,0])),)
 w = Wavelet(h, g, hdual, gdual, M, np.abs(np.linalg.det(M)))
 
 #ci_ = wavedec(data, 3, w)
-ci = wavedec_multilevel_at_once(data, w, 6)
+ci = wavedec_multilevel_at_once(data, w, 5)
 #print(ai_.matrix)
-ress = waverec_multilevel_at_once(ci, w, [5, 5])
+#clamp(ci)
+ress = waverec_multilevel_at_once(ci, w, (512, 512))
 #print(res.matrix)
 #ress = waverec(ci_, w, [5, 5])
 print(ress.matrix)
@@ -368,7 +371,6 @@ iio.imwrite('ress.png', np.clip(ci[0].matrix, 0, 255).astype(np.uint8))
 #for i, di in enumerate(d):
 #    for j, dij in enumerate(di):
 #        iio.imwrite(f'd{i}-{j}.png', np.clip(dij.matrix * (w.m ** (5 -i )), 0, 255).astype(np.uint8))
-##clamp(ai, d)
 #
 #a = waverec(ai, d, w, data.matrix.shape)
 #print(a)
