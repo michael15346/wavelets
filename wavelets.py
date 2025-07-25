@@ -257,9 +257,6 @@ def downsample(a: OffsetMatrix, M: np.ndarray):
     return downsampled
 
 def downsample_vector(a: OffsetMatrix, M: np.ndarray):
-    print("actual shape/offset")
-    print(a.matrix.shape)
-    print(a.offset)
     Minv_pre = np.array([[M[1,1],-M[0,1]],[-M[1,0],M[0,0]]])
     m = round(np.abs(np.linalg.det(M)))
     Minv = np.linalg.inv(M)
@@ -272,6 +269,7 @@ def downsample_vector(a: OffsetMatrix, M: np.ndarray):
     xmax = floor(max(x1[0], x2[0], x3[0], x4[0]))
     ymin = ceil(min(x1[1], x2[1], x3[1], x4[1]))
     ymax = floor(max(x1[1], x2[1], x3[1], x4[1]))
+    print("limits dowsample_vector", xmin, xmax, ymin, ymax)
 
     downsampled = OffsetMatrix(np.zeros((xmax - xmin + 1, ymax - ymin + 1), dtype=np.float64), np.array([xmin, ymin]))
 
@@ -282,6 +280,7 @@ def downsample_vector(a: OffsetMatrix, M: np.ndarray):
     downs_coords = (Minv_pre @ lattice_coords)
     mask = np.all(np.mod(downs_coords, m) == 0, axis=0)
     lattice_coords = to_python_vect(lattice_coords.T[mask], a.offset)
+    print("lattice_coords downsample_vector", lattice_coords)
     return a.matrix[lattice_coords[0], lattice_coords[1]]
 
 def downsample_dummy(shape, offset, M: np.ndarray):
@@ -310,15 +309,18 @@ def upsample_vector(a, M: np.ndarray, original_shape, original_offset):
     xmax = floor(max(x1[0], x2[0], x3[0], x4[0]))
     ymin = ceil(min(x1[1], x2[1], x3[1], x4[1]))
     ymax = floor(max(x1[1], x2[1], x3[1], x4[1]))
-    upsampled = OffsetMatrix(np.zeros((xmax - xmin + 1, ymax - ymin + 1), dtype=np.float64), np.array([xmin, ymin]))
+    print("limits upsample_vector", xmin, xmax, ymin, ymax)
+    upsampled = OffsetMatrix(np.zeros((original_shape[0],original_shape[1]), dtype=np.float64), np.array([xmin, ymin]))
 
-    lattice_coords = np.mgrid[xmin:xmax,
-                          ymin:ymax].reshape(2, -1)
+    lattice_coords = np.mgrid[original_offset[0]:original_offset[0] + original_shape[0],
+                          original_offset[1]:original_offset[1] + original_shape[1]].reshape(2, -1)
     Minv_pre = np.array([[M[1,1],-M[0,1]],[-M[1,0],M[0,0]]])
     ups_coords = Minv_pre @ lattice_coords
     m = round(np.abs(np.linalg.det(M)))
     mask = np.all(np.mod(ups_coords, m) == 0, axis=0)
-    ups_coords = to_python_vect(lattice_coords.T[mask], upsampled.offset)
+    ups_coords = to_python_vect(lattice_coords.T[mask], original_offset)
+    print("ups coords upsample_vector", ups_coords)
+    print("a upsample_vector", a)
     upsampled.matrix[ups_coords[0], ups_coords[1]] = a
     return upsampled
 
@@ -417,7 +419,6 @@ def wavedec_multilevel_at_once(data: OffsetMatrix, w: Wavelet, level: int):
 
     details = []
     cur_M = np.eye(w.M.shape[0], dtype=int)
-    print("masks actual", masks[0][0].matrix.shape, masks[0][0].offset, masks[1][0].matrix.shape, masks[1][0].offset)
     for mask in masks:
         cur_M @= w.M
         tmp_list = list()
@@ -496,7 +497,7 @@ def waverec_multilevel_at_once(c: list, w: Wavelet, original_shape, original_off
         for j, dij in enumerate(di):
             print(len(d) - j - 1)
             print(og_s_o[0])
-            res += subdivision_vector(dij, wmasks[j], cur_M, og_s_o[j][0][0], og_s_o[j][0][1])
+            res += subdivision_vector(dij, wmasks[j], cur_M, og_s_o[1][0][0], og_s_o[1][0][1])
             wmasks[j] = subdivision(wmasks[j], w.h, w.M)
             wmasks[j].matrix = wmasks[j].matrix * m
             cur_M @= w.M
@@ -508,7 +509,7 @@ def waverec_multilevel_at_once(c: list, w: Wavelet, original_shape, original_off
         mask_h.matrix = mask_h.matrix * m
         cur_M @= w.M
 
-    res += subdivision_vector(a, mask_h, cur_M, og_s_o[0][0], og_s_o[0][1])
+    res += subdivision_vector(a, mask_h, cur_M, og_s_o[0][0][0], og_s_o[0][0][1])
 
 
     #res = res.matrix[*tuple(map(slice, tuple(-res.offset), tuple(-res.offset+original_shape)))]
@@ -537,7 +538,7 @@ gdual = (OffsetMatrix(np.array([[-0.25, 0.5, -0.25]]),np.array([0,0])),)
 w = Wavelet(h, g, hdual, gdual, M, np.abs(np.linalg.det(M)))
 
 #ci_ = wavedec(data, 3, w)
-ci = wavedec_multilevel_at_once(data, w, 2)
+ci = wavedec_multilevel_at_once(data, w, 1)
 #clamp(ci)
 ress = waverec_multilevel_at_once(ci, w, np.array([5, 5]))
 #ress = waverec(ci_, w, [5, 5])
