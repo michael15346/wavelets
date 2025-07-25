@@ -497,7 +497,7 @@ def waverec_multilevel_at_once(c: list, w: Wavelet, original_shape, original_off
         for j, dij in enumerate(di):
             print(len(d) - j - 1)
             print(og_s_o[0])
-            res += subdivision_vector(dij, wmasks[j], cur_M, og_s_o[1][0][0], og_s_o[1][0][1])
+            res += subdivision_vector(dij, wmasks[j], cur_M, og_s_o[1 + j][0][0], og_s_o[1 + j][0][1])
             wmasks[j] = subdivision(wmasks[j], w.h, w.M)
             wmasks[j].matrix = wmasks[j].matrix * m
             cur_M @= w.M
@@ -523,8 +523,8 @@ def waverec_multilevel_at_once(c: list, w: Wavelet, original_shape, original_off
 
 
 
-#data = OffsetMatrix(iio.imread('test/lenna.bmp'), np.array([0,0]))
-data = OffsetMatrix(28 * np.array([[1, 2, 3, 4, 5], [2, 3, 4, 5, 6], [3, 4, 5, 6, 7], [4, 5, 6, 7, 8], [5, 6, 7, 8, 9]]), np.array([0,0]))
+data = OffsetMatrix(iio.imread('test/lenna.bmp'), np.array([0,0]))
+#data = OffsetMatrix(28 * np.array([[1, 2, 3, 4, 5], [2, 3, 4, 5, 6], [3, 4, 5, 6, 7], [4, 5, 6, 7, 8], [5, 6, 7, 8, 9]]), np.array([0,0]))
 
 M = np.array([[1, -1], [1,1]])
 
@@ -540,10 +540,10 @@ w = Wavelet(h, g, hdual, gdual, M, np.abs(np.linalg.det(M)))
 #ci_ = wavedec(data, 3, w)
 ci = wavedec_multilevel_at_once(data, w, 1)
 #clamp(ci)
-ress = waverec_multilevel_at_once(ci, w, np.array([5, 5]))
+ress = waverec_multilevel_at_once(ci, w, np.array([512, 512]))
 #ress = waverec(ci_, w, [5, 5])
 iio.imwrite('res.png', np.clip(ress.matrix, 0, 255).astype(np.uint8))
-iio.imwrite('ress.png', np.clip(ci[0].matrix, 0, 255).astype(np.uint8))
+#iio.imwrite('ress.png', np.clip(ci[0], 0, 255).astype(np.uint8))
 #iio.imwrite('resss.png', np.clip(ress, 0, 255).astype(np.uint8))
 #iio.imwrite('ress_.png', np.clip(ci_[0].matrix, 0, 255).astype(np.uint8))
 #for dd in d:
