@@ -62,13 +62,11 @@ def to_coord(row, col, offset):
 
 
 def convolve(a: OffsetMatrix, b: OffsetMatrix):
-    print("convolve mask actual", a.matrix.shape, a.offset, b.matrix.shape, b.offset)
     new_offset = np.array([a.offset[0] + b.offset[0], a.offset[1] + b.offset[1]])
     new_matrix = scipy.signal.convolve2d(a.matrix, b.matrix, mode = 'full', boundary = 'fill')
     return OffsetMatrix(new_matrix, new_offset)
 
 def convolve_dummy(shape, offset, mask_shape, mask_offset):
-    print("convolve mask dummy", shape, offset, mask_shape, mask_offset)
     new_offset = np.array([offset[0] + mask_offset[0], offset[1] + mask_offset[1]])
     new_shape = np.array([shape[0] + (mask_shape[0] - 1), shape[1] + (mask_shape[1] - 1)])
     return (new_shape, new_offset)
@@ -89,25 +87,18 @@ def transition_vector(a: OffsetMatrix, mask: OffsetMatrix, M: np.ndarray):
 
 
 def subdivision(a: OffsetMatrix, mask: OffsetMatrix, M: np.ndarray):
-    print("subdivision actual things", a.matrix.shape, a.offset, mask.matrix.shape, mask.offset)
     u = upsample(a,M)
-    print("subdivision actual things_afterupsample", u.matrix.shape, u.offset)
     c = convolve(u, mask)
-    print("subdivision actual things_after", c.matrix.shape, c.offset)
     return c#convolve(upsample(a, M), mask)
 
 def subdivision_vector(a: OffsetMatrix, mask: OffsetMatrix, M: np.ndarray, original_shape, original_offset):
-    print("original things", original_shape, original_offset)
     u = upsample_vector(a,M, original_shape, original_offset)
     c = convolve(u, mask)
     return c#convolve(upsample(a, M), mask)
 
 def subdivision_dummy(matrix_shape, matrix_offset, mask_shape, mask_offset, M: np.ndarray):
-    print("subdivision dummy things", matrix_shape, matrix_offset, mask_shape, mask_offset)
     (shape, offset) = upsample_dummy(matrix_shape, matrix_offset ,M)
-    print("subdivision dummy things_afterupsample", shape, offset)
     (offset_, dummy_) = convolve_dummy(shape, offset, mask_shape, mask_offset)
-    print("subdivision dummy things_after", offset_, dummy_)
     return (offset_, dummy_)
 
 def dwt(a: OffsetMatrix, w: Wavelet):
@@ -269,7 +260,6 @@ def downsample_vector(a: OffsetMatrix, M: np.ndarray):
     xmax = floor(max(x1[0], x2[0], x3[0], x4[0]))
     ymin = ceil(min(x1[1], x2[1], x3[1], x4[1]))
     ymax = floor(max(x1[1], x2[1], x3[1], x4[1]))
-    print("limits dowsample_vector", xmin, xmax, ymin, ymax)
 
     downsampled = OffsetMatrix(np.zeros((xmax - xmin + 1, ymax - ymin + 1), dtype=np.float64), np.array([xmin, ymin]))
 
@@ -280,7 +270,6 @@ def downsample_vector(a: OffsetMatrix, M: np.ndarray):
     downs_coords = (Minv_pre @ lattice_coords)
     mask = np.all(np.mod(downs_coords, m) == 0, axis=0)
     lattice_coords = to_python_vect(lattice_coords.T[mask], a.offset)
-    print("lattice_coords downsample_vector", lattice_coords)
     return a.matrix[lattice_coords[0], lattice_coords[1]]
 
 def downsample_dummy(shape, offset, M: np.ndarray):
@@ -309,8 +298,7 @@ def upsample_vector(a, M: np.ndarray, original_shape, original_offset):
     xmax = floor(max(x1[0], x2[0], x3[0], x4[0]))
     ymin = ceil(min(x1[1], x2[1], x3[1], x4[1]))
     ymax = floor(max(x1[1], x2[1], x3[1], x4[1]))
-    print("limits upsample_vector", xmin, xmax, ymin, ymax)
-    upsampled = OffsetMatrix(np.zeros((original_shape[0],original_shape[1]), dtype=np.float64), np.array([xmin, ymin]))
+    upsampled = OffsetMatrix(np.zeros((original_shape[0],original_shape[1]), dtype=np.float64), np.array([original_offset[0], original_offset[1]]))
 
     lattice_coords = np.mgrid[original_offset[0]:original_offset[0] + original_shape[0],
                           original_offset[1]:original_offset[1] + original_shape[1]].reshape(2, -1)
@@ -319,8 +307,6 @@ def upsample_vector(a, M: np.ndarray, original_shape, original_offset):
     m = round(np.abs(np.linalg.det(M)))
     mask = np.all(np.mod(ups_coords, m) == 0, axis=0)
     ups_coords = to_python_vect(lattice_coords.T[mask], original_offset)
-    print("ups coords upsample_vector", ups_coords)
-    print("a upsample_vector", a)
     upsampled.matrix[ups_coords[0], ups_coords[1]] = a
     return upsampled
 
@@ -358,7 +344,6 @@ def upsample(a: OffsetMatrix, M: np.ndarray):
     upsampled.matrix[ups_coords[0], ups_coords[1]] = a.matrix[lattice_coords[0], lattice_coords[1]]
     return upsampled
 
-
 def wavedec_multilevel_at_once(data: OffsetMatrix, w: Wavelet, level: int):
     masks = [list(w.gdual)]
 
@@ -393,51 +378,10 @@ def wavedec_multilevel_at_once(data: OffsetMatrix, w: Wavelet, level: int):
     details.append(transition_vector(data, ref_mask, cur_M))
     details.reverse()
 
-    return details
-
-def wavedec_multilevel_at_once(data: OffsetMatrix, w: Wavelet, level: int):
-    masks = [list(w.gdual)]
-
-    for i in range(1, level):
-        gmasks = []
-        for gdual in w.gdual:
-            cur_mask = w.hdual
-            cur_M = w.M.copy()
-            for j in range(i-1, 0, -1):
-                cur_mask = subdivision(w.hdual, cur_mask, cur_M)
-                cur_M @= w.M
-            wave_mask = subdivision(gdual, cur_mask, cur_M)
-            gmasks.append(wave_mask)
-        masks.append(gmasks)
-    # !!!
-    if level > 1:
-        ref_mask = subdivision(w.hdual, cur_mask, cur_M)
-    else:
-        ref_mask = w.hdual
-    #masks[-1].append(ref_mask)
-    print(ref_mask.matrix.shape, ref_mask.offset)
-
-    details = []
-    cur_M = np.eye(w.M.shape[0], dtype=int)
-    for mask in masks:
-        cur_M @= w.M
-        tmp_list = list()
-        for m in mask:
-            print("m shape actual", m.matrix.shape, m.offset)
-            tmp_list.append(transition_vector(data, m, cur_M.copy()))
-        details.append(tmp_list)
-        #details.append(list(map(
-        #    transition, [data] * len(mask), mask, [cur_M] * len(mask))))
-    print("ref mask actual", ref_mask.matrix.shape, ref_mask.offset)
-    details.append(transition_vector(data, ref_mask, cur_M))
-    details.reverse()
-
-    print("data shape", data.matrix.shape, data.offset)
 
     return details
 
 def wavedec_multilevel_at_once_dummy(data_shape, data_offset, w: Wavelet, level: int):
-    print(data_shape, " is the shape that comes to dummy")
     mask = [[ww.matrix.shape, ww.offset] for ww in w.gdual]
     masks = [mask]
 
@@ -461,19 +405,15 @@ def wavedec_multilevel_at_once_dummy(data_shape, data_offset, w: Wavelet, level:
         ref_mask_shape, ref_mask_offset = w.hdual.matrix.shape, w.hdual.offset
     details = []
     cur_M = np.eye(w.M.shape[0], dtype=int)
-    print("masks dummy", masks)
     for mask in masks:
         cur_M @= w.M
         tmp_list = list()
         for m in mask:
-            print("m shape dummy", m[0], m[1])
-            shape_, offset_ =transition_dummy(data_shape, data_offset, m[0], m[1], cur_M.copy()) 
+            shape_, offset_ = transition_dummy(data_shape, data_offset, m[0], m[1], cur_M.copy()) 
             tmp_list.append([shape_, offset_])
         details.append(tmp_list)
         #details.append(list(map(
         #    transition, [data] * len(mask), mask, [cur_M] * len(mask))))
-    print("ref mask", ref_mask_shape, ref_mask_offset)
-    print("data shape", data_shape, data_offset)
     shape_, offset_ = transition_dummy(data_shape, data_offset, ref_mask_shape, ref_mask_offset, cur_M)
     details.append([[shape_, offset_]])
     details.reverse()
@@ -486,8 +426,6 @@ def waverec_multilevel_at_once(c: list, w: Wavelet, original_shape, original_off
     a = c[0]
     d = c[1:]
     og_s_o = wavedec_multilevel_at_once_dummy(original_shape, original_offset, w, len(d))
-    print(og_s_o)
-    print(og_s_o[0])
     d.reverse()
     res = OffsetMatrix(np.zeros((1, 1)), np.array([0, 0]))
     m = w.m
@@ -495,9 +433,7 @@ def waverec_multilevel_at_once(c: list, w: Wavelet, original_shape, original_off
     cur_M = w.M.copy()
     for i, di in enumerate(d):
         for j, dij in enumerate(di):
-            print(len(d) - j - 1)
-            print(og_s_o[0])
-            res += subdivision_vector(dij, wmasks[j], cur_M, og_s_o[1 + j][0][0], og_s_o[1 + j][0][1])
+            res += subdivision_vector(dij, wmasks[j], cur_M, og_s_o[len(d) - i][0][0], og_s_o[len(d) - i][0][1])
             wmasks[j] = subdivision(wmasks[j], w.h, w.M)
             wmasks[j].matrix = wmasks[j].matrix * m
             cur_M @= w.M
@@ -513,7 +449,7 @@ def waverec_multilevel_at_once(c: list, w: Wavelet, original_shape, original_off
 
 
     #res = res.matrix[*tuple(map(slice, tuple(-res.offset), tuple(-res.offset+original_shape)))]
-    res.matrix = res.matrix[-res.offset[0]:-res.offset[0] + original_shape[0], -res.offset[1]:-res.offset[1] + original_shape[1]]
+    res.matrix = res.matrix[-res.offset[0]:-res.offset[0] + original_shape[0], -res.offset[1] :-res.offset[1] + original_shape[1]]
     return res
 
 
@@ -538,9 +474,10 @@ gdual = (OffsetMatrix(np.array([[-0.25, 0.5, -0.25]]),np.array([0,0])),)
 w = Wavelet(h, g, hdual, gdual, M, np.abs(np.linalg.det(M)))
 
 #ci_ = wavedec(data, 3, w)
-ci = wavedec_multilevel_at_once(data, w, 1)
+ci = wavedec_multilevel_at_once(data, w, 10)
 #clamp(ci)
 ress = waverec_multilevel_at_once(ci, w, np.array([512, 512]))
+
 #ress = waverec(ci_, w, [5, 5])
 iio.imwrite('res.png', np.clip(ress.matrix, 0, 255).astype(np.uint8))
 #iio.imwrite('ress.png', np.clip(ci[0], 0, 255).astype(np.uint8))
