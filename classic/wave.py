@@ -1,3 +1,5 @@
+import numpy as np
+
 from offset_matrix import OffsetMatrix
 from wavelet import Wavelet
 from classic.transform import dwt, idwt

@@ -16,7 +16,7 @@ def downsample_dummy(shape, offset, M: np.ndarray):
     ymin = ceil(min(x1[1], x2[1], x3[1], x4[1]))
     ymax = floor(max(x1[1], x2[1], x3[1], x4[1]))
     downsampled = OffsetMatrix(np.zeros((xmax - xmin + 1, ymax - ymin + 1), dtype=np.float64), np.array([xmin, ymin]))
-    return (downsampled.matrix.shape, downsampled.offset)
+    return downsampled.matrix.shape, downsampled.offset
 
 
 def upsample_dummy(a_shape, a_offset, M: np.ndarray):
@@ -29,5 +29,5 @@ def upsample_dummy(a_shape, a_offset, M: np.ndarray):
     ymin = int(min(x1[1], x2[1], x3[1], x4[1]))
     ymax = int(max(x1[1], x2[1], x3[1], x4[1]))
     upsampled = OffsetMatrix(np.zeros((xmax - xmin + 1, ymax - ymin + 1), dtype=np.float64), np.array([xmin, ymin]))
-    return (upsampled.matrix.shape, upsampled.offset)
+    return upsampled.matrix.shape, upsampled.offset
 
