@@ -1,10 +1,10 @@
-from math import floor
+from math import floor, ceil
 
 import numpy as np
 import scipy
 
 from offset_matrix import OffsetMatrix
-from utils import OffsetMatrixConjugate
+from utils import OffsetMatrixConjugate, to_python_vect
 from wavelet import Wavelet
 
 def dwt(a: OffsetMatrix, w: Wavelet):
