@@ -1,11 +1,29 @@
 import numpy as np
+import scipy
 
+from classic.wave import subdivision
 from offset_matrix import OffsetMatrix
-from periodic.operators import subdivision_period, transition_period
-from vector.operators import transition_vector, subdivision_vector
+from utils import OffsetMatrixConjugate
+from vector.operators import upsample_vector, downsample_vector
 from wavelet import Wavelet
-from classic.operators import subdivision
 
+
+def transition_period(a: OffsetMatrix, mask: OffsetMatrix, M: np.ndarray):
+    mask = OffsetMatrixConjugate(mask)
+    return downsample_vector(convolve_period(a, mask), M)
+
+
+def subdivision_period(a: OffsetMatrix, mask: OffsetMatrix, M: np.ndarray, original_shape, original_offset):
+    u = upsample_vector(a,M, original_shape, original_offset)
+    c = convolve_period(u, mask)
+    return c#convolve(upsample(a, M), mask)
+
+def convolve_period(a: OffsetMatrix, b: OffsetMatrix):
+    new_offset = a.offset + b.offset + np.ceil(np.array(b.matrix.shape)/2) -1
+    new_tensor = scipy.signal.convolve2d(a.matrix, b.matrix, mode = 'same', boundary = 'wrap')
+    # периодический сдвиг, чтобы (0,0) координата была в индексе (0,0)
+    new_tensor = np.roll(new_tensor, tuple(new_offset.astype(np.int32)), axis=(0, 1))
+    return OffsetMatrix(new_tensor, np.array([0,0]))
 
 def wavedec_period(data: OffsetMatrix, w: Wavelet, level: int):
     masks = [list(w.gdual)]
@@ -26,7 +44,6 @@ def wavedec_period(data: OffsetMatrix, w: Wavelet, level: int):
         ref_mask = subdivision(w.hdual, cur_mask, cur_M)
     else:
         ref_mask = w.hdual
-    #masks[-1].append(ref_mask)
 
     details = []
     cur_M = np.eye(w.M.shape[0], dtype=int)
@@ -36,8 +53,6 @@ def wavedec_period(data: OffsetMatrix, w: Wavelet, level: int):
         for m in mask:
             tmp_list.append(transition_period(data, m, cur_M.copy()))
         details.append(tmp_list)
-        #details.append(list(map(
-        #    transition, [data] * len(mask), mask, [cur_M] * len(mask))))
     details.append(transition_period(data, ref_mask, cur_M))
     details.reverse()
 
@@ -72,7 +87,6 @@ def waverec_period(c: list, w: Wavelet, original_shape, original_offset=np.array
     res += subdivision_period(a, mask_h, cur_M, original_shape, original_offset)
 
 
-    #res = res.matrix[*tuple(map(slice, tuple(-res.offset), tuple(-res.offset+original_shape)))]
     res.matrix = res.matrix[-res.offset[0]:-res.offset[0] + original_shape[0], -res.offset[1] :-res.offset[1] + original_shape[1]]
     return res
 

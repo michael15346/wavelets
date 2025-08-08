@@ -2,7 +2,6 @@ import numpy as np
 import imageio.v3 as iio
 
 from metrics import psnr
-from multilevel.wave import wavedec_multilevel_at_once, waverec_multilevel_at_once
 from offset_matrix import OffsetMatrix
 from periodic.wave import wavedec_period, waverec_period
 from wavelet import Wavelet
@@ -23,10 +22,10 @@ if __name__ == "__main__":
     w = Wavelet(h, g, hdual, gdual, M, np.abs(np.linalg.det(M)))
 
     #ci_ = wavedec(data, 3, w)
-    ci = wavedec_period(data, w, 10)
+    ci = wavedec_period(data, w, 2)
     #clamp(ci)
     ress = waverec_period(ci, w, np.array([512, 512]))
-
+    print(ress.matrix)
     #ress = waverec(ci_, w, [5, 5])
     iio.imwrite('res.png', np.clip(ress.matrix, 0, 255).astype(np.uint8))
     print("PSNR:", psnr(data.matrix, ress.matrix))

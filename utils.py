@@ -27,7 +27,7 @@ def OffsetMatrix2CoefCoords(a: OffsetMatrix):
                 coords.append([offset[0]+i, offset[1]+j])
     if len(coef) == 0:
         coef, coords = [0], [[0,0]]
-    return (np.array(coef), np.array(coords))
+    return np.array(coef), np.array(coords)
 
 
 def CoefCoords2OffsetMatrix(a):  # a filter in coef-coords form

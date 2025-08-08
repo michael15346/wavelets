@@ -1,10 +1,10 @@
 import numpy as np
 
+from classic.wave import subdivision
 from dummy.wave import wavedec_multilevel_at_once_dummy
 from offset_matrix import OffsetMatrix
 from vector.operators import transition_vector, subdivision_vector
 from wavelet import Wavelet
-from classic.operators import subdivision
 
 
 def wavedec_multilevel_at_once(data: OffsetMatrix, w: Wavelet, level: int):
@@ -26,7 +26,6 @@ def wavedec_multilevel_at_once(data: OffsetMatrix, w: Wavelet, level: int):
         ref_mask = subdivision(w.hdual, cur_mask, cur_M)
     else:
         ref_mask = w.hdual
-    #masks[-1].append(ref_mask)
 
     details = []
     cur_M = np.eye(w.M.shape[0], dtype=int)
@@ -36,8 +35,6 @@ def wavedec_multilevel_at_once(data: OffsetMatrix, w: Wavelet, level: int):
         for m in mask:
             tmp_list.append(transition_vector(data, m, cur_M.copy()))
         details.append(tmp_list)
-        #details.append(list(map(
-        #    transition, [data] * len(mask), mask, [cur_M] * len(mask))))
     details.append(transition_vector(data, ref_mask, cur_M))
     details.reverse()
 
@@ -73,7 +70,6 @@ def waverec_multilevel_at_once(c: list, w: Wavelet, original_shape, original_off
     res += subdivision_vector(a, mask_h, cur_M, og_s_o[0][0][0], og_s_o[0][0][1])
 
 
-    #res = res.matrix[*tuple(map(slice, tuple(-res.offset), tuple(-res.offset+original_shape)))]
     res.matrix = res.matrix[-res.offset[0]:-res.offset[0] + original_shape[0], -res.offset[1] :-res.offset[1] + original_shape[1]]
     return res
 
