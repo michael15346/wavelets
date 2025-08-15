@@ -2,7 +2,7 @@ from math import ceil, floor
 
 import numpy as np
 
-from offset_matrix import OffsetMatrix
+from offset_matrix import OffsetTensor
 from wavelet import Wavelet
 
 def OffsetMatrixConjugate_dummy(a_shape, a_offset):
@@ -20,8 +20,8 @@ def downsample_dummy(shape, offset, M: np.ndarray):
     xmax = floor(max(x1[0], x2[0], x3[0], x4[0]))
     ymin = ceil(min(x1[1], x2[1], x3[1], x4[1]))
     ymax = floor(max(x1[1], x2[1], x3[1], x4[1]))
-    downsampled = OffsetMatrix(np.zeros((xmax - xmin + 1, ymax - ymin + 1), dtype=np.float64), np.array([xmin, ymin]))
-    return downsampled.matrix.shape, downsampled.offset
+    downsampled = OffsetTensor(np.zeros((xmax - xmin + 1, ymax - ymin + 1), dtype=np.float64), np.array([xmin, ymin]))
+    return downsampled.tensor.shape, downsampled.offset
 
 
 def upsample_dummy(a_shape, a_offset, M: np.ndarray):
@@ -33,8 +33,8 @@ def upsample_dummy(a_shape, a_offset, M: np.ndarray):
     xmax = int(max(x1[0], x2[0], x3[0], x4[0]))
     ymin = int(min(x1[1], x2[1], x3[1], x4[1]))
     ymax = int(max(x1[1], x2[1], x3[1], x4[1]))
-    upsampled = OffsetMatrix(np.zeros((xmax - xmin + 1, ymax - ymin + 1), dtype=np.float64), np.array([xmin, ymin]))
-    return upsampled.matrix.shape, upsampled.offset
+    upsampled = OffsetTensor(np.zeros((xmax - xmin + 1, ymax - ymin + 1), dtype=np.float64), np.array([xmin, ymin]))
+    return upsampled.tensor.shape, upsampled.offset
 
 
 def convolve_dummy(shape, offset, mask_shape, mask_offset):
@@ -55,27 +55,27 @@ def subdivision_dummy(matrix_shape, matrix_offset, mask_shape, mask_offset, M: n
     return offset_, dummy_
 
 def wavedec_multilevel_at_once_dummy(data_shape, data_offset, w: Wavelet, level: int):
-    mask = [[ww.matrix.shape, ww.offset] for ww in w.gdual]
+    mask = [[ww.tensor.shape, ww.offset] for ww in w.gdual]
     masks = [mask]
 
     for i in range(1, level):
         gmasks = []
         for gdual in w.gdual:
             cur_mask = w.hdual
-            cur_mask_shape = cur_mask.matrix.shape
+            cur_mask_shape = cur_mask.tensor.shape
             cur_mask_offset = cur_mask.offset
             cur_M = w.M.copy()
             for j in range(i-1, 0, -1):
-                cur_mask_shape, cur_mask_offset = subdivision_dummy(w.hdual.matrix.shape, w.hdual.offset, cur_mask_shape, cur_mask_offset, cur_M)
+                cur_mask_shape, cur_mask_offset = subdivision_dummy(w.hdual.tensor.shape, w.hdual.offset, cur_mask_shape, cur_mask_offset, cur_M)
                 cur_M @= w.M
-            wave_mask_shape, wave_mask_offset = subdivision_dummy(gdual.matrix.shape, gdual.offset, cur_mask_shape, cur_mask_offset, cur_M)
+            wave_mask_shape, wave_mask_offset = subdivision_dummy(gdual.tensor.shape, gdual.offset, cur_mask_shape, cur_mask_offset, cur_M)
             gmasks.append([wave_mask_shape, wave_mask_offset])
         masks.append(gmasks)
     # !!!
     if level > 1:
-        ref_mask_shape, ref_mask_offset = subdivision_dummy(w.hdual.matrix.shape, w.hdual.offset, cur_mask_shape, cur_mask_offset, cur_M)
+        ref_mask_shape, ref_mask_offset = subdivision_dummy(w.hdual.tensor.shape, w.hdual.offset, cur_mask_shape, cur_mask_offset, cur_M)
     else:
-        ref_mask_shape, ref_mask_offset = w.hdual.matrix.shape, w.hdual.offset
+        ref_mask_shape, ref_mask_offset = w.hdual.tensor.shape, w.hdual.offset
     details = []
     cur_M = np.eye(w.M.shape[0], dtype=int)
     for mask in masks:

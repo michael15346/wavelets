@@ -3,37 +3,40 @@ import imageio.v3 as iio
 
 from classic.wave import wavedec, waverec
 from metrics import psnr
-from offset_matrix import OffsetMatrix
+from multilevel.wave import waverec_multilevel_at_once, wavedec_multilevel_at_once
+from offset_matrix import OffsetTensor
 from periodic.wave import wavedec_period, waverec_period
+from quant import roundtrip
 from wavelet import Wavelet
 
 if __name__ == "__main__":
-    #data = OffsetMatrix(iio.imread('test/lenna.bmp'), np.array([0,0]))
-    data = OffsetMatrix(28. * np.array([[1, 2, 3, 4, 5], [2, 3, 4, 5, 6], [3, 4, 5, 6, 7], [4, 5, 6, 7, 8], [5, 6, 7, 8, 9]]), np.array([0,0]))
+    data = OffsetTensor(iio.imread('test/lenna.bmp'), np.array([0, 0]))
+    #data = OffsetMatrix(28. * np.array([[1, 2, 3, 4, 5, 6], [2, 3, 4, 5, 6, 7], [3, 4, 5, 6, 7, 8], [4, 5, 6, 7, 8, 9], [5, 6, 7, 8, 9, 10], [6, 7, 8, 9, 10, 11]]), np.array([0,0]))
 
     M = np.array([[1, -1], [1,1]])
 
-    h = OffsetMatrix(np.array([[0.25, 0.5, 0.25]]), np.array([0,-1]))
-    g = (OffsetMatrix(np.array([[-0.125, -0.25, 0.75, -0.25, -0.125]]), np.array([0,-1])),)
-    hdual = OffsetMatrix(np.array([[-0.125, 0.25, 0.75, 0.25, -0.125]]), np.array([0,-2]))
-    gdual = (OffsetMatrix(np.array([[-0.25, 0.5, -0.25]]),np.array([0,0])),)
+    h = OffsetTensor(np.array([[0.25, 0.5, 0.25]]), np.array([0, -1]))
+    g = (OffsetTensor(np.array([[-0.125, -0.25, 0.75, -0.25, -0.125]]), np.array([0, -1])),)
+    hdual = OffsetTensor(np.array([[-0.125, 0.25, 0.75, 0.25, -0.125]]), np.array([0, -2]))
+    gdual = (OffsetTensor(np.array([[-0.25, 0.5, -0.25]]), np.array([0, 0])),)
 
 
 
     w = Wavelet(h, g, hdual, gdual, M, np.abs(np.linalg.det(M)))
 
-    ci_ = wavedec(data, 2, w)
+    #ci_ = wavedec(data, 1, w)
     ci = wavedec_period(data, w, 2)
     #clamp(ci)
+    #ci = roundtrip(ci)
 
-    res_classic = waverec(ci_, w, np.array([5, 5]))
-    ress = waverec_period(ci, w, np.array([5, 5]))
-    print(res_classic)
-    print(ress.matrix)
-    #print(data.matrix)
+    #res_classic = waverec(ci_, w, np.array([5, 5]))
+    ress = waverec_period(ci, w, np.array([512, 512]))
+    #print(res_classic)
+    print("recovered:", ress.tensor)
+    print("original:", data.tensor)
     #ress = waverec(ci_, w, [5, 5])
-    iio.imwrite('res.png', np.clip(ress.matrix, 0, 255).astype(np.uint8))
-    print("PSNR:", psnr(data.matrix, ress.matrix))
+    iio.imwrite('res.png', np.clip(ress.tensor, 0, 255).astype(np.uint8))
+    print("PSNR:", psnr(data.tensor, ress.tensor))
     #iio.imwrite('ress.png', np.clip(ci[0], 0, 255).astype(np.uint8))
     #iio.imwrite('resss.png', np.clip(ress, 0, 255).astype(np.uint8))
     #iio.imwrite('ress_.png', np.clip(ci_[0].matrix, 0, 255).astype(np.uint8))

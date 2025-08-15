@@ -1,6 +1,6 @@
 from copy import deepcopy
 import numpy as np
-from offset_matrix import OffsetMatrix
+from offset_matrix import OffsetTensor
 
 
 def to_python(x, y, offset):
@@ -15,15 +15,15 @@ def to_python_vect(coords, offset):
     return coords.T[0] - offset[0], coords.T[1]-offset[1]
 
 
-def OffsetMatrix2CoefCoords(a: OffsetMatrix):
-    shape = a.matrix.shape
+def OffsetMatrix2CoefCoords(a: OffsetTensor):
+    shape = a.tensor.shape
     offset = a.offset
     coef = []
     coords = []
     for i in range(shape[0]):
         for j in range(shape[1]):
-            if a.matrix[i, j] != 0:
-                coef.append(a.matrix[i, j])
+            if a.tensor[i, j] != 0:
+                coef.append(a.tensor[i, j])
                 coords.append([offset[0]+i, offset[1]+j])
     if len(coef) == 0:
         coef, coords = [0], [[0,0]]
@@ -41,13 +41,13 @@ def CoefCoords2OffsetMatrix(a):  # a filter in coef-coords form
     for ind, coord in enumerate(coords):
         row, col = to_python(coord[0], coord[1], offset)
         matrix[row, col] = coef[ind]
-    return OffsetMatrix(matrix, offset)
+    return OffsetTensor(matrix, offset)
 
 
-def OffsetMatrixConjugate(a: OffsetMatrix):
+def OffsetMatrixConjugate(a: OffsetTensor):
     a_conj = deepcopy(a)
-    np.flip(a_conj.matrix)
-    a_conj.offset = np.array([-(a.offset[0] + a.matrix.shape[0] - 1), -(a.offset[1] + a.matrix.shape[1] - 1)])
+    np.flip(a_conj.tensor)
+    a_conj.offset = np.array([-(a.offset[0] + a.tensor.shape[0] - 1), -(a.offset[1] + a.tensor.shape[1] - 1)])
 
 
     return a_conj
@@ -56,12 +56,12 @@ def OffsetMatrixConjugate(a: OffsetMatrix):
 def clamp(a):
     d = a[1:]
     a = a[0]
-    clamped = np.sum(np.abs(a.matrix) <= 10)
-    a.matrix = np.where(np.abs(a.matrix) > 10, a.matrix, 0)
-    total = a.matrix.size
+    clamped = np.sum(np.abs(a.tensor) <= 10)
+    a.tensor = np.where(np.abs(a.tensor) > 10, a.tensor, 0)
+    total = a.tensor.size
     for di in d:
         for dj in di:
-            total += dj.matrix.size
-            clamped += np.sum(np.abs(dj.matrix) <= 10)
-            dj.matrix = np.where(np.abs(dj.matrix) > 10, dj.matrix, 0)
+            total += dj.tensor.size
+            clamped += np.sum(np.abs(dj.tensor) <= 10)
+            dj.tensor = np.where(np.abs(dj.tensor) > 10, dj.tensor, 0)
 

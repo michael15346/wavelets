@@ -2,12 +2,12 @@ import numpy as np
 
 from classic.wave import subdivision
 from dummy.wave import wavedec_multilevel_at_once_dummy
-from offset_matrix import OffsetMatrix
+from offset_matrix import OffsetTensor
 from vector.operators import transition_vector, subdivision_vector
 from wavelet import Wavelet
 
 
-def wavedec_multilevel_at_once(data: OffsetMatrix, w: Wavelet, level: int):
+def wavedec_multilevel_at_once(data: OffsetTensor, w: Wavelet, level: int):
     masks = [list(w.gdual)]
 
     for i in range(1, level):
@@ -49,28 +49,28 @@ def waverec_multilevel_at_once(c: list, w: Wavelet, original_shape, original_off
     d = c[1:]
     og_s_o = wavedec_multilevel_at_once_dummy(original_shape, original_offset, w, len(d))
     d.reverse()
-    res = OffsetMatrix(np.zeros((1, 1)), np.array([0, 0]))
+    res = OffsetTensor(np.zeros((1, 1)), np.array([0, 0]))
     m = w.m
-    wmasks = [OffsetMatrix(wmask.matrix * m, wmask.offset) for wmask in w.g]
+    wmasks = [OffsetTensor(wmask.tensor * m, wmask.offset) for wmask in w.g]
     cur_M = w.M.copy()
     for i, di in enumerate(d):
         for j, dij in enumerate(di):
             res += subdivision_vector(dij, wmasks[j], cur_M, og_s_o[len(d) - i][0][0], og_s_o[len(d) - i][0][1])
             wmasks[j] = subdivision(wmasks[j], w.h, w.M)
-            wmasks[j].matrix = wmasks[j].matrix * m
+            wmasks[j].tensor = wmasks[j].tensor * m
             cur_M @= w.M
 
-    mask_h = OffsetMatrix(w.h.matrix * m, w.h.offset)
+    mask_h = OffsetTensor(w.h.tensor * m, w.h.offset)
     cur_M = w.M.copy()
     for i in range(len(d)-1):
         mask_h = subdivision(mask_h, w.h, w.M)
-        mask_h.matrix = mask_h.matrix * m
+        mask_h.tensor = mask_h.tensor * m
         cur_M @= w.M
 
     res += subdivision_vector(a, mask_h, cur_M, og_s_o[0][0][0], og_s_o[0][0][1])
 
 
-    res.matrix = res.matrix[-res.offset[0]:-res.offset[0] + original_shape[0], -res.offset[1] :-res.offset[1] + original_shape[1]]
+    res.tensor = res.tensor[-res.offset[0]:-res.offset[0] + original_shape[0], -res.offset[1]:-res.offset[1] + original_shape[1]]
     return res
 
 

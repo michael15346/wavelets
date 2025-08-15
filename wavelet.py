@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 import numpy as np
-from offset_matrix import OffsetMatrix
+from offset_matrix import OffsetTensor
 
 
 @dataclass
 class Wavelet:
-    h: OffsetMatrix
-    g: tuple[OffsetMatrix, ...]
-    hdual: OffsetMatrix
-    gdual: tuple[OffsetMatrix, ...]
+    h: OffsetTensor
+    g: tuple[OffsetTensor, ...]
+    hdual: OffsetTensor
+    gdual: tuple[OffsetTensor, ...]
     M: np.ndarray
     m: float
 

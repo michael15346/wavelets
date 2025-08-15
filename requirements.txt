@@ -1,3 +1,4 @@
 numpy~=2.3.1
 scipy~=1.16.0
 imageio~=2.37.0
+fast1dkmeans @ git+https://github.com/michael15346/fast1dkmeans@3eb9ea9ad
