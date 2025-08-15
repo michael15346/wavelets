@@ -1,3 +1,4 @@
+from itertools import product
 from math import ceil, floor
 
 import numpy as np
@@ -6,40 +7,35 @@ from offset_matrix import OffsetTensor
 from wavelet import Wavelet
 
 def OffsetMatrixConjugate_dummy(a_shape, a_offset):
-    offset = np.array([-(a_offset[0] + a_shape[0] - 1), -(a_offset[1] + a_shape[1] - 1)])
+    slices = tuple(-(o + s - 1) for s, o in zip(a_shape, a_offset))
+    offset = np.array(slices)
     return a_shape, offset
 
 
 def downsample_dummy(shape, offset, M: np.ndarray):
     Minv = np.linalg.inv(M)
-    x1 = Minv @ np.array([offset[0], offset[1]])
-    x2 = Minv @ np.array([offset[0] + shape[0] - 1, offset[1]])
-    x3 = Minv @ np.array([offset[0], offset[1] + shape[1] - 1])
-    x4 = Minv @ np.array([offset[0] + shape[0] - 1, offset[1] + shape[1] - 1])
-    xmin = ceil(min(x1[0], x2[0], x3[0], x4[0]))
-    xmax = floor(max(x1[0], x2[0], x3[0], x4[0]))
-    ymin = ceil(min(x1[1], x2[1], x3[1], x4[1]))
-    ymax = floor(max(x1[1], x2[1], x3[1], x4[1]))
-    downsampled = OffsetTensor(np.zeros((xmax - xmin + 1, ymax - ymin + 1), dtype=np.float64), np.array([xmin, ymin]))
+    choices = [(offset[i], offset[i] + shape[i] - 1) for i in range(len(shape))]
+    corners = list(product(*choices))
+    xs = Minv @ np.array(corners).T
+    minc = np.ceil(np.min(xs, axis=1))
+    maxc = np.floor(np.max(xs, axis=1))
+    downsampled = OffsetTensor(np.zeros(maxc - minc + 1, dtype=np.float64), minc)
     return downsampled.tensor.shape, downsampled.offset
 
 
 def upsample_dummy(a_shape, a_offset, M: np.ndarray):
-    x1 = M @ np.array([a_offset[0], a_offset[1]])
-    x2 = M @ np.array([a_offset[0] + a_shape[0] - 1, a_offset[1]])
-    x3 = M @ np.array([a_offset[0], a_offset[1] + a_shape[1]-1])
-    x4 = M @ np.array([a_offset[0] + a_shape[0]  - 1, a_offset[1] + a_shape[1] - 1])
-    xmin = int(min(x1[0], x2[0], x3[0], x4[0]))
-    xmax = int(max(x1[0], x2[0], x3[0], x4[0]))
-    ymin = int(min(x1[1], x2[1], x3[1], x4[1]))
-    ymax = int(max(x1[1], x2[1], x3[1], x4[1]))
-    upsampled = OffsetTensor(np.zeros((xmax - xmin + 1, ymax - ymin + 1), dtype=np.float64), np.array([xmin, ymin]))
+    choices = [(a_offset[i], a_offset[i] + a_shape[i] - 1) for i in range(len(a_shape))]
+    corners = list(product(*choices))
+    xs = M @ np.array(corners).T
+    minc = np.ceil(np.min(xs, axis=1))
+    maxc = np.floor(np.max(xs, axis=1))
+    upsampled = OffsetTensor(np.zeros(maxc - minc + 1, dtype=np.float64), minc)
     return upsampled.tensor.shape, upsampled.offset
 
 
 def convolve_dummy(shape, offset, mask_shape, mask_offset):
-    new_offset = np.array([offset[0] + mask_offset[0], offset[1] + mask_offset[1]])
-    new_shape = np.array([shape[0] + (mask_shape[0] - 1), shape[1] + (mask_shape[1] - 1)])
+    new_offset = offset + mask_offset
+    new_shape = np.array(shape) + np.array(mask_shape) - 1
     return new_shape, new_offset
 
 

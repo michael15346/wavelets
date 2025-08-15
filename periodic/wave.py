@@ -22,8 +22,8 @@ def convolve_period(a: OffsetTensor, b: OffsetTensor):
     new_offset = a.offset + b.offset + np.ceil(np.array(b.tensor.shape) / 2) - 1
     new_tensor = scipy.signal.convolve2d(a.tensor, b.tensor, mode ='same', boundary ='wrap')
     # периодический сдвиг, чтобы (0,0) координата была в индексе (0,0)
-    new_tensor = np.roll(new_tensor, tuple(new_offset.astype(np.int32)), axis=(0, 1))
-    return OffsetTensor(new_tensor, np.array([0, 0]))
+    new_tensor = np.roll(new_tensor, tuple(new_offset.astype(np.int32)), axis=np.arange(len(a.offset)))
+    return OffsetTensor(new_tensor, np.zeros_like(a.offset))
 
 def wavedec_period(data: OffsetTensor, w: Wavelet, level: int):
     masks = [list(w.gdual)]
@@ -66,7 +66,7 @@ def waverec_period(c: list, w: Wavelet, original_shape, original_offset=np.array
     a = c[0]
     d = c[1:]
     d.reverse()
-    res = OffsetTensor(np.zeros((1, 1)), np.array([0, 0]))
+    res = OffsetTensor(np.zeros((1,) * len(original_shape)), np.zeros_like(original_offset))
     m = w.m
     wmasks = [OffsetTensor(wmask.tensor * m, wmask.offset) for wmask in w.g]
     cur_M = w.M.copy()
@@ -86,8 +86,9 @@ def waverec_period(c: list, w: Wavelet, original_shape, original_offset=np.array
 
     res += subdivision_period(a, mask_h, cur_M, original_shape, original_offset)
 
+    slices = tuple(slice(-o, -o + s) for s, o in zip(original_shape, res.offset))
 
-    res.tensor = res.tensor[-res.offset[0]:-res.offset[0] + original_shape[0], -res.offset[1]:-res.offset[1] + original_shape[1]]
+    res.tensor = res.tensor[slices]
     return res
 
 

@@ -15,33 +15,33 @@ def to_python_vect(coords, offset):
     return coords.T[0] - offset[0], coords.T[1]-offset[1]
 
 
-def OffsetMatrix2CoefCoords(a: OffsetTensor):
-    shape = a.tensor.shape
-    offset = a.offset
-    coef = []
-    coords = []
-    for i in range(shape[0]):
-        for j in range(shape[1]):
-            if a.tensor[i, j] != 0:
-                coef.append(a.tensor[i, j])
-                coords.append([offset[0]+i, offset[1]+j])
-    if len(coef) == 0:
-        coef, coords = [0], [[0,0]]
-    return np.array(coef), np.array(coords)
+# def OffsetMatrix2CoefCoords(a: OffsetTensor):
+#     shape = a.tensor.shape
+#     offset = a.offset
+#     coef = []
+#     coords = []
+#     for i in range(shape[0]):
+#         for j in range(shape[1]):
+#             if a.tensor[i, j] != 0:
+#                 coef.append(a.tensor[i, j])
+#                 coords.append([offset[0]+i, offset[1]+j])
+#     if len(coef) == 0:
+#         coef, coords = [0], [[0,0]]
+#     return np.array(coef), np.array(coords)
 
 
-def CoefCoords2OffsetMatrix(a):  # a filter in coef-coords form
-    coef = a[0]
-    coords = a[1]
-    x_left, y_bottom = list(np.min(np.transpose(coords), axis=1))
-    x_right, y_up = list(np.max(np.transpose(coords), axis=1))
-    shape = [x_right-x_left+1, y_up-y_bottom+1]
-    offset = np.array([x_left, y_bottom])
-    matrix = np.zeros(shape)
-    for ind, coord in enumerate(coords):
-        row, col = to_python(coord[0], coord[1], offset)
-        matrix[row, col] = coef[ind]
-    return OffsetTensor(matrix, offset)
+# def CoefCoords2OffsetMatrix(a):  # a filter in coef-coords form
+#     coef = a[0]
+#     coords = a[1]
+#     x_left, y_bottom = list(np.min(np.transpose(coords), axis=1))
+#     x_right, y_up = list(np.max(np.transpose(coords), axis=1))
+#     shape = [x_right-x_left+1, y_up-y_bottom+1]
+#     offset = np.array([x_left, y_bottom])
+#     matrix = np.zeros(shape)
+#     for ind, coord in enumerate(coords):
+#         row, col = to_python(coord[0], coord[1], offset)
+#         matrix[row, col] = coef[ind]
+#     return OffsetTensor(matrix, offset)
 
 
 def OffsetMatrixConjugate(a: OffsetTensor):

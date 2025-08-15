@@ -49,7 +49,7 @@ def waverec_multilevel_at_once(c: list, w: Wavelet, original_shape, original_off
     d = c[1:]
     og_s_o = wavedec_multilevel_at_once_dummy(original_shape, original_offset, w, len(d))
     d.reverse()
-    res = OffsetTensor(np.zeros((1, 1)), np.array([0, 0]))
+    res = OffsetTensor(np.zeros((1,) * len(original_shape)), np.zeros_like(original_offset))
     m = w.m
     wmasks = [OffsetTensor(wmask.tensor * m, wmask.offset) for wmask in w.g]
     cur_M = w.M.copy()
@@ -69,8 +69,9 @@ def waverec_multilevel_at_once(c: list, w: Wavelet, original_shape, original_off
 
     res += subdivision_vector(a, mask_h, cur_M, og_s_o[0][0][0], og_s_o[0][0][1])
 
+    slices = tuple(slice(-o, -o + s) for s, o in zip(original_shape, res.offset))
 
-    res.tensor = res.tensor[-res.offset[0]:-res.offset[0] + original_shape[0], -res.offset[1]:-res.offset[1] + original_shape[1]]
+    res.tensor = res.tensor[slices]
     return res
 
 
