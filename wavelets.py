@@ -11,7 +11,7 @@ from wavelet import Wavelet
 
 if __name__ == "__main__":
     data = OffsetTensor(iio.imread('test/lenna.bmp'), np.array([0, 0]))
-    #data = OffsetMatrix(28. * np.array([[1, 2, 3, 4, 5, 6], [2, 3, 4, 5, 6, 7], [3, 4, 5, 6, 7, 8], [4, 5, 6, 7, 8, 9], [5, 6, 7, 8, 9, 10], [6, 7, 8, 9, 10, 11]]), np.array([0,0]))
+    #data = OffsetTensor(28. * np.array([[1, 2, 3, 4, 5, 6], [2, 3, 4, 5, 6, 7], [3, 4, 5, 6, 7, 8], [4, 5, 6, 7, 8, 9], [5, 6, 7, 8, 9, 10], [6, 7, 8, 9, 10, 11]]), np.array([0,0]))
 
     M = np.array([[1, -1], [1,1]])
 
@@ -25,12 +25,12 @@ if __name__ == "__main__":
     w = Wavelet(h, g, hdual, gdual, M, np.abs(np.linalg.det(M)))
 
     #ci_ = wavedec(data, 1, w)
-    ci = wavedec(data, w, 4)
+    ci = wavedec_period(data, w, 5)
     #clamp(ci)
     #ci = roundtrip(ci)
 
     #res_classic = waverec(ci_, w, np.array([5, 5]))
-    ress = waverec(ci, w, np.array([512, 512]))
+    ress = waverec_period(ci, w, np.array(data.tensor.shape))
     #print(res_classic)
     print("recovered:", ress.tensor)
     print("original:", data.tensor)

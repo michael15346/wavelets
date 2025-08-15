@@ -56,10 +56,10 @@ def downsample(a: OffsetTensor, M: np.ndarray):
     lattice_coords = np.mgrid[slices].reshape(len(a.tensor.shape), -1)
     downs_coords = (Minv_pre @ lattice_coords)
     mask = np.all(np.mod(downs_coords, m) == 0, axis=0)
-    lattice_coords = np.array(to_python_vect(lattice_coords.T[mask], a.offset))
+    lattice_coords = tuple(to_python_vect(lattice_coords.T[mask], a.offset))
 
-    downs_coords = np.array(to_python_vect(downs_coords.T[mask ]//m, downsampled.offset))
-    downsampled.tensor[downs_coords] = a.tensor[lattice_coords]
+    downs_coords = tuple(to_python_vect(downs_coords.T[mask ]//m, downsampled.offset))
+    downsampled.tensor[*downs_coords] = a.tensor[*lattice_coords]
     return downsampled
 
 
@@ -74,9 +74,9 @@ def upsample(a: OffsetTensor, M: np.ndarray):
     lattice_coords = np.mgrid[slices].reshape(len(a.tensor.shape), -1)
 
     ups_coords = M @ lattice_coords
-    lattice_coords = to_python_vect(lattice_coords.T, a.offset)
-    ups_coords = to_python_vect(ups_coords.T, upsampled.offset)
-    upsampled.tensor[ups_coords] = a.tensor[lattice_coords]
+    lattice_coords = tuple(to_python_vect(lattice_coords.T, a.offset))
+    ups_coords = tuple(to_python_vect(ups_coords.T, upsampled.offset))
+    upsampled.tensor[*ups_coords] = a.tensor[*lattice_coords]
     return upsampled
 
 

@@ -12,7 +12,7 @@ def to_coord(row, col, offset):
 
 
 def to_python_vect(coords, offset):
-    return coords.T[0] - offset[0], coords.T[1]-offset[1]
+    return (coords - offset).T
 
 
 # def OffsetMatrix2CoefCoords(a: OffsetTensor):
