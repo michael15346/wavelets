@@ -25,9 +25,9 @@ if __name__ == "__main__":
     w = Wavelet(h, g, hdual, gdual, M, np.abs(np.linalg.det(M)))
 
     #ci_ = wavedec(data, 1, w)
-    ci = wavedec_period(data, w, 5)
+    ci = wavedec_period(data, w, 8)
     #clamp(ci)
-    #ci = roundtrip(ci)
+    ci = roundtrip(ci)
 
     #res_classic = waverec(ci_, w, np.array([5, 5]))
     ress = waverec_period(ci, w, np.array(data.tensor.shape))
