@@ -6,7 +6,7 @@ from metrics import psnr
 from multilevel.wave import waverec_multilevel_at_once, wavedec_multilevel_at_once
 from offset_matrix import OffsetTensor
 from periodic.wave import wavedec_period, waverec_period
-from quant import roundtrip
+from quant import roundtrip_kmeans, uniform_roundtrip, uniform_entropy
 from wavelet import Wavelet
 
 if __name__ == "__main__":
@@ -25,9 +25,11 @@ if __name__ == "__main__":
     w = Wavelet(h, g, hdual, gdual, M, np.abs(np.linalg.det(M)))
 
     #ci_ = wavedec(data, 1, w)
-    ci = wavedec_period(data, w, 8)
+    ci = wavedec_period(data, w, 6)
+    entropy = uniform_entropy(ci)
+
     #clamp(ci)
-    ci = roundtrip(ci)
+    ci = uniform_roundtrip(ci)
 
     #res_classic = waverec(ci_, w, np.array([5, 5]))
     ress = waverec_period(ci, w, np.array(data.tensor.shape))
@@ -37,6 +39,7 @@ if __name__ == "__main__":
     #ress = waverec(ci_, w, [5, 5])
     iio.imwrite('res.png', np.clip(ress.tensor, 0, 255).astype(np.uint8))
     print("PSNR:", psnr(data.tensor, ress.tensor))
+    print("entropy:", entropy)
     #iio.imwrite('ress.png', np.clip(ci[0], 0, 255).astype(np.uint8))
     #iio.imwrite('resss.png', np.clip(ress, 0, 255).astype(np.uint8))
     #iio.imwrite('ress_.png', np.clip(ci_[0].matrix, 0, 255).astype(np.uint8))
