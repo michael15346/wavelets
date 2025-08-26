@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import numpy as np
-from offset_matrix import OffsetTensor
+from offset_tensor import OffsetTensor
 
 
 @dataclass

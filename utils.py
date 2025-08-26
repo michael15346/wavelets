@@ -1,6 +1,6 @@
 from copy import deepcopy
 import numpy as np
-from offset_matrix import OffsetTensor
+from offset_tensor import OffsetTensor
 
 
 def to_python(x, y, offset):

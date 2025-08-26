@@ -4,7 +4,7 @@ import imageio.v3 as iio
 from classic.wave import wavedec, waverec
 from metrics import psnr
 from multilevel.wave import waverec_multilevel_at_once, wavedec_multilevel_at_once
-from offset_matrix import OffsetTensor
+from offset_tensor import OffsetTensor
 from periodic.wave import wavedec_period, waverec_period
 from quant import roundtrip_kmeans, uniform_roundtrip, uniform_entropy
 from wavelet import Wavelet
@@ -25,7 +25,7 @@ if __name__ == "__main__":
     w = Wavelet(h, g, hdual, gdual, M, np.abs(np.linalg.det(M)))
 
     #ci_ = wavedec(data, 1, w)
-    ci = wavedec_period(data, w, 6)
+    ci = wavedec_period(data, w, 1)
     entropy = uniform_entropy(ci)
 
     #clamp(ci)

@@ -2,7 +2,7 @@ import numpy as np
 import scipy
 
 from classic.wave import subdivision
-from offset_matrix import OffsetTensor
+from offset_tensor import OffsetTensor
 from utils import OffsetMatrixConjugate
 from vector.operators import upsample_vector, downsample_vector
 from wavelet import Wavelet
@@ -19,8 +19,8 @@ def subdivision_period(a: OffsetTensor, mask: OffsetTensor, M: np.ndarray, origi
     return c
 
 def convolve_period(a: OffsetTensor, b: OffsetTensor):
-    new_offset = a.offset + b.offset + np.ceil(np.array(b.tensor.shape) / 2) - 1
-    new_tensor = scipy.signal.convolve2d(a.tensor, b.tensor, mode ='same', boundary ='wrap')
+    new_offset = a.offset + b.offset# + np.ceil(np.array(b.tensor.shape) / 2) - 1
+    new_tensor = scipy.ndimage.convolve(a.tensor, b.tensor, mode='wrap')
     # периодический сдвиг, чтобы (0,0) координата была в индексе (0,0)
     new_tensor = np.roll(new_tensor, tuple(new_offset.astype(np.int32)), axis=np.arange(len(a.offset)))
     return OffsetTensor(new_tensor, np.zeros_like(a.offset))

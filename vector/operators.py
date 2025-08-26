@@ -4,7 +4,7 @@ from math import ceil, floor
 import numpy as np
 
 from classic.wave import convolve
-from offset_matrix import OffsetTensor
+from offset_tensor import OffsetTensor
 from utils import OffsetMatrixConjugate, to_python_vect
 
 

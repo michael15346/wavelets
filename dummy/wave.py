@@ -3,7 +3,7 @@ from math import ceil, floor
 
 import numpy as np
 
-from offset_matrix import OffsetTensor
+from offset_tensor import OffsetTensor
 from wavelet import Wavelet
 
 def OffsetMatrixConjugate_dummy(a_shape, a_offset):

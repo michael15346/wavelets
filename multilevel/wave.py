@@ -2,7 +2,7 @@ import numpy as np
 
 from classic.wave import subdivision
 from dummy.wave import wavedec_multilevel_at_once_dummy
-from offset_matrix import OffsetTensor
+from offset_tensor import OffsetTensor
 from vector.operators import transition_vector, subdivision_vector
 from wavelet import Wavelet
 
