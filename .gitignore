@@ -1,3 +1,5 @@
 *.png
 *.bmp
 __pycache__
+results
+.idea

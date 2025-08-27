@@ -1,57 +1,98 @@
-import numpy as np
-import imageio.v3 as iio
+import argparse
+import json
+import os
+from itertools import chain
+from multiprocessing import Pool
 
-from classic.wave import wavedec, waverec
+import imageio.v3 as iio
+import numpy as np
+import pandas as pd
+
+from db import createWaveletFromContent, checkContent, PRP_check
 from metrics import psnr
-from multilevel.wave import waverec_multilevel_at_once, wavedec_multilevel_at_once
 from offset_tensor import OffsetTensor
-from periodic.wave import wavedec_period, waverec_period
-from quant import roundtrip_kmeans, uniform_roundtrip, uniform_entropy
-from wavelet import Wavelet
+from periodic.wave import waverec_period, wavedec_period
+from quant import roundtrip_kmeans, uniform_roundtrip
+from roundtrip import roundtrip
+from skimage.metrics import structural_similarity as ssim
+def benchmark(content):
+    os.makedirs("results/{}".format(content["Index"]), exist_ok=True)
+    row = dict()
+    w = createWaveletFromContent(content)
+    results = []
+    test_files = os.listdir('test')
+    for file in test_files:
+        path = os.path.join('test', file)
+        data = iio.imread(path)
+
+        if data.ndim == 3:  # rgb
+            data = data.mean(axis=2)
+        iio.imwrite("results/{}/{}.png".format(content["Index"], file.split('.')[0]), data.astype(np.uint8))
+        data = OffsetTensor(data, np.array([0, 0]))
+        for level in range(1, 6):
+            ci = wavedec_period(data, w, level)
+            for log_clusters in range(1, 9):
+                row['Index'] = content['Index']
+                row['WaveletSystemType'] = content['WaveletSystemType']
+                row['RefinableMaskInfo'] = content['RefinableMaskInfo']
+                row['DualRefinableMaskInfo'] = content['DualRefinableMaskInfo']
+                row['SymmetryInfo'] = content['SymmetryInfo']
+                row['DilationMatrixInfo'] = content['DilationMatrixInfo']
+                row['SR'] = content['Mask']['SR']
+                row['DualSR'] = content['DualMask']['SR']
+                row['ValidPRP'] = PRP_check(w)[0]
+                row['SourceInfo'] = content['SourceInfo']
+                row['Quant'] = 'KMeans'
+                row['Level'] = level
+                row['Clusters'] = 2 ** log_clusters
+                row['TestImg'] = file
+                ci_kmeans = roundtrip_kmeans(ci, 2 ** log_clusters)
+                res_kmeans = waverec_period(ci_kmeans, w, np.array(data.tensor.shape))
+                iio.imwrite("results/{}/{}-kmeans-l{}-c{}.png".format(content["Index"],
+                                                                      file.split('.')[0],
+                                                                      level,
+                                                                      2 ** log_clusters
+                                                                      ),
+                            np.clip(res_kmeans.tensor, 0, 255).astype(np.uint8))
+                psnr_kmeans = psnr(data.tensor, res_kmeans.tensor)
+                ssim_kmeans = ssim(data.tensor, res_kmeans.tensor, data_range=256)
+                row['PSNR_KMeans'] = psnr_kmeans
+                row['SSIM_Kmeans'] = ssim_kmeans
+                ci_uniform = uniform_roundtrip(ci, 2 ** log_clusters)
+                res_uniform = waverec_period(ci_uniform, w, np.array(data.tensor.shape))
+                iio.imwrite("results/{}/{}-uniform-l{}-c{}.png".format(content["Index"],
+                                                                       file.split('.')[0],
+                                                                       level,
+                                                                       2 ** log_clusters),
+                            np.clip(res_uniform.tensor, 0, 255).astype(np.uint8))
+                psnr_uniform = psnr(data.tensor, res_uniform.tensor)
+                ssim_uniform = ssim(data.tensor, res_uniform.tensor, data_range=256)
+                row['PSNR_Uniform'] = psnr_uniform
+                row['SSIM_Uniform'] = ssim_uniform
+                results.append(row)
+    return results
+
+
 
 if __name__ == "__main__":
-    data = OffsetTensor(iio.imread('test/lenna.bmp'), np.array([0, 0]))
-    #data = OffsetTensor(28. * np.array([[1, 2, 3, 4, 5, 6], [2, 3, 4, 5, 6, 7], [3, 4, 5, 6, 7, 8], [4, 5, 6, 7, 8, 9], [5, 6, 7, 8, 9, 10], [6, 7, 8, 9, 10, 11]]), np.array([0,0]))
+    parser = argparse.ArgumentParser(
+        prog='wavelets')
+    parser.add_argument('command')
+    parser.add_argument('-i')
+    parser.add_argument('-o')
+    args = parser.parse_args()
+    if args.command == 'roundtrip':
+        roundtrip(args.i, args.o)
+    elif args.command == 'benchmark':
+        with open("WaveDB.json", 'r') as j:
+            contents = json.loads(j.read())
+        with Pool(8) as p:
+            results_nonflat = p.map(benchmark, contents)
+        results = list(chain(*results_nonflat))
 
-    M = np.array([[1, -1], [1,1]])
-
-    h = OffsetTensor(np.array([[0.25, 0.5, 0.25]]), np.array([0, -1]))
-    g = (OffsetTensor(np.array([[-0.125, -0.25, 0.75, -0.25, -0.125]]), np.array([0, -1])),)
-    hdual = OffsetTensor(np.array([[-0.125, 0.25, 0.75, 0.25, -0.125]]), np.array([0, -2]))
-    gdual = (OffsetTensor(np.array([[-0.25, 0.5, -0.25]]), np.array([0, 0])),)
+        pd.DataFrame(results).to_csv('results.csv')
 
 
 
-    w = Wavelet(h, g, hdual, gdual, M, np.abs(np.linalg.det(M)))
-
-    #ci_ = wavedec(data, 1, w)
-    ci = wavedec_period(data, w, 1)
-    entropy = uniform_entropy(ci)
-
-    #clamp(ci)
-    ci = uniform_roundtrip(ci)
-
-    #res_classic = waverec(ci_, w, np.array([5, 5]))
-    ress = waverec_period(ci, w, np.array(data.tensor.shape))
-    #print(res_classic)
-    print("recovered:", ress.tensor)
-    print("original:", data.tensor)
-    #ress = waverec(ci_, w, [5, 5])
-    iio.imwrite('res.png', np.clip(ress.tensor, 0, 255).astype(np.uint8))
-    print("PSNR:", psnr(data.tensor, ress.tensor))
-    print("entropy:", entropy)
-    #iio.imwrite('ress.png', np.clip(ci[0], 0, 255).astype(np.uint8))
-    #iio.imwrite('resss.png', np.clip(ress, 0, 255).astype(np.uint8))
-    #iio.imwrite('ress_.png', np.clip(ci_[0].matrix, 0, 255).astype(np.uint8))
-    #for dd in d:
-    #    for ddd in dd:
-    #
-    #
-    #iio.imwrite('a.png', np.clip(ai.matrix, 0, 255).astype(np.uint8))
-    #for i, di in enumerate(d):
-    #    for j, dij in enumerate(di):
-    #        iio.imwrite(f'd{i}-{j}.png', np.clip(dij.matrix * (w.m ** (5 -i )), 0, 255).astype(np.uint8))
-    #
-    #a = waverec(ai, d, w, data.matrix.shape)
-
-    #iio.imwrite('restored.png', np.clip(a, 0, 255).astype(np.uint8))
+    else:
+        print("Unknown command. Supported commands: roundtrip, benchmark")

@@ -5,7 +5,7 @@ import numpy as np
 import scipy
 
 from offset_tensor import OffsetTensor
-from utils import OffsetMatrixConjugate, to_python_vect
+from utils import to_python_vect
 from wavelet import Wavelet
 
 def dwt(a: OffsetTensor, w: Wavelet):
@@ -27,12 +27,12 @@ def idwt(a: OffsetTensor, d: tuple[OffsetTensor, ...], w: Wavelet):
 
 def convolve(a: OffsetTensor, b: OffsetTensor):
     new_offset = a.offset + b.offset
-    new_matrix = scipy.signal.convolve2d(a.tensor, b.tensor, mode ='full', boundary ='fill')
+    new_matrix = scipy.signal.oaconvolve(a.tensor, b.tensor, mode ='full')
     return OffsetTensor(new_matrix, new_offset)
 
 
 def transition(a: OffsetTensor, mask: OffsetTensor, M: np.ndarray):
-    mask = OffsetMatrixConjugate(mask)
+    mask = mask.conjugate()
     return downsample(convolve(a, mask), M)
 
 

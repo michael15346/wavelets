@@ -3,13 +3,12 @@ import scipy
 
 from classic.wave import subdivision
 from offset_tensor import OffsetTensor
-from utils import OffsetMatrixConjugate
 from vector.operators import upsample_vector, downsample_vector
 from wavelet import Wavelet
 
 
 def transition_period(a: OffsetTensor, mask: OffsetTensor, M: np.ndarray):
-    mask = OffsetMatrixConjugate(mask)
+    mask = mask.conjugate()
     return downsample_vector(convolve_period(a, mask), M)
 
 
@@ -19,8 +18,8 @@ def subdivision_period(a: OffsetTensor, mask: OffsetTensor, M: np.ndarray, origi
     return c
 
 def convolve_period(a: OffsetTensor, b: OffsetTensor):
-    new_offset = a.offset + b.offset# + np.ceil(np.array(b.tensor.shape) / 2) - 1
-    new_tensor = scipy.ndimage.convolve(a.tensor, b.tensor, mode='wrap')
+    new_offset = a.offset + b.offset + np.ceil(np.array(b.tensor.shape) / 2) - 1
+    new_tensor = scipy.ndimage.convolve(a.tensor.astype(np.float64), b.tensor.astype(np.float64), mode='wrap')
     # периодический сдвиг, чтобы (0,0) координата была в индексе (0,0)
     new_tensor = np.roll(new_tensor, tuple(new_offset.astype(np.int32)), axis=np.arange(len(a.offset)))
     return OffsetTensor(new_tensor, np.zeros_like(a.offset))
@@ -61,7 +60,6 @@ def wavedec_period(data: OffsetTensor, w: Wavelet, level: int):
 
 
     return details
-
 
 def waverec_period(c: list, w: Wavelet, original_shape, original_offset=np.array([0,0])):
 

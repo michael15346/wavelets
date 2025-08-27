@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import numpy as np
 
 class OffsetTensor:
@@ -25,3 +27,9 @@ class OffsetTensor:
     def __mul__(self, other):
         matrix = self.tensor * other
         return OffsetTensor(matrix, self.offset)
+
+    def conjugate(self):
+        a_conj = deepcopy(self)
+        np.flip(a_conj.tensor)
+        a_conj.offset = -(self.offset + self.tensor.shape - 1)
+        return a_conj

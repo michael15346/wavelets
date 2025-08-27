@@ -14,7 +14,6 @@ def roundtrip_kmeans(coef: list, n_cluster = 256):
     centroids = sums / counts
     flat_restored = centroids[clusters]
     restored = list()
-    idx = 0
     restored.append(flat_restored[:coef[0].size])
     idx = coef[0].size
     for c in coef[1:]:
@@ -34,7 +33,7 @@ def uniform_entropy(coef: list, n_cluster = 256):
     prob = counts / len(quantized)
     return -(prob * np.log2(prob)).sum()
 
-def uniform_roundtrip(coef: list, n_cluster = 32):
+def uniform_roundtrip(coef: list, n_cluster = 16):
     flat_coef = np.array(list(coef[0]) + list(itertools.chain(*itertools.chain(*coef[1:]))))
     print("before cluster")
     n_min = np.min(flat_coef)
@@ -42,7 +41,6 @@ def uniform_roundtrip(coef: list, n_cluster = 32):
     quantized = np.clip(np.round((flat_coef - n_min) / n_max * (n_cluster - 1)),0, n_cluster - 1).astype(int)
     flat_restored = (quantized * n_max / (n_cluster - 1)) + n_min
     restored = list()
-    idx = 0
     restored.append(flat_restored[:coef[0].size])
     idx = coef[0].size
     for c in coef[1:]:

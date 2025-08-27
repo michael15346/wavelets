@@ -5,7 +5,7 @@ import numpy as np
 
 from classic.wave import convolve
 from offset_tensor import OffsetTensor
-from utils import OffsetMatrixConjugate, to_python_vect
+from utils import to_python_vect
 
 
 def downsample_vector(a: OffsetTensor, M: np.ndarray):
@@ -37,7 +37,7 @@ def upsample_vector(a, M: np.ndarray, original_shape, original_offset):
 
 
 def transition_vector(a: OffsetTensor, mask: OffsetTensor, M: np.ndarray):
-    mask = OffsetMatrixConjugate(mask)
+    mask = mask.conjugate()
     return downsample_vector(convolve(a, mask), M)
 
 
