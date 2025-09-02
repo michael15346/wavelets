@@ -1,6 +1,6 @@
 import numpy as np
 
-from classic.wave import subdivision
+from classic.wave import subdivision, transition
 from dummy.wave import wavedec_multilevel_at_once_dummy
 from offset_tensor import OffsetTensor
 from vector.operators import transition_vector, subdivision_vector
@@ -33,9 +33,9 @@ def wavedec_multilevel_at_once(data: OffsetTensor, w: Wavelet, level: int):
         cur_M @= w.M
         tmp_list = list()
         for m in mask:
-            tmp_list.append(transition_vector(data, m, cur_M.copy()))
+            tmp_list.append(transition(data, m, cur_M.copy()))
         details.append(tmp_list)
-    details.append(transition_vector(data, ref_mask, cur_M))
+    details.append(transition(data, ref_mask, cur_M))
     details.reverse()
 
 
@@ -55,10 +55,10 @@ def waverec_multilevel_at_once(c: list, w: Wavelet, original_shape, original_off
     cur_M = w.M.copy()
     for i, di in enumerate(d):
         for j, dij in enumerate(di):
-            res += subdivision_vector(dij, wmasks[j], cur_M, og_s_o[len(d) - i][0][0], og_s_o[len(d) - i][0][1])
+            res += subdivision_vector(dij, wmasks[j], cur_M, og_s_o[len(d) - i][j][0], og_s_o[len(d) - i][j][1])
             wmasks[j] = subdivision(wmasks[j], w.h, w.M)
             wmasks[j].tensor = wmasks[j].tensor * m
-            cur_M @= w.M
+        cur_M @= w.M
 
     mask_h = OffsetTensor(w.h.tensor * m, w.h.offset)
     cur_M = w.M.copy()

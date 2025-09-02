@@ -1,28 +1,28 @@
+import json
+
 import numpy as np
 
+from db import createWaveletFromContent
 from metrics import psnr
 from offset_tensor import OffsetTensor
 import imageio.v3 as iio
 
+from multilevel.wave import wavedec_multilevel_at_once, waverec_multilevel_at_once
 from periodic.wave import wavedec_period, waverec_period
+from classic.wave import wavedec, waverec
 from wavelet import Wavelet
 
 
 def roundtrip(input, output):
-    data = OffsetTensor(iio.imread(input), np.array([0, 0]))
+    data = OffsetTensor(iio.imread(input).mean(axis=2), np.array([0, 0]))
     # data = OffsetTensor(28. * np.array([[1, 2, 3, 4, 5, 6], [2, 3, 4, 5, 6, 7], [3, 4, 5, 6, 7, 8], [4, 5, 6, 7, 8, 9], [5, 6, 7, 8, 9, 10], [6, 7, 8, 9, 10, 11]]), np.array([0,0]))
 
-    M = np.array([[1, -1], [1, 1]])
-
-    h = OffsetTensor(np.array([[0.25, 0.5, 0.25]]), np.array([0, -1]))
-    g = (OffsetTensor(np.array([[-0.125, -0.25, 0.75, -0.25, -0.125]]), np.array([0, -1])),)
-    hdual = OffsetTensor(np.array([[-0.125, 0.25, 0.75, 0.25, -0.125]]), np.array([0, -2]))
-    gdual = (OffsetTensor(np.array([[-0.25, 0.5, -0.25]]), np.array([0, 0])),)
-
-    w = Wavelet(h, g, hdual, gdual, M, np.abs(np.linalg.det(M)))
-
+    with open("WaveDB.json", 'r') as j:
+        contents = json.loads(j.read())
+    content = contents[19]
+    w = createWaveletFromContent(content)
     # ci_ = wavedec(data, 1, w)
-    ci = wavedec_period(data, w, 4)
+    ci = wavedec_period(data, w, 5)
     # entropy = uniform_entropy(ci)
 
     # clamp(ci)
@@ -33,8 +33,10 @@ def roundtrip(input, output):
     # print(res_classic)
     print("recovered:", ress.tensor)
     print("original:", data.tensor)
+    #print("diff:", ress.tensor - data.tensor)
     # ress = waverec(ci_, w, [5, 5])
     iio.imwrite(output, np.clip(ress.tensor, 0, 255).astype(np.uint8))
+    iio.imwrite('diff.png', np.clip(np.abs(ress.tensor - data.tensor) * 3e15, 0, 255).astype(np.uint8))
     print("PSNR:", psnr(data.tensor, ress.tensor))
     # print("entropy:", entropy)
     # iio.imwrite('ress.png', np.clip(ci[0], 0, 255).astype(np.uint8))

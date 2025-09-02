@@ -18,15 +18,20 @@ def subdivision_period(a: OffsetTensor, mask: OffsetTensor, M: np.ndarray, origi
     return c
 
 def convolve_period(a: OffsetTensor, b: OffsetTensor):
-    new_offset = a.offset + b.offset + np.ceil(np.array(b.tensor.shape) / 2) - 1
-    new_tensor = scipy.ndimage.convolve(a.tensor.astype(np.float64), b.tensor.astype(np.float64), mode='wrap')
+    new_offset = a.offset + b.offset
+    origin = (-(np.array(b.tensor.shape) // 2)).tolist()
+
+    new_tensor = scipy.ndimage.convolve(a.tensor.astype(np.float64), b.tensor.astype(np.float64),
+                                        mode='wrap', origin=origin)
     # периодический сдвиг, чтобы (0,0) координата была в индексе (0,0)
+    # origin в scipy.ndimage.convolve не умеет сдвигать больше, чем на пол-ядра относительно центра
     new_tensor = np.roll(new_tensor, tuple(new_offset.astype(np.int32)), axis=np.arange(len(a.offset)))
     return OffsetTensor(new_tensor, np.zeros_like(a.offset))
 
 def wavedec_period(data: OffsetTensor, w: Wavelet, level: int):
     shape = np.array(data.tensor.shape)
-    padding = np.array([np.zeros_like(shape), w.m ** level - shape % (w.m ** level)], dtype=int).T
+    pad_up_to = np.int32(w.m ** level)
+    padding = np.array([np.zeros_like(shape), np.ceil(shape / pad_up_to) * pad_up_to - shape], dtype=int).T
     data_padded = OffsetTensor(np.pad(data.tensor, padding, mode="wrap"), data.offset)
     masks = [list(w.gdual)]
 
@@ -67,7 +72,9 @@ def waverec_period(c: list, w: Wavelet, original_shape, original_offset=np.array
     d = c[1:]
     level = len(d)
     shape = np.array(original_shape, dtype=int)
-    padding = np.array(w.m ** level - shape % (w.m ** level), dtype=int).T
+    #padding = np.array(w.m ** level - shape % (w.m ** level), dtype=int).T
+    pad_up_to = np.int32(w.m ** level)
+    padding = np.array(np.ceil(shape / pad_up_to) * pad_up_to - shape, dtype=int).T
     padded_shape = shape + padding
     d.reverse()
     res = OffsetTensor(np.zeros((1,) * len(padded_shape)), np.zeros_like(original_offset))
@@ -79,7 +86,7 @@ def waverec_period(c: list, w: Wavelet, original_shape, original_offset=np.array
             res += subdivision_period(dij, wmasks[j], cur_M, padded_shape, original_offset)
             wmasks[j] = subdivision(wmasks[j], w.h, w.M)
             wmasks[j].tensor = wmasks[j].tensor * m
-            cur_M = cur_M @ w.M
+        cur_M = cur_M @ w.M
 
     mask_h = OffsetTensor(w.h.tensor * m, w.h.offset)
     cur_M = w.M.copy()
