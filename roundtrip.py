@@ -21,6 +21,8 @@ def roundtrip(input, output):
         contents = json.loads(j.read())
     content = contents[19]
     w = createWaveletFromContent(content)
+
+    print(w)
     # ci_ = wavedec(data, 1, w)
     ci = wavedec_period(data, w, 5)
     # entropy = uniform_entropy(ci)

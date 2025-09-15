@@ -4,7 +4,7 @@ import numpy as np
 
 from classic.wave import convolve
 from offset_tensor import OffsetTensor
-from utils import CoefCoords2OffsetMatrix, OffsetMatrix2CoefCoords
+from utils import CoefCoords2OffsetTensor, OffsetTensor2CoefCoords
 from wavelet import Wavelet
 
 
@@ -12,18 +12,18 @@ def createWaveletFromContent(content):
     M = np.array(content['DilationMatrix'])
     coeffs = np.array(content['Mask']['Coeffs']) / content['Mask']['CoeffsDenominator']
     coords = np.array(content['Mask']['Coords'])
-    h = CoefCoords2OffsetMatrix((coeffs, coords))
+    h = CoefCoords2OffsetTensor((coeffs, coords))
 
     coeffs = np.array(content['DualMask']['Coeffs']) / content['DualMask']['CoeffsDenominator']
     coords = np.array(content['DualMask']['Coords'])
-    hdual = CoefCoords2OffsetMatrix((coeffs, coords))
+    hdual = CoefCoords2OffsetTensor((coeffs, coords))
 
     g = []
     for wmask in content['WaveletMasks']:
         coeffs = np.array(content['WaveletMasks'][wmask]['Coeffs']) / content['WaveletMasks'][wmask][
             'CoeffsDenominator']
         coords = np.array(content['WaveletMasks'][wmask]['Coords'])
-        g.append(CoefCoords2OffsetMatrix((coeffs, coords)))
+        g.append(CoefCoords2OffsetTensor((coeffs, coords)))
     g = tuple(g)
 
     gdual = []
@@ -31,7 +31,7 @@ def createWaveletFromContent(content):
         coeffs = np.array(content['DualWaveletMasks'][wmask]['Coeffs']) / content['DualWaveletMasks'][wmask][
             'CoeffsDenominator']
         coords = np.array(content['DualWaveletMasks'][wmask]['Coords'])
-        gdual.append(CoefCoords2OffsetMatrix((coeffs, coords)))
+        gdual.append(CoefCoords2OffsetTensor((coeffs, coords)))
     gdual = tuple(gdual)
 
     return Wavelet(h, g, hdual, gdual, M, abs(np.linalg.det(M)))
@@ -75,7 +75,7 @@ def VM(wmask: OffsetTensor, tolerance=1e-6, max_vm=None):
     Returns:
         int: Order of vanishing moments.
     """
-    (coefs, coords) = OffsetMatrix2CoefCoords(wmask)
+    (coefs, coords) = OffsetTensor2CoefCoords(wmask)
     d = len(wmask.offset)
     vm = 1
     if max_vm is None:
@@ -117,7 +117,7 @@ def Mask2Polyphase(mask: OffsetTensor, M, digits=None):
     if digits is None:
         digits = SetOfDigitsFinder(M)
 
-    (coefs, coords) = OffsetMatrix2CoefCoords(mask)
+    (coefs, coords) = OffsetTensor2CoefCoords(mask)
     m = round(np.abs(np.linalg.det(M)))
     Minv_pre = np.rint((m * np.linalg.inv(M))).astype(np.int32)
     dim = len(M)
@@ -129,9 +129,9 @@ def Mask2Polyphase(mask: OffsetTensor, M, digits=None):
         poly_coords = pre_poly_coords.T[mask] // m
         poly_coefs = coefs[mask]
         if len(poly_coefs) == 0:
-            polyphases.append(CoefCoords2OffsetMatrix(([0], [np.zeros(dim, dtype=np.int32)])))
+            polyphases.append(CoefCoords2OffsetTensor(([0], [np.zeros(dim, dtype=np.int32)])))
         else:
-            polyphases.append(CoefCoords2OffsetMatrix((poly_coefs, poly_coords)))
+            polyphases.append(CoefCoords2OffsetTensor((poly_coefs, poly_coords)))
 
     return polyphases
 
@@ -163,7 +163,7 @@ def SR(mask: OffsetTensor, M, digits=None, tolerance=1e-6, max_sr=None):
         sr_check = None
         sr_stop = False
         for digit, polyphase in zip(digits, polyphases):
-            (poly_coefs, poly_coords) = OffsetMatrix2CoefCoords(polyphase)
+            (poly_coefs, poly_coords) = OffsetTensor2CoefCoords(polyphase)
             poly_coords = (poly_coords @ M.T) + digit
             if sr_check is None:
                 sr_check = np.dot(poly_coefs, MatrixOfPowers(poly_coords, bPowers))

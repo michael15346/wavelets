@@ -28,6 +28,14 @@ class OffsetTensor:
         matrix = self.tensor * other
         return OffsetTensor(matrix, self.offset)
 
+    def __str__(self):
+        return f"""OffsetTensor(tensor=
+{self.tensor}
+        , offset={self.offset})"""
+
+    def __repr__(self):
+        return str(self)
+
     def conjugate(self):
         a_conj = deepcopy(self)
         a_conj.tensor = np.flip(a_conj.tensor)

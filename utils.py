@@ -8,7 +8,7 @@ def to_python(x, y, offset):
 def to_python_vect(coords, offset):
     return (coords - offset).T
 
-def OffsetMatrix2CoefCoords(a: OffsetTensor):
+def OffsetTensor2CoefCoords(a: OffsetTensor):
     shape = a.tensor.shape
     offset = a.offset
     coef = []
@@ -23,7 +23,7 @@ def OffsetMatrix2CoefCoords(a: OffsetTensor):
     return np.array(coef), np.array(coords)
 
 
-def CoefCoords2OffsetMatrix(a):  # a filter in coef-coords form
+def CoefCoords2OffsetTensor(a):  # a filter in coef-coords form
     coef = a[0]
     coords = a[1]
     x_left, y_bottom = list(np.min(np.transpose(coords), axis=1))

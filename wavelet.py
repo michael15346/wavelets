@@ -20,3 +20,21 @@ class Wavelet:
         self.M = M
         self.m = m
 
+    def __str__(self):
+        return f"""Wavelet(
+h:
+{self.h}
+g:
+{self.g}
+hdual:
+{self.hdual}
+gdual:
+{self.gdual}
+M:
+{self.M}
+det(M):
+{self.m}
+"""
+    def __repr__(self):
+        return str(self)
+

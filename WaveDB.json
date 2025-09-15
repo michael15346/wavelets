@@ -3189,5 +3189,4276 @@
         "SymmetryInfo": "D2",
         "Index": "Q1_IN_03_HL_D2_FR",
         "SourceInfo": "Created by the algorithm in paper \"Symmetric multivariate wavelets\" by Karakazyan S., Skopina M., Tchobanou M. in Int. J. Wavelets Multiresolut. Inf. Process. 2009 7 (3) P. 313-340."
+    },
+    {
+        "DilationMatrix": [
+            [
+                1,
+                1
+            ],
+            [
+                1,
+                -1
+            ]
+        ],
+        "DilationMatrixInfo": "QuincunxReflection",
+        "InterpolatoryMask": true,
+        "Mask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 32,
+            "Coeffs": [
+                16,
+                5,
+                5,
+                5,
+                5,
+                1,
+                -2,
+                1,
+                -2,
+                1,
+                -2,
+                1,
+                -2
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    0,
+                    1
+                ],
+                [
+                    -1,
+                    0
+                ],
+                [
+                    0,
+                    -1
+                ],
+                [
+                    2,
+                    1
+                ],
+                [
+                    1,
+                    2
+                ],
+                [
+                    -1,
+                    2
+                ],
+                [
+                    -2,
+                    1
+                ],
+                [
+                    -2,
+                    -1
+                ],
+                [
+                    -1,
+                    -2
+                ],
+                [
+                    1,
+                    -2
+                ],
+                [
+                    2,
+                    -1
+                ]
+            ],
+            "SR": 4,
+            "SobolevSmoothness": 2.6677
+        },
+        "DualMask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 1,
+            "Coeffs": [
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ]
+            ],
+            "SR": 0,
+            "SobolevSmoothness": -Infinity
+        },
+        "WaveletMasks": {
+            "WM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 1,
+                "Coeffs": [
+                    0,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 0
+            }
+        },
+        "DualWaveletMasks": {
+            "DWM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 32,
+                "Coeffs": [
+                    -1,
+                    2,
+                    2,
+                    -5,
+                    -5,
+                    -1,
+                    -1,
+                    -5,
+                    -5,
+                    2,
+                    2,
+                    -1,
+                    16
+                ],
+                "Coords": [
+                    [
+                        -1,
+                        -1
+                    ],
+                    [
+                        0,
+                        -2
+                    ],
+                    [
+                        -1,
+                        1
+                    ],
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        -1
+                    ],
+                    [
+                        2,
+                        -2
+                    ],
+                    [
+                        0,
+                        2
+                    ],
+                    [
+                        1,
+                        1
+                    ],
+                    [
+                        2,
+                        0
+                    ],
+                    [
+                        3,
+                        -1
+                    ],
+                    [
+                        2,
+                        2
+                    ],
+                    [
+                        3,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 4
+            }
+        },
+        "WaveletMasksVM": 0,
+        "DualWaveletMasksVM": 4,
+        "WaveletSystemType": "Frame-like Dual Wavelet System",
+        "RefinableMaskInfo": "Best In Cube-2 Support",
+        "DualRefinableMaskInfo": "Delta Function",
+        "SymmetryInfo": "D1",
+        "Index": "Q1_IN_13_C2_D1_FL",
+        "SourceInfo": "Created by the algorithm in paper \"On construction of multivariate symmetric MRA-based wavelets\" by A. Krivoshein, 2014, ACHA 36 (2), 215-238"
+    },
+    {
+        "DilationMatrix": [
+            [
+                1,
+                1
+            ],
+            [
+                1,
+                -1
+            ]
+        ],
+        "DilationMatrixInfo": "QuincunxReflection",
+        "InterpolatoryMask": true,
+        "Mask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 32,
+            "Coeffs": [
+                16,
+                5,
+                5,
+                5,
+                5,
+                1,
+                -2,
+                1,
+                -2,
+                1,
+                -2,
+                1,
+                -2
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    0,
+                    1
+                ],
+                [
+                    -1,
+                    0
+                ],
+                [
+                    0,
+                    -1
+                ],
+                [
+                    2,
+                    1
+                ],
+                [
+                    1,
+                    2
+                ],
+                [
+                    -1,
+                    2
+                ],
+                [
+                    -2,
+                    1
+                ],
+                [
+                    -2,
+                    -1
+                ],
+                [
+                    -1,
+                    -2
+                ],
+                [
+                    1,
+                    -2
+                ],
+                [
+                    2,
+                    -1
+                ]
+            ],
+            "SR": 4,
+            "SobolevSmoothness": 2.6677
+        },
+        "DualMask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 4,
+            "Coeffs": [
+                2,
+                1,
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    -1,
+                    0
+                ],
+                [
+                    1,
+                    0
+                ]
+            ],
+            "SR": 2,
+            "SobolevSmoothness": 2.0
+        },
+        "WaveletMasks": {
+            "WM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 2,
+                "Coeffs": [
+                    1,
+                    0
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 0
+            },
+            "WM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 2,
+                "Coeffs": [
+                    0,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 0
+            }
+        },
+        "DualWaveletMasks": {
+            "DWM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    2,
+                    -1,
+                    -1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        -1,
+                        0
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 2
+            },
+            "DWM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 64,
+                "Coeffs": [
+                    -2,
+                    4,
+                    4,
+                    -10,
+                    -10,
+                    -2,
+                    -2,
+                    -10,
+                    -10,
+                    4,
+                    4,
+                    -2,
+                    -1,
+                    2,
+                    2,
+                    -5,
+                    -6,
+                    1,
+                    -1,
+                    -3,
+                    54,
+                    -3,
+                    -1,
+                    1,
+                    -6,
+                    -5,
+                    2,
+                    2,
+                    -1
+                ],
+                "Coords": [
+                    [
+                        -1,
+                        -1
+                    ],
+                    [
+                        0,
+                        -2
+                    ],
+                    [
+                        -1,
+                        1
+                    ],
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        -1
+                    ],
+                    [
+                        2,
+                        -2
+                    ],
+                    [
+                        0,
+                        2
+                    ],
+                    [
+                        1,
+                        1
+                    ],
+                    [
+                        2,
+                        0
+                    ],
+                    [
+                        3,
+                        -1
+                    ],
+                    [
+                        2,
+                        2
+                    ],
+                    [
+                        3,
+                        1
+                    ],
+                    [
+                        -2,
+                        -1
+                    ],
+                    [
+                        -1,
+                        -2
+                    ],
+                    [
+                        -2,
+                        1
+                    ],
+                    [
+                        -1,
+                        0
+                    ],
+                    [
+                        0,
+                        -1
+                    ],
+                    [
+                        1,
+                        -2
+                    ],
+                    [
+                        -1,
+                        2
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        2,
+                        -1
+                    ],
+                    [
+                        3,
+                        -2
+                    ],
+                    [
+                        1,
+                        2
+                    ],
+                    [
+                        2,
+                        1
+                    ],
+                    [
+                        3,
+                        0
+                    ],
+                    [
+                        4,
+                        -1
+                    ],
+                    [
+                        3,
+                        2
+                    ],
+                    [
+                        4,
+                        1
+                    ]
+                ],
+                "VM": 2
+            }
+        },
+        "WaveletMasksVM": 0,
+        "DualWaveletMasksVM": 2,
+        "WaveletSystemType": "Frame-like Dual Wavelet System",
+        "RefinableMaskInfo": "Best In Cube-2 Support",
+        "DualRefinableMaskInfo": "Best In Rhomb-1 Support",
+        "SymmetryInfo": "D1",
+        "Index": "Q1_IN_13_C2_D1_FLL2",
+        "SourceInfo": "Created by the algorithm in paper \"On construction of multivariate symmetric MRA-based wavelets\" by A. Krivoshein, 2014, ACHA 36 (2), 215-238"
+    },
+    {
+        "DilationMatrix": [
+            [
+                1,
+                1
+            ],
+            [
+                1,
+                -1
+            ]
+        ],
+        "DilationMatrixInfo": "QuincunxReflection",
+        "InterpolatoryMask": true,
+        "Mask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 32,
+            "Coeffs": [
+                16,
+                5,
+                5,
+                5,
+                5,
+                1,
+                -2,
+                1,
+                -2,
+                1,
+                -2,
+                1,
+                -2
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    0,
+                    1
+                ],
+                [
+                    -1,
+                    0
+                ],
+                [
+                    0,
+                    -1
+                ],
+                [
+                    2,
+                    1
+                ],
+                [
+                    1,
+                    2
+                ],
+                [
+                    -1,
+                    2
+                ],
+                [
+                    -2,
+                    1
+                ],
+                [
+                    -2,
+                    -1
+                ],
+                [
+                    -1,
+                    -2
+                ],
+                [
+                    1,
+                    -2
+                ],
+                [
+                    2,
+                    -1
+                ]
+            ],
+            "SR": 4,
+            "SobolevSmoothness": 2.6677
+        },
+        "DualMask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 256,
+            "Coeffs": [
+                124,
+                32,
+                32,
+                32,
+                32,
+                18,
+                18,
+                18,
+                18,
+                -17,
+                -17,
+                -17,
+                -17
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    -1,
+                    0
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    0,
+                    -1
+                ],
+                [
+                    0,
+                    1
+                ],
+                [
+                    -1,
+                    -1
+                ],
+                [
+                    1,
+                    1
+                ],
+                [
+                    -1,
+                    1
+                ],
+                [
+                    1,
+                    -1
+                ],
+                [
+                    -2,
+                    0
+                ],
+                [
+                    2,
+                    0
+                ],
+                [
+                    0,
+                    -2
+                ],
+                [
+                    0,
+                    2
+                ]
+            ],
+            "SR": 2,
+            "SobolevSmoothness": 1.83392
+        },
+        "WaveletMasks": {
+            "WM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 2,
+                "Coeffs": [
+                    1,
+                    0
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 0
+            },
+            "WM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 2,
+                "Coeffs": [
+                    0,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 0
+            }
+        },
+        "DualWaveletMasks": {
+            "DWM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 256,
+                "Coeffs": [
+                    17,
+                    -18,
+                    17,
+                    -18,
+                    132,
+                    -18,
+                    17,
+                    -18,
+                    17,
+                    -32,
+                    -32,
+                    -32,
+                    -32
+                ],
+                "Coords": [
+                    [
+                        -2,
+                        0
+                    ],
+                    [
+                        -1,
+                        -1
+                    ],
+                    [
+                        0,
+                        -2
+                    ],
+                    [
+                        -1,
+                        1
+                    ],
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        -1
+                    ],
+                    [
+                        0,
+                        2
+                    ],
+                    [
+                        1,
+                        1
+                    ],
+                    [
+                        2,
+                        0
+                    ],
+                    [
+                        -1,
+                        0
+                    ],
+                    [
+                        0,
+                        -1
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 4
+            },
+            "DWM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4096,
+                "Coeffs": [
+                    17,
+                    -52,
+                    53,
+                    -34,
+                    -34,
+                    103,
+                    -127,
+                    242,
+                    103,
+                    17,
+                    53,
+                    242,
+                    -714,
+                    -714,
+                    -127,
+                    -52,
+                    -52,
+                    -127,
+                    -714,
+                    -714,
+                    242,
+                    53,
+                    17,
+                    103,
+                    242,
+                    -127,
+                    103,
+                    -34,
+                    -34,
+                    53,
+                    -52,
+                    17,
+                    -32,
+                    32,
+                    64,
+                    64,
+                    -128,
+                    -288,
+                    -128,
+                    -32,
+                    32,
+                    -288,
+                    3456,
+                    -288,
+                    32,
+                    -32,
+                    -128,
+                    -288,
+                    -128,
+                    64,
+                    64,
+                    32,
+                    -32
+                ],
+                "Coords": [
+                    [
+                        -3,
+                        -1
+                    ],
+                    [
+                        -2,
+                        -2
+                    ],
+                    [
+                        -1,
+                        -3
+                    ],
+                    [
+                        0,
+                        -4
+                    ],
+                    [
+                        -3,
+                        1
+                    ],
+                    [
+                        -2,
+                        0
+                    ],
+                    [
+                        -1,
+                        -1
+                    ],
+                    [
+                        0,
+                        -2
+                    ],
+                    [
+                        1,
+                        -3
+                    ],
+                    [
+                        2,
+                        -4
+                    ],
+                    [
+                        -2,
+                        2
+                    ],
+                    [
+                        -1,
+                        1
+                    ],
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        -1
+                    ],
+                    [
+                        2,
+                        -2
+                    ],
+                    [
+                        3,
+                        -3
+                    ],
+                    [
+                        -1,
+                        3
+                    ],
+                    [
+                        0,
+                        2
+                    ],
+                    [
+                        1,
+                        1
+                    ],
+                    [
+                        2,
+                        0
+                    ],
+                    [
+                        3,
+                        -1
+                    ],
+                    [
+                        4,
+                        -2
+                    ],
+                    [
+                        0,
+                        4
+                    ],
+                    [
+                        1,
+                        3
+                    ],
+                    [
+                        2,
+                        2
+                    ],
+                    [
+                        3,
+                        1
+                    ],
+                    [
+                        4,
+                        0
+                    ],
+                    [
+                        5,
+                        -1
+                    ],
+                    [
+                        2,
+                        4
+                    ],
+                    [
+                        3,
+                        3
+                    ],
+                    [
+                        4,
+                        2
+                    ],
+                    [
+                        5,
+                        1
+                    ],
+                    [
+                        -2,
+                        -1
+                    ],
+                    [
+                        -1,
+                        -2
+                    ],
+                    [
+                        0,
+                        -3
+                    ],
+                    [
+                        -2,
+                        1
+                    ],
+                    [
+                        -1,
+                        0
+                    ],
+                    [
+                        0,
+                        -1
+                    ],
+                    [
+                        1,
+                        -2
+                    ],
+                    [
+                        2,
+                        -3
+                    ],
+                    [
+                        -1,
+                        2
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        2,
+                        -1
+                    ],
+                    [
+                        3,
+                        -2
+                    ],
+                    [
+                        0,
+                        3
+                    ],
+                    [
+                        1,
+                        2
+                    ],
+                    [
+                        2,
+                        1
+                    ],
+                    [
+                        3,
+                        0
+                    ],
+                    [
+                        4,
+                        -1
+                    ],
+                    [
+                        2,
+                        3
+                    ],
+                    [
+                        3,
+                        2
+                    ],
+                    [
+                        4,
+                        1
+                    ]
+                ],
+                "VM": 4
+            }
+        },
+        "WaveletMasksVM": 0,
+        "DualWaveletMasksVM": 4,
+        "WaveletSystemType": "Frame-like Dual Wavelet System",
+        "RefinableMaskInfo": "Best In Cube-2 Support",
+        "DualRefinableMaskInfo": "Best In Rhomb-1 Support",
+        "SymmetryInfo": "D1",
+        "Index": "Q1_IN_13_C2_D1_FLL2",
+        "SourceInfo": "Created by the algorithm in paper \"On construction of multivariate symmetric MRA-based wavelets\" by A. Krivoshein, 2014, ACHA 36 (2), 215-238"
+    },
+    {
+        "DilationMatrix": [
+            [
+                1,
+                1
+            ],
+            [
+                1,
+                -1
+            ]
+        ],
+        "DilationMatrixInfo": "QuincunxReflection",
+        "InterpolatoryMask": true,
+        "Mask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 32,
+            "Coeffs": [
+                16,
+                5,
+                5,
+                5,
+                5,
+                1,
+                -2,
+                1,
+                -2,
+                1,
+                -2,
+                1,
+                -2
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    0,
+                    1
+                ],
+                [
+                    -1,
+                    0
+                ],
+                [
+                    0,
+                    -1
+                ],
+                [
+                    2,
+                    1
+                ],
+                [
+                    1,
+                    2
+                ],
+                [
+                    -1,
+                    2
+                ],
+                [
+                    -2,
+                    1
+                ],
+                [
+                    -2,
+                    -1
+                ],
+                [
+                    -1,
+                    -2
+                ],
+                [
+                    1,
+                    -2
+                ],
+                [
+                    2,
+                    -1
+                ]
+            ],
+            "SR": 4,
+            "SobolevSmoothness": 2.6677
+        },
+        "DualMask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 64,
+            "Coeffs": [
+                -1,
+                1,
+                2,
+                2,
+                -3,
+                -6,
+                -1,
+                -5,
+                16,
+                54,
+                16,
+                -5,
+                -1,
+                -6,
+                -3,
+                2,
+                2,
+                1,
+                -1
+            ],
+            "Coords": [
+                [
+                    -2,
+                    -2
+                ],
+                [
+                    -2,
+                    0
+                ],
+                [
+                    -2,
+                    2
+                ],
+                [
+                    -1,
+                    -3
+                ],
+                [
+                    -1,
+                    -1
+                ],
+                [
+                    -1,
+                    1
+                ],
+                [
+                    -1,
+                    3
+                ],
+                [
+                    0,
+                    -2
+                ],
+                [
+                    0,
+                    -1
+                ],
+                [
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    1
+                ],
+                [
+                    0,
+                    2
+                ],
+                [
+                    1,
+                    -3
+                ],
+                [
+                    1,
+                    -1
+                ],
+                [
+                    1,
+                    1
+                ],
+                [
+                    1,
+                    3
+                ],
+                [
+                    2,
+                    -2
+                ],
+                [
+                    2,
+                    0
+                ],
+                [
+                    2,
+                    2
+                ]
+            ],
+            "SR": 2,
+            "SobolevSmoothness": 0.0628943
+        },
+        "WaveletMasks": {
+            "WM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 64,
+                "Coeffs": [
+                    -16,
+                    -16,
+                    -1,
+                    2,
+                    1,
+                    -3,
+                    -5,
+                    -1,
+                    2,
+                    -6,
+                    54,
+                    -6,
+                    2,
+                    -1,
+                    -5,
+                    -3,
+                    1,
+                    2,
+                    -1
+                ],
+                "Coords": [
+                    [
+                        1,
+                        -1
+                    ],
+                    [
+                        1,
+                        1
+                    ],
+                    [
+                        -1,
+                        -2
+                    ],
+                    [
+                        0,
+                        -3
+                    ],
+                    [
+                        -1,
+                        0
+                    ],
+                    [
+                        0,
+                        -1
+                    ],
+                    [
+                        1,
+                        -2
+                    ],
+                    [
+                        2,
+                        -3
+                    ],
+                    [
+                        -1,
+                        2
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        2,
+                        -1
+                    ],
+                    [
+                        3,
+                        -2
+                    ],
+                    [
+                        0,
+                        3
+                    ],
+                    [
+                        1,
+                        2
+                    ],
+                    [
+                        2,
+                        1
+                    ],
+                    [
+                        3,
+                        0
+                    ],
+                    [
+                        2,
+                        3
+                    ],
+                    [
+                        3,
+                        2
+                    ]
+                ],
+                "VM": 2
+            }
+        },
+        "DualWaveletMasks": {
+            "DWM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 32,
+                "Coeffs": [
+                    -1,
+                    2,
+                    2,
+                    -5,
+                    -5,
+                    -1,
+                    -1,
+                    -5,
+                    -5,
+                    2,
+                    2,
+                    -1,
+                    16
+                ],
+                "Coords": [
+                    [
+                        -1,
+                        -1
+                    ],
+                    [
+                        0,
+                        -2
+                    ],
+                    [
+                        -1,
+                        1
+                    ],
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        -1
+                    ],
+                    [
+                        2,
+                        -2
+                    ],
+                    [
+                        0,
+                        2
+                    ],
+                    [
+                        1,
+                        1
+                    ],
+                    [
+                        2,
+                        0
+                    ],
+                    [
+                        3,
+                        -1
+                    ],
+                    [
+                        2,
+                        2
+                    ],
+                    [
+                        3,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 4
+            }
+        },
+        "WaveletMasksVM": 2,
+        "DualWaveletMasksVM": 4,
+        "WaveletSystemType": "Dual Wavelet Frame",
+        "RefinableMaskInfo": "Best In Cube-2 Support",
+        "DualRefinableMaskInfo": "Biorthogonal with SR = 2",
+        "SymmetryInfo": "D1",
+        "Index": "Q1_IN_13_C2_D1_FR",
+        "SourceInfo": "Created by the algorithm in paper \"Symmetric multivariate wavelets\" by Karakazyan S., Skopina M., Tchobanou M. in Int. J. Wavelets Multiresolut. Inf. Process. 2009 7 (3) P. 313-340."
+    },
+    {
+        "DilationMatrix": [
+            [
+                2,
+                -1
+            ],
+            [
+                1,
+                1
+            ]
+        ],
+        "DilationMatrixInfo": "HexagonalRotation",
+        "InterpolatoryMask": true,
+        "Mask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 3,
+            "Coeffs": [
+                1,
+                1,
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    0,
+                    -1
+                ]
+            ],
+            "SR": 1,
+            "SobolevSmoothness": 0.36907
+        },
+        "DualMask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 1,
+            "Coeffs": [
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ]
+            ],
+            "SR": 0,
+            "SobolevSmoothness": -Infinity
+        },
+        "WaveletMasks": {
+            "WM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 1,
+                "Coeffs": [
+                    1
+                ],
+                "Coords": [
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 0
+            },
+            "WM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 1,
+                "Coeffs": [
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        -1
+                    ]
+                ],
+                "VM": 0
+            }
+        },
+        "DualWaveletMasks": {
+            "DWM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 3,
+                "Coeffs": [
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 1
+            },
+            "DWM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 3,
+                "Coeffs": [
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        -1
+                    ]
+                ],
+                "VM": 1
+            }
+        },
+        "WaveletMasksVM": 0,
+        "DualWaveletMasksVM": 1,
+        "WaveletSystemType": "Frame-like Dual Wavelet System",
+        "RefinableMaskInfo": "Haar",
+        "DualRefinableMaskInfo": "Delta Function",
+        "SymmetryInfo": "Only Refinable",
+        "Index": "H0_IN_03_HR_NS_FL",
+        "SourceInfo": "Created by the algorithm in paper \"Approximation by frame-like wavelet systems\" by A. Krivoshein, M. Skopina, 2011, ACHA 31 (3), 410-428"
+    },
+    {
+        "DilationMatrix": [
+            [
+                2,
+                -1
+            ],
+            [
+                1,
+                1
+            ]
+        ],
+        "DilationMatrixInfo": "HexagonalRotation",
+        "InterpolatoryMask": true,
+        "Mask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 3,
+            "Coeffs": [
+                1,
+                1,
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    0,
+                    -1
+                ]
+            ],
+            "SR": 1,
+            "SobolevSmoothness": 0.36907
+        },
+        "DualMask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 1,
+            "Coeffs": [
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ]
+            ],
+            "SR": 0,
+            "SobolevSmoothness": 0.36907
+        },
+        "WaveletMasks": {
+            "WM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 1,
+                "Coeffs": [
+                    1
+                ],
+                "Coords": [
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 0
+            },
+            "WM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 1,
+                "Coeffs": [
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        -1
+                    ]
+                ],
+                "VM": 0
+            }
+        },
+        "DualWaveletMasks": {
+            "DWM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 3,
+                "Coeffs": [
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 1
+            },
+            "DWM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 3,
+                "Coeffs": [
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        -1
+                    ]
+                ],
+                "VM": 1
+            }
+        },
+        "WaveletMasksVM": 0,
+        "DualWaveletMasksVM": 1,
+        "WaveletSystemType": "Dual Wavelet Frame",
+        "RefinableMaskInfo": "Haar",
+        "DualRefinableMaskInfo": "Same as Refinable",
+        "SymmetryInfo": "NO",
+        "Index": "H0_IN_03_HR_NS_FR",
+        "SourceInfo": "Created by the algorithm in paper \"Symmetric multivariate wavelets\" by Karakazyan S., Skopina M., Tchobanou M. in Int. J. Wavelets Multiresolut. Inf. Process. 2009 7 (3) P. 313-340."
+    },
+    {
+        "DilationMatrix": [
+            [
+                2,
+                -1
+            ],
+            [
+                1,
+                1
+            ]
+        ],
+        "DilationMatrixInfo": "HexagonalRotation",
+        "InterpolatoryMask": true,
+        "Mask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 3,
+            "Coeffs": [
+                1,
+                1,
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    0,
+                    -1
+                ]
+            ],
+            "SR": 1,
+            "SobolevSmoothness": 0.36907
+        },
+        "DualMask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 3,
+            "Coeffs": [
+                1,
+                1,
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    -1
+                ],
+                [
+                    0,
+                    0
+                ],
+                [
+                    1,
+                    0
+                ]
+            ],
+            "SR": 1,
+            "SobolevSmoothness": 0.36907
+        },
+        "WaveletMasks": {
+            "WM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 1,
+                "Coeffs": [
+                    0.3333333333333333,
+                    0.1220084679281462,
+                    -0.4553418012614796
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        -1
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 1
+            },
+            "WM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 1,
+                "Coeffs": [
+                    0.3333333333333333,
+                    -0.4553418012614796,
+                    0.1220084679281462
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        -1
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 1
+            }
+        },
+        "DualWaveletMasks": {
+            "DWM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 1,
+                "Coeffs": [
+                    0.3333333333333333,
+                    0.1220084679281462,
+                    -0.4553418012614796
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        -1
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 1
+            },
+            "DWM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 1,
+                "Coeffs": [
+                    0.3333333333333333,
+                    -0.4553418012614796,
+                    0.1220084679281462
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        -1
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 1
+            }
+        },
+        "WaveletMasksVM": 1,
+        "DualWaveletMasksVM": 1,
+        "WaveletSystemType": "ONB",
+        "RefinableMaskInfo": "Haar",
+        "DualRefinableMaskInfo": "Same as Refinable",
+        "SymmetryInfo": "NO",
+        "Index": "H0_IN_03_HR_NS_OB",
+        "SourceInfo": "Thesis"
+    },
+    {
+        "DilationMatrix": [
+            [
+                2,
+                -1
+            ],
+            [
+                1,
+                1
+            ]
+        ],
+        "DilationMatrixInfo": "HexagonalRotation",
+        "InterpolatoryMask": true,
+        "Mask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 3,
+            "Coeffs": [
+                1,
+                1,
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    -1,
+                    0
+                ]
+            ],
+            "SR": 1,
+            "SobolevSmoothness": 0.17122
+        },
+        "DualMask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 1,
+            "Coeffs": [
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ]
+            ],
+            "SR": 0,
+            "SobolevSmoothness": -Infinity
+        },
+        "WaveletMasks": {
+            "WM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 1,
+                "Coeffs": [
+                    1
+                ],
+                "Coords": [
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 0
+            },
+            "WM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 1,
+                "Coeffs": [
+                    1
+                ],
+                "Coords": [
+                    [
+                        -1,
+                        0
+                    ]
+                ],
+                "VM": 0
+            }
+        },
+        "DualWaveletMasks": {
+            "DWM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 3,
+                "Coeffs": [
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 1
+            },
+            "DWM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 3,
+                "Coeffs": [
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        -1,
+                        0
+                    ]
+                ],
+                "VM": 1
+            }
+        },
+        "WaveletMasksVM": 0,
+        "DualWaveletMasksVM": 1,
+        "WaveletSystemType": "Frame-like Dual Wavelet System",
+        "RefinableMaskInfo": "Haar",
+        "DualRefinableMaskInfo": "Delta Function",
+        "SymmetryInfo": "Only Refinable",
+        "Index": "H0_IN_03_HL_NS_FL",
+        "SourceInfo": "Created by the algorithm in paper \"Approximation by frame-like wavelet systems\" by A. Krivoshein, M. Skopina, 2011, ACHA 31 (3), 410-428"
+    },
+    {
+        "DilationMatrix": [
+            [
+                2,
+                -1
+            ],
+            [
+                1,
+                1
+            ]
+        ],
+        "DilationMatrixInfo": "HexagonalRotation",
+        "InterpolatoryMask": true,
+        "Mask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 3,
+            "Coeffs": [
+                1,
+                1,
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    -1,
+                    0
+                ]
+            ],
+            "SR": 1,
+            "SobolevSmoothness": 0.17122
+        },
+        "DualMask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 3,
+            "Coeffs": [
+                1,
+                1,
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    -1,
+                    0
+                ]
+            ],
+            "SR": 1,
+            "SobolevSmoothness": 0.17122
+        },
+        "WaveletMasks": {
+            "WM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 3,
+                "Coeffs": [
+                    -1,
+                    2,
+                    -1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        -1,
+                        0
+                    ]
+                ],
+                "VM": 1
+            },
+            "WM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 3,
+                "Coeffs": [
+                    -1,
+                    -1,
+                    2
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        -1,
+                        0
+                    ]
+                ],
+                "VM": 1
+            }
+        },
+        "DualWaveletMasks": {
+            "DWM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 3,
+                "Coeffs": [
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 1
+            },
+            "DWM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 3,
+                "Coeffs": [
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        -1,
+                        0
+                    ]
+                ],
+                "VM": 1
+            }
+        },
+        "WaveletMasksVM": 1,
+        "DualWaveletMasksVM": 1,
+        "WaveletSystemType": "Dual Wavelet Frame",
+        "RefinableMaskInfo": "Haar",
+        "DualRefinableMaskInfo": "Same as Refinable",
+        "SymmetryInfo": "NO",
+        "Index": "H0_IN_03_HL_NS_FR",
+        "SourceInfo": "Created by the algorithm in paper \"Symmetric multivariate wavelets\" by Karakazyan S., Skopina M., Tchobanou M. in Int. J. Wavelets Multiresolut. Inf. Process. 2009 7 (3) P. 313-340."
+    },
+    {
+        "DilationMatrix": [
+            [
+                2,
+                -1
+            ],
+            [
+                1,
+                1
+            ]
+        ],
+        "DilationMatrixInfo": "HexagonalRotation",
+        "InterpolatoryMask": true,
+        "Mask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 3,
+            "Coeffs": [
+                1,
+                1,
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    -1,
+                    0
+                ]
+            ],
+            "SR": 1,
+            "SobolevSmoothness": 0.17122
+        },
+        "DualMask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 3,
+            "Coeffs": [
+                1,
+                1,
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    -1,
+                    0
+                ]
+            ],
+            "SR": 1,
+            "SobolevSmoothness": 0.17122
+        },
+        "WaveletMasks": {
+            "WM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 1,
+                "Coeffs": [
+                    0.3333333333333333,
+                    0.1220084679281462,
+                    -0.4553418012614796
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        -1,
+                        0
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 1
+            },
+            "WM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 1,
+                "Coeffs": [
+                    0.3333333333333333,
+                    -0.4553418012614796,
+                    0.1220084679281462
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        -1,
+                        0
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 1
+            }
+        },
+        "DualWaveletMasks": {
+            "DWM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 1,
+                "Coeffs": [
+                    0.3333333333333333,
+                    0.1220084679281462,
+                    -0.4553418012614796
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        -1,
+                        0
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 1
+            },
+            "DWM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 1,
+                "Coeffs": [
+                    0.3333333333333333,
+                    -0.4553418012614796,
+                    0.1220084679281462
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        -1,
+                        0
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 1
+            }
+        },
+        "WaveletMasksVM": 1,
+        "DualWaveletMasksVM": 1,
+        "WaveletSystemType": "ONB",
+        "RefinableMaskInfo": "Haar",
+        "DualRefinableMaskInfo": "Same as Refinable",
+        "SymmetryInfo": "NO",
+        "Index": "H0_IN_03_HL_NS_OB",
+        "SourceInfo": "Thesis"
+    },
+    {
+        "DilationMatrix": [
+            [
+                2,
+                -1
+            ],
+            [
+                1,
+                1
+            ]
+        ],
+        "DilationMatrixInfo": "HexagonalRotation",
+        "InterpolatoryMask": true,
+        "Mask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 9,
+            "Coeffs": [
+                3,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    0,
+                    1
+                ],
+                [
+                    -1,
+                    0
+                ],
+                [
+                    0,
+                    -1
+                ],
+                [
+                    1,
+                    1
+                ],
+                [
+                    -1,
+                    -1
+                ]
+            ],
+            "SR": 2,
+            "SobolevSmoothness": 1.65714
+        },
+        "DualMask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 1,
+            "Coeffs": [
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ]
+            ],
+            "SR": 0,
+            "SobolevSmoothness": -Infinity
+        },
+        "WaveletMasks": {
+            "WM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 1,
+                "Coeffs": [
+                    1
+                ],
+                "Coords": [
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 0
+            },
+            "WM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 1,
+                "Coeffs": [
+                    1
+                ],
+                "Coords": [
+                    [
+                        -1,
+                        0
+                    ]
+                ],
+                "VM": 0
+            }
+        },
+        "DualWaveletMasks": {
+            "DWM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 9,
+                "Coeffs": [
+                    -1,
+                    -1,
+                    -1,
+                    3
+                ],
+                "Coords": [
+                    [
+                        1,
+                        -1
+                    ],
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        2,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 2
+            },
+            "DWM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 9,
+                "Coeffs": [
+                    -1,
+                    -1,
+                    -1,
+                    3
+                ],
+                "Coords": [
+                    [
+                        -2,
+                        -1
+                    ],
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        -1,
+                        1
+                    ],
+                    [
+                        -1,
+                        0
+                    ]
+                ],
+                "VM": 2
+            }
+        },
+        "WaveletMasksVM": 0,
+        "DualWaveletMasksVM": 2,
+        "WaveletSystemType": "Frame-like Dual Wavelet System",
+        "RefinableMaskInfo": "Best In Cube-1",
+        "DualRefinableMaskInfo": "Delta Function",
+        "SymmetryInfo": "HexAbel",
+        "Index": "H1_IN_07_C1_HA_FL",
+        "SourceInfo": "Created by the algorithm in paper \"Approximation by frame-like wavelet systems\" by A. Krivoshein, M. Skopina, 2011, ACHA 31 (3), 410-428"
+    },
+    {
+        "DilationMatrix": [
+            [
+                2,
+                -1
+            ],
+            [
+                1,
+                1
+            ]
+        ],
+        "DilationMatrixInfo": "HexagonalRotation",
+        "InterpolatoryMask": true,
+        "Mask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 9,
+            "Coeffs": [
+                3,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    0,
+                    1
+                ],
+                [
+                    -1,
+                    0
+                ],
+                [
+                    0,
+                    -1
+                ],
+                [
+                    1,
+                    1
+                ],
+                [
+                    -1,
+                    -1
+                ]
+            ],
+            "SR": 2,
+            "SobolevSmoothness": 1.65714
+        },
+        "DualMask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 9,
+            "Coeffs": [
+                1,
+                1,
+                1,
+                3,
+                1,
+                1,
+                1
+            ],
+            "Coords": [
+                [
+                    -1,
+                    -1
+                ],
+                [
+                    -1,
+                    0
+                ],
+                [
+                    0,
+                    -1
+                ],
+                [
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    1
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    1,
+                    1
+                ]
+            ],
+            "SR": 2,
+            "SobolevSmoothness": 1.65714
+        },
+        "WaveletMasks": {
+            "WM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 3,
+                "Coeffs": [
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ]
+                ],
+                "VM": 0
+            },
+            "WM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 3,
+                "Coeffs": [
+                    1
+                ],
+                "Coords": [
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 0
+            },
+            "WM3": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 3,
+                "Coeffs": [
+                    1
+                ],
+                "Coords": [
+                    [
+                        -1,
+                        0
+                    ]
+                ],
+                "VM": 0
+            }
+        },
+        "DualWaveletMasks": {
+            "DWM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 9,
+                "Coeffs": [
+                    6,
+                    -1,
+                    -1,
+                    -1,
+                    -1,
+                    -1,
+                    -1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        -1,
+                        -1
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        0,
+                        -1
+                    ],
+                    [
+                        -1,
+                        0
+                    ],
+                    [
+                        1,
+                        1
+                    ]
+                ],
+                "VM": 2
+            },
+            "DWM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 27,
+                "Coeffs": [
+                    -3,
+                    -3,
+                    -3,
+                    -1,
+                    -1,
+                    -1,
+                    24,
+                    -1,
+                    -1,
+                    -1,
+                    -1,
+                    -2,
+                    -1,
+                    -2,
+                    -2,
+                    -1
+                ],
+                "Coords": [
+                    [
+                        1,
+                        -1
+                    ],
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        2,
+                        1
+                    ],
+                    [
+                        0,
+                        -2
+                    ],
+                    [
+                        -1,
+                        -1
+                    ],
+                    [
+                        2,
+                        -1
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        3,
+                        1
+                    ],
+                    [
+                        2,
+                        2
+                    ],
+                    [
+                        1,
+                        -2
+                    ],
+                    [
+                        0,
+                        -1
+                    ],
+                    [
+                        -1,
+                        0
+                    ],
+                    [
+                        2,
+                        0
+                    ],
+                    [
+                        1,
+                        1
+                    ],
+                    [
+                        3,
+                        2
+                    ]
+                ],
+                "VM": 2
+            },
+            "DWM3": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 27,
+                "Coeffs": [
+                    -3,
+                    -3,
+                    -3,
+                    -1,
+                    -2,
+                    -2,
+                    -1,
+                    -2,
+                    -1,
+                    -1,
+                    -1,
+                    -1,
+                    24,
+                    -1,
+                    -1,
+                    -1
+                ],
+                "Coords": [
+                    [
+                        -2,
+                        -1
+                    ],
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        -1,
+                        1
+                    ],
+                    [
+                        -3,
+                        -2
+                    ],
+                    [
+                        -1,
+                        -1
+                    ],
+                    [
+                        -2,
+                        0
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        -1,
+                        2
+                    ],
+                    [
+                        -2,
+                        -2
+                    ],
+                    [
+                        -3,
+                        -1
+                    ],
+                    [
+                        0,
+                        -1
+                    ],
+                    [
+                        -1,
+                        0
+                    ],
+                    [
+                        -2,
+                        1
+                    ],
+                    [
+                        1,
+                        1
+                    ],
+                    [
+                        0,
+                        2
+                    ]
+                ],
+                "VM": 2
+            }
+        },
+        "WaveletMasksVM": 0,
+        "DualWaveletMasksVM": 2,
+        "WaveletSystemType": "Dual Wavelet Frame",
+        "RefinableMaskInfo": "Best In Cube-1",
+        "DualRefinableMaskInfo": "Same Sym and Compatible 2",
+        "SymmetryInfo": "HexAbel",
+        "Index": "H1_IN_07_C1_HA_FR",
+        "SourceInfo": "Created by the algorithm in paper \"On construction of multivariate symmetric MRA-based wavelets\" by A. Krivoshein, 2014, ACHA 36 (2), 215-238"
+    },
+    {
+        "DilationMatrix": [
+            [
+                2,
+                0
+            ],
+            [
+                0,
+                2
+            ]
+        ],
+        "DilationMatrixInfo": "DyadicStandard",
+        "InterpolatoryMask": true,
+        "Mask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 4,
+            "Coeffs": [
+                1,
+                1,
+                1,
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    1
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    1,
+                    1
+                ]
+            ],
+            "SR": 1,
+            "SobolevSmoothness": 1.0
+        },
+        "DualMask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 1,
+            "Coeffs": [
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ]
+            ],
+            "SR": 0,
+            "SobolevSmoothness": -Infinity
+        },
+        "WaveletMasks": {
+            "WM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 1,
+                "Coeffs": [
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        1
+                    ]
+                ],
+                "VM": 0
+            },
+            "WM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 1,
+                "Coeffs": [
+                    1
+                ],
+                "Coords": [
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 0
+            },
+            "WM3": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 1,
+                "Coeffs": [
+                    1
+                ],
+                "Coords": [
+                    [
+                        1,
+                        1
+                    ]
+                ],
+                "VM": 0
+            }
+        },
+        "DualWaveletMasks": {
+            "DWM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ]
+                ],
+                "VM": 1
+            },
+            "DWM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 1
+            },
+            "DWM3": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        1
+                    ]
+                ],
+                "VM": 1
+            }
+        },
+        "WaveletMasksVM": 0,
+        "DualWaveletMasksVM": 1,
+        "WaveletSystemType": "Frame-like Dual Wavelet System",
+        "RefinableMaskInfo": "Haar",
+        "DualRefinableMaskInfo": "Delta Function",
+        "SymmetryInfo": "Only Refinable",
+        "Index": "DY_IN_04_HR_NS_FL",
+        "SourceInfo": "Created by the algorithm in paper \"Approximation by frame-like wavelet systems\" by A. Krivoshein, M. Skopina, 2011, ACHA 31 (3), 410-428"
+    },
+    {
+        "DilationMatrix": [
+            [
+                2,
+                0
+            ],
+            [
+                0,
+                2
+            ]
+        ],
+        "DilationMatrixInfo": "DyadicStandard",
+        "InterpolatoryMask": true,
+        "Mask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 4,
+            "Coeffs": [
+                1,
+                1,
+                1,
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    1
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    1,
+                    1
+                ]
+            ],
+            "SR": 1,
+            "SobolevSmoothness": 1.0
+        },
+        "DualMask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 4,
+            "Coeffs": [
+                1,
+                1,
+                1,
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    1
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    1,
+                    1
+                ]
+            ],
+            "SR": 1,
+            "SobolevSmoothness": 1.0
+        },
+        "WaveletMasks": {
+            "WM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    -1,
+                    3,
+                    -1,
+                    -1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        1,
+                        1
+                    ]
+                ],
+                "VM": 1
+            },
+            "WM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    -1,
+                    -1,
+                    3,
+                    -1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        1,
+                        1
+                    ]
+                ],
+                "VM": 1
+            },
+            "WM3": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    -1,
+                    -1,
+                    -1,
+                    3
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        1,
+                        1
+                    ]
+                ],
+                "VM": 1
+            }
+        },
+        "DualWaveletMasks": {
+            "DWM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ]
+                ],
+                "VM": 1
+            },
+            "DWM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 1
+            },
+            "DWM3": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        1
+                    ]
+                ],
+                "VM": 1
+            }
+        },
+        "WaveletMasksVM": 1,
+        "DualWaveletMasksVM": 1,
+        "WaveletSystemType": "Dual Wavelet Frame",
+        "RefinableMaskInfo": "Haar",
+        "DualRefinableMaskInfo": "Same as Refinable",
+        "SymmetryInfo": "D2 with symmetry center (1/2,1/2)",
+        "Index": "DY_IN_04_HR_D2_FR",
+        "SourceInfo": "Created by the algorithm in paper \"On construction of multivariate symmetric MRA-based wavelets\" by A. Krivoshein, 2014, ACHA 36 (2), 215-238"
+    },
+    {
+        "DilationMatrix": [
+            [
+                2,
+                0
+            ],
+            [
+                0,
+                2
+            ]
+        ],
+        "DilationMatrixInfo": "DyadicStandard",
+        "InterpolatoryMask": true,
+        "Mask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 4,
+            "Coeffs": [
+                1,
+                1,
+                1,
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    1
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    1,
+                    1
+                ]
+            ],
+            "SR": 1,
+            "SobolevSmoothness": 1.0
+        },
+        "DualMask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 4,
+            "Coeffs": [
+                1,
+                1,
+                1,
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    1
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    1,
+                    1
+                ]
+            ],
+            "SR": 1,
+            "SobolevSmoothness": 1.0
+        },
+        "WaveletMasks": {
+            "WM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    1,
+                    1,
+                    -1,
+                    -1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        1,
+                        1
+                    ]
+                ],
+                "VM": 1
+            },
+            "WM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    1,
+                    -1,
+                    1,
+                    -1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        1,
+                        1
+                    ]
+                ],
+                "VM": 1
+            },
+            "WM3": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    1,
+                    -1,
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        1,
+                        1
+                    ]
+                ],
+                "VM": 2
+            }
+        },
+        "DualWaveletMasks": {
+            "DWM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    1,
+                    1,
+                    -1,
+                    -1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        1,
+                        1
+                    ]
+                ],
+                "VM": 1
+            },
+            "DWM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    1,
+                    -1,
+                    1,
+                    -1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        1,
+                        1
+                    ]
+                ],
+                "VM": 1
+            },
+            "DWM3": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    1,
+                    -1,
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        1,
+                        1
+                    ]
+                ],
+                "VM": 2
+            }
+        },
+        "WaveletMasksVM": 1,
+        "DualWaveletMasksVM": 1,
+        "WaveletSystemType": "ONB",
+        "RefinableMaskInfo": "Haar",
+        "DualRefinableMaskInfo": "Same as Refinable",
+        "SymmetryInfo": "D2 with symmetry center (1/2,1/2)",
+        "Index": "DY_IN_04_HR_D2_OB",
+        "SourceInfo": "Thesis"
+    },
+    {
+        "DilationMatrix": [
+            [
+                2,
+                0
+            ],
+            [
+                0,
+                2
+            ]
+        ],
+        "DilationMatrixInfo": "DyadicNonStandard",
+        "InterpolatoryMask": true,
+        "Mask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 4,
+            "Coeffs": [
+                1,
+                1,
+                1,
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    1
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    -1,
+                    -1
+                ]
+            ],
+            "SR": 1,
+            "SobolevSmoothness": 0.207519
+        },
+        "DualMask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 1,
+            "Coeffs": [
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ]
+            ],
+            "SR": 0,
+            "SobolevSmoothness": -Infinity
+        },
+        "WaveletMasks": {
+            "WM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 1,
+                "Coeffs": [
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        1
+                    ]
+                ],
+                "VM": 0
+            },
+            "WM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 1,
+                "Coeffs": [
+                    1
+                ],
+                "Coords": [
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 0
+            },
+            "WM3": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 1,
+                "Coeffs": [
+                    1
+                ],
+                "Coords": [
+                    [
+                        -1,
+                        -1
+                    ]
+                ],
+                "VM": 0
+            }
+        },
+        "DualWaveletMasks": {
+            "DWM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ]
+                ],
+                "VM": 1
+            },
+            "DWM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 1
+            },
+            "DWM3": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        -1,
+                        -1
+                    ]
+                ],
+                "VM": 1
+            }
+        },
+        "WaveletMasksVM": 0,
+        "DualWaveletMasksVM": 1,
+        "WaveletSystemType": "Frame-like Dual Wavelet System",
+        "RefinableMaskInfo": "Haar",
+        "DualRefinableMaskInfo": "Delta Function",
+        "SymmetryInfo": "NO",
+        "Index": "D1_IN_04_HR_NS_FL",
+        "SourceInfo": "Created by the algorithm in paper \"Approximation by frame-like wavelet systems\" by A. Krivoshein, M. Skopina, 2011, ACHA 31 (3), 410-428"
+    },
+    {
+        "DilationMatrix": [
+            [
+                2,
+                0
+            ],
+            [
+                0,
+                2
+            ]
+        ],
+        "DilationMatrixInfo": "DyadicNonStandard",
+        "InterpolatoryMask": true,
+        "Mask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 4,
+            "Coeffs": [
+                1,
+                1,
+                1,
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    1
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    -1,
+                    -1
+                ]
+            ],
+            "SR": 1,
+            "SobolevSmoothness": 0.207519
+        },
+        "DualMask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 4,
+            "Coeffs": [
+                1,
+                1,
+                1,
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    1
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    -1,
+                    -1
+                ]
+            ],
+            "SR": 1,
+            "SobolevSmoothness": 0.207519
+        },
+        "WaveletMasks": {
+            "WM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    -1,
+                    3,
+                    -1,
+                    -1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        -1,
+                        -1
+                    ]
+                ],
+                "VM": 1
+            },
+            "WM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    -1,
+                    -1,
+                    3,
+                    -1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        -1,
+                        -1
+                    ]
+                ],
+                "VM": 1
+            },
+            "WM3": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    -1,
+                    -1,
+                    -1,
+                    3
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        -1,
+                        -1
+                    ]
+                ],
+                "VM": 1
+            }
+        },
+        "DualWaveletMasks": {
+            "DWM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ]
+                ],
+                "VM": 1
+            },
+            "DWM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                "VM": 1
+            },
+            "DWM3": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        -1,
+                        -1
+                    ]
+                ],
+                "VM": 1
+            }
+        },
+        "WaveletMasksVM": 1,
+        "DualWaveletMasksVM": 1,
+        "WaveletSystemType": "Dual Wavelet Frame",
+        "RefinableMaskInfo": "Haar",
+        "DualRefinableMaskInfo": "Same as Refinable",
+        "SymmetryInfo": "NO",
+        "Index": "D1_IN_04_HR_NS_FR",
+        "SourceInfo": "Created by the algorithm in paper \"On construction of multivariate symmetric MRA-based wavelets\" by A. Krivoshein, 2014, ACHA 36 (2), 215-238"
+    },
+    {
+        "DilationMatrix": [
+            [
+                2,
+                0
+            ],
+            [
+                0,
+                2
+            ]
+        ],
+        "DilationMatrixInfo": "DyadicNONStandard",
+        "InterpolatoryMask": true,
+        "Mask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 4,
+            "Coeffs": [
+                1,
+                1,
+                1,
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    1
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    -1,
+                    -1
+                ]
+            ],
+            "SR": 1,
+            "SobolevSmoothness": 0.207519
+        },
+        "DualMask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 4,
+            "Coeffs": [
+                1,
+                1,
+                1,
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    1
+                ],
+                [
+                    1,
+                    0
+                ],
+                [
+                    -1,
+                    -1
+                ]
+            ],
+            "SR": 1,
+            "SobolevSmoothness": 0.207519
+        },
+        "WaveletMasks": {
+            "WM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    1,
+                    1,
+                    -1,
+                    -1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        -1,
+                        -1
+                    ]
+                ],
+                "VM": 1
+            },
+            "WM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    1,
+                    -1,
+                    1,
+                    -1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        -1,
+                        -1
+                    ]
+                ],
+                "VM": 1
+            },
+            "WM3": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    1,
+                    -1,
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        -1,
+                        -1
+                    ]
+                ],
+                "VM": 1
+            }
+        },
+        "DualWaveletMasks": {
+            "DWM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    1,
+                    1,
+                    -1,
+                    -1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        -1,
+                        -1
+                    ]
+                ],
+                "VM": 1
+            },
+            "DWM2": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    1,
+                    -1,
+                    1,
+                    -1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        -1,
+                        -1
+                    ]
+                ],
+                "VM": 1
+            },
+            "DWM3": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 4,
+                "Coeffs": [
+                    1,
+                    -1,
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        1,
+                        0
+                    ],
+                    [
+                        -1,
+                        -1
+                    ]
+                ],
+                "VM": 1
+            }
+        },
+        "WaveletMasksVM": 1,
+        "DualWaveletMasksVM": 1,
+        "WaveletSystemType": "ONB",
+        "RefinableMaskInfo": "Haar",
+        "DualRefinableMaskInfo": "Same as Refinable",
+        "SymmetryInfo": "NO",
+        "Index": "D1_IN_04_HR_NS_OB",
+        "SourceInfo": "Thesis"
     }
 ]

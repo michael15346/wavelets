@@ -43,12 +43,15 @@ def subdivision(a: OffsetTensor, mask: OffsetTensor, M: np.ndarray):
 
 
 def downsample(a: OffsetTensor, M: np.ndarray):
-    Minv_pre = np.array([[M[1 ,1] ,-M[0 ,1]] ,[-M[1 ,0] ,M[0 ,0]]])
+
     m = round(np.abs(np.linalg.det(M)))
     Minv = np.linalg.inv(M)
+    Minv_pre = np.rint((m * Minv)).astype(np.int32)
     choices = [(a.offset[i], a.offset[i] + a.tensor.shape[i] - 1) for i in range(len(a.tensor.shape))]
     corners = list(product(*choices))
     xs = Minv @ np.array(corners).T
+    xsmask = abs(xs - np.rint(xs)) < 1e-6
+    xs[xsmask] = np.rint(xs[xsmask])
     minc = np.array(np.ceil(np.min(xs, axis=1)), dtype=int)
     maxc = np.array(np.floor(np.max(xs, axis=1)), dtype=int)
     downsampled = OffsetTensor(np.zeros(maxc - minc + 1, dtype=np.float64), minc)

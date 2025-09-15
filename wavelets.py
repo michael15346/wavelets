@@ -19,18 +19,26 @@ def benchmark(content):
     os.makedirs("results/{}".format(content["Index"]), exist_ok=True)
     row = dict()
     w = createWaveletFromContent(content)
+    print(w)
     results = []
     #test_files = os.listdir('test')
-    for file in ('lenna.bmp', 'Sunrise.bmp'):
+    for file in ('lenna.bmp',):
         path = os.path.join('test', file)
         data = iio.imread(path)
 
         if data.ndim == 3:  # rgb
-            data = data.mean(axis=2)
+            data = data[:, :, 0] * 0.299 + data[:, :, 1] * 0.587 + data[:, :, 2] * 0.114
+            #data = data.mean(axis=2)
         iio.imwrite("results/{}/{}.png".format(content["Index"], file.split('.')[0]), data.astype(np.uint8))
         data = OffsetTensor(data, np.array([0, 0]))
         for level in range(1, 10):
             ci = wavedec_period(data, w, level)
+            res_true = waverec_period(ci, w, np.array(data.tensor.shape))
+            iio.imwrite("results/{}/{}-true-l{}.png".format(content["Index"],
+                                                                  file.split('.')[0],
+                                                                  level
+                                                                  ),
+                        np.clip(res_true.tensor, 0, 255).astype(np.uint8))
             for log_clusters in range(1, 10):
                 row['Index'] = content['Index']
                 row['WaveletSystemType'] = content['WaveletSystemType']
