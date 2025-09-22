@@ -3,25 +3,32 @@ import itertools
 import fast1dkmeans
 import numpy as np
 
-def roundtrip_kmeans(coef: list, n_cluster = 256):
+from dummy.wave import wavedec_multilevel_at_once_dummy, wavedec_periodic_dummy
+from wavelet import Wavelet
+
+
+def encode_kmeans(coef: list, n_cluster = 256):
     flat_coef = np.array(list(coef[0]) + list(itertools.chain(*itertools.chain(*coef[1:]))))
-    print("before cluster")
     clusters = fast1dkmeans.cluster(flat_coef, n_cluster, method='binary-search-interpolation')
-    print("after cluster")
     labels, inverse = np.unique(clusters, return_inverse=True)
     sums = np.bincount(inverse, weights=flat_coef)
     counts = np.bincount(inverse)
     centroids = sums / counts
+    return centroids, clusters
+
+def decode_kmeans(centroids: np.ndarray, clusters: np.ndarray, w: Wavelet, original_shape, level: int):
+    coef_shapes = wavedec_periodic_dummy(original_shape, np.zeros_like(original_shape), w, level)
     flat_restored = centroids[clusters]
     restored = list()
-    restored.append(flat_restored[:coef[0].size])
-    idx = coef[0].size
-    for c in coef[1:]:
+    restored.append(flat_restored[:coef_shapes[0]])
+    idx = coef_shapes[0]
+    for c in coef_shapes[1:]:
         restored.append([])
         for cc in c:
-            restored[-1].append(flat_restored[idx:idx + cc.size])
-            idx += cc.size
+            restored[-1].append(flat_restored[idx:idx + cc])
+            idx += cc
     return restored
+
 
 def uniform_entropy(coef: list, n_cluster = 256):
     flat_coef = np.array(list(coef[0]) + list(itertools.chain(*itertools.chain(*coef[1:]))))

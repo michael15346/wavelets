@@ -19,7 +19,7 @@ def roundtrip(input, output):
 
     with open("WaveDB.json", 'r') as j:
         contents = json.loads(j.read())
-    content = contents[19]
+    content = contents[22]
     w = createWaveletFromContent(content)
 
     print(w)

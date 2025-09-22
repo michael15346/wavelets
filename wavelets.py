@@ -12,7 +12,7 @@ from db import createWaveletFromContent, checkContent, PRP_check
 from metrics import psnr
 from offset_tensor import OffsetTensor
 from periodic.wave import waverec_period, wavedec_period
-from quant import roundtrip_kmeans, uniform_roundtrip
+from quant import encode_kmeans, decode_kmeans, uniform_roundtrip
 from roundtrip import roundtrip
 from skimage.metrics import structural_similarity as ssim
 def benchmark(content):
@@ -39,7 +39,7 @@ def benchmark(content):
                                                                   level
                                                                   ),
                         np.clip(res_true.tensor, 0, 255).astype(np.uint8))
-            for log_clusters in range(1, 10):
+            for log_clusters in (4,8):
                 row['Index'] = content['Index']
                 row['WaveletSystemType'] = content['WaveletSystemType']
                 row['RefinableMaskInfo'] = content['RefinableMaskInfo']
@@ -54,7 +54,8 @@ def benchmark(content):
                 row['Level'] = level
                 row['Clusters'] = 2 ** log_clusters
                 row['TestImg'] = file
-                ci_kmeans = roundtrip_kmeans(ci, 2 ** log_clusters)
+                centroids_kmeans, cluster_kmeans = encode_kmeans(ci, 2 ** log_clusters)
+                ci_kmeans = decode_kmeans(centroids_kmeans, cluster_kmeans, w, data.tensor.shape, level)
                 res_kmeans = waverec_period(ci_kmeans, w, np.array(data.tensor.shape))
                 iio.imwrite("results/{}/{}-kmeans-l{}-c{}.png".format(content["Index"],
                                                                       file.split('.')[0],
@@ -65,7 +66,7 @@ def benchmark(content):
                 psnr_kmeans = psnr(data.tensor, res_kmeans.tensor)
                 ssim_kmeans = ssim(data.tensor, res_kmeans.tensor, data_range=256)
                 row['PSNR_KMeans'] = psnr_kmeans
-                row['SSIM_Kmeans'] = ssim_kmeans
+                row['SSIM_KMeans'] = ssim_kmeans
                 ci_uniform = uniform_roundtrip(ci, 2 ** log_clusters)
                 res_uniform = waverec_period(ci_uniform, w, np.array(data.tensor.shape))
                 iio.imwrite("results/{}/{}-uniform-l{}-c{}.png".format(content["Index"],
@@ -94,8 +95,12 @@ if __name__ == "__main__":
     elif args.command == 'benchmark':
         with open("WaveDB.json", 'r') as j:
             contents = json.loads(j.read())
-        with Pool(8) as p:
-            results_nonflat = p.map(benchmark, contents)
+        results_nonflat = []
+        for c in contents:
+            results_nonflat.append(benchmark(c))
+
+        #with Pool(1) as p:
+        #    results_nonflat = p.map(benchmark, contents)
         results = list(chain(*results_nonflat))
 
         pd.DataFrame(results).to_csv('results.csv')
