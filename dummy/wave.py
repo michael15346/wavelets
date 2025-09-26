@@ -48,7 +48,7 @@ def convolve_dummy(shape, offset, mask_shape, mask_offset):
     return new_shape, new_offset
 
 def convolve_period_dummy(shape, offset, mask_shape):
-    new_shape = np.array(shape) + np.array(mask_shape) - 1
+    new_shape = np.array(shape)# + np.array(mask_shape) - 1
 
     return new_shape, np.zeros_like(offset)
 
@@ -112,7 +112,7 @@ def wavedec_periodic_dummy(data_shape, data_offset, w: Wavelet, level: int):
     pad_up_to = np.int32(w.m ** level)
     padding = np.ceil(data_shape / pad_up_to) * pad_up_to - data_shape
     data_shape += padding
-    masks = [list(w.gdual)]
+    masks = [[(gd.tensor.shape, gd.offset) for gd in w.gdual]]
 
     for i in range(1, level):
         gmasks = []
@@ -139,7 +139,7 @@ def wavedec_periodic_dummy(data_shape, data_offset, w: Wavelet, level: int):
         cur_M = cur_M @ w.M
         tmp_list = list()
         for m in mask:
-            tmp_list.append(transition_period_dummy(data_shape, data_offset, m.tensor.shape, m.offset, cur_M.copy()))
+            tmp_list.append(transition_period_dummy(data_shape, data_offset, m[0], m[1], cur_M.copy()))
         details.append(tmp_list)
     details.append(transition_period_dummy(data_shape, data_offset, ref_mask_shape, ref_mask_offset, cur_M))
     details.reverse()

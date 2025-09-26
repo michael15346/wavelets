@@ -12,7 +12,7 @@ from db import createWaveletFromContent, checkContent, PRP_check
 from metrics import psnr
 from offset_tensor import OffsetTensor
 from periodic.wave import waverec_period, wavedec_period
-from quant import encode_kmeans, decode_kmeans, uniform_roundtrip
+from quant import encode_kmeans, decode_kmeans, entropy, encode_uniform, decode_uniform
 from roundtrip import roundtrip
 from skimage.metrics import structural_similarity as ssim
 def benchmark(content):
@@ -31,7 +31,7 @@ def benchmark(content):
             #data = data.mean(axis=2)
         iio.imwrite("results/{}/{}.png".format(content["Index"], file.split('.')[0]), data.astype(np.uint8))
         data = OffsetTensor(data, np.array([0, 0]))
-        for level in range(1, 10):
+        for level in range(1, 9):
             ci = wavedec_period(data, w, level)
             res_true = waverec_period(ci, w, np.array(data.tensor.shape))
             iio.imwrite("results/{}/{}-true-l{}.png".format(content["Index"],
@@ -39,7 +39,7 @@ def benchmark(content):
                                                                   level
                                                                   ),
                         np.clip(res_true.tensor, 0, 255).astype(np.uint8))
-            for log_clusters in (4,8):
+            for log_clusters in range(1,8):
                 row['Index'] = content['Index']
                 row['WaveletSystemType'] = content['WaveletSystemType']
                 row['RefinableMaskInfo'] = content['RefinableMaskInfo']
@@ -55,6 +55,9 @@ def benchmark(content):
                 row['Clusters'] = 2 ** log_clusters
                 row['TestImg'] = file
                 centroids_kmeans, cluster_kmeans = encode_kmeans(ci, 2 ** log_clusters)
+                entropy_kmeans = entropy(cluster_kmeans)
+                row['Entropy_KMeans'] = entropy_kmeans
+
                 ci_kmeans = decode_kmeans(centroids_kmeans, cluster_kmeans, w, data.tensor.shape, level)
                 res_kmeans = waverec_period(ci_kmeans, w, np.array(data.tensor.shape))
                 iio.imwrite("results/{}/{}-kmeans-l{}-c{}.png".format(content["Index"],
@@ -67,7 +70,10 @@ def benchmark(content):
                 ssim_kmeans = ssim(data.tensor, res_kmeans.tensor, data_range=256)
                 row['PSNR_KMeans'] = psnr_kmeans
                 row['SSIM_KMeans'] = ssim_kmeans
-                ci_uniform = uniform_roundtrip(ci, 2 ** log_clusters)
+                quantized_uniform, n_min, n_max = encode_uniform(ci, 2 ** log_clusters)
+                entropy_uniform = entropy(quantized_uniform)
+                row['Entropy_Uniform'] = entropy_uniform
+                ci_uniform = decode_uniform(quantized_uniform, n_min, n_max, 2 ** log_clusters, w, data.tensor.shape, level)
                 res_uniform = waverec_period(ci_uniform, w, np.array(data.tensor.shape))
                 iio.imwrite("results/{}/{}-uniform-l{}-c{}.png".format(content["Index"],
                                                                        file.split('.')[0],
@@ -95,12 +101,13 @@ if __name__ == "__main__":
     elif args.command == 'benchmark':
         with open("WaveDB.json", 'r') as j:
             contents = json.loads(j.read())
-        results_nonflat = []
-        for c in contents:
-            results_nonflat.append(benchmark(c))
+        #results_nonflat = []
+        #results_nonflat.append(benchmark(contents[0]))
+        #for c in contents:
 
-        #with Pool(1) as p:
-        #    results_nonflat = p.map(benchmark, contents)
+
+        with Pool(8) as p:
+         results_nonflat = p.map(benchmark, contents)
         results = list(chain(*results_nonflat))
 
         pd.DataFrame(results).to_csv('results.csv')
