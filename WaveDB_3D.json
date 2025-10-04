@@ -1,0 +1,109 @@
+[
+    {
+        "DilationMatrix": [
+            [
+                1,
+                0,
+                1
+            ],
+            [
+                -1,
+                -1,
+                1
+            ],
+            [
+                0,
+                -1,
+                0
+            ]
+        ],
+        "DilationMatrixInfo": "Quincunx3D",
+        "InterpolatoryMask": true,
+        "Mask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 2,
+            "Coeffs": [
+                1,
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0,
+                    0
+                ],
+                [
+                    1,
+                    0,
+                    0
+                ]
+            ],
+            "SR": 1,
+            "SobolevSmoothness": 1.0
+        },
+        "DualMask": {
+            "ExactCoeffs": true,
+            "CoeffsDenominator": 1,
+            "Coeffs": [
+                1
+            ],
+            "Coords": [
+                [
+                    0,
+                    0,
+                    0
+                ]
+            ],
+            "SR": 0,
+            "SobolevSmoothness": -Infinity
+        },
+        "WaveletMasks": {
+            "WM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 1,
+                "Coeffs": [
+                    1
+                ],
+                "Coords": [
+                    [
+                        1,
+                        0,
+                        0
+                    ]
+                ],
+                "VM": 0
+            }
+        },
+        "DualWaveletMasks": {
+            "DWM1": {
+                "ExactCoeffs": true,
+                "CoeffsDenominator": 2,
+                "Coeffs": [
+                    -1,
+                    1
+                ],
+                "Coords": [
+                    [
+                        0,
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        0,
+                        0
+                    ]
+                ],
+                "VM": 1
+            }
+        },
+        "WaveletMasksVM": 0,
+        "DualWaveletMasksVM": 1,
+        "WaveletSystemType": "Frame-like Dual Wavelet System",
+        "RefinableMaskInfo": "Best 2-Point Standard Support",
+        "DualRefinableMaskInfo": "Delta Function",
+        "SymmetryInfo": "No Symmetry",
+        "Index": "D1",
+        "SourceInfo": "Created by the algorithm in paper \"On construction of multivariate symmetric MRA-based wavelets\" by A. Krivoshein, 2014, ACHA 36 (2), 215-238"
+    }
+]

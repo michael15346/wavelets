@@ -9,7 +9,9 @@ from utils import to_python_vect
 
 
 def downsample_vector(a: OffsetTensor, M: np.ndarray):
-    Minv_pre = np.array([[M[1, 1], -M[0, 1]], [-M[1, 0], M[0, 0]]])
+    m = round(np.abs(np.linalg.det(M)))
+    Minv = np.linalg.inv(M)
+    Minv_pre = np.rint((m * Minv)).astype(np.int32)
     m = round(np.abs(np.linalg.det(M)))
     slices = tuple(slice(o, o + s) for s, o in zip(a.tensor.shape, a.offset))
     lattice_coords = np.mgrid[slices].reshape(a.offset.shape[0], -1)

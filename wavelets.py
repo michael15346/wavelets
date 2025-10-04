@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+from copy import deepcopy
 from itertools import chain
 from multiprocessing import Pool
 
@@ -31,7 +32,7 @@ def benchmark(content):
             #data = data.mean(axis=2)
         iio.imwrite("results/{}/{}.png".format(content["Index"], file.split('.')[0]), data.astype(np.uint8))
         data = OffsetTensor(data, np.array([0, 0]))
-        for level in range(1, 9):
+        for level in range(1, 7):
             ci = wavedec_period(data, w, level)
             res_true = waverec_period(ci, w, np.array(data.tensor.shape))
             iio.imwrite("results/{}/{}-true-l{}.png".format(content["Index"],
@@ -39,7 +40,7 @@ def benchmark(content):
                                                                   level
                                                                   ),
                         np.clip(res_true.tensor, 0, 255).astype(np.uint8))
-            for log_clusters in range(1,8):
+            for log_clusters in (2, 4, 8):
                 row['Index'] = content['Index']
                 row['WaveletSystemType'] = content['WaveletSystemType']
                 row['RefinableMaskInfo'] = content['RefinableMaskInfo']
@@ -84,7 +85,7 @@ def benchmark(content):
                 ssim_uniform = ssim(data.tensor, res_uniform.tensor, data_range=256)
                 row['PSNR_Uniform'] = psnr_uniform
                 row['SSIM_Uniform'] = ssim_uniform
-                results.append(row)
+                results.append(deepcopy(row))
     return results
 
 

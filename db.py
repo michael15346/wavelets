@@ -198,7 +198,7 @@ def PRP_check(w: Wavelet, digits=None, tolerance=1e-6):
     for i in range(m):
         PRP_matrix.append([])
         for j in range(m):
-            tmp = OffsetTensor(np.array([[0]]), np.array(np.zeros(dim, dtype=np.int32)))
+            tmp = OffsetTensor(np.zeros([1] * dim), np.array(np.zeros(dim, dtype=np.int32)))
             for k in range(len(w.g) + 1):
                 tmp = tmp + convolve(polyphase_matrix[k][i], dual_polyphase_matrix[k][j].conjugate())
 
