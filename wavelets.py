@@ -40,7 +40,7 @@ def benchmark(content):
                                                                   level
                                                                   ),
                         np.clip(res_true.tensor, 0, 255).astype(np.uint8))
-            for log_clusters in (2, 4, 8):
+            for log_clusters in range(1,9):
                 row['Index'] = content['Index']
                 row['WaveletSystemType'] = content['WaveletSystemType']
                 row['RefinableMaskInfo'] = content['RefinableMaskInfo']
