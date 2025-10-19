@@ -1,8 +1,10 @@
 import json
+from copy import deepcopy
 
 import numpy as np
 
 from db import createWaveletFromContent
+from ezw.wave import wavedec_ezw, waverec_ezw
 from metrics import psnr
 from offset_tensor import OffsetTensor
 import imageio.v3 as iio
@@ -19,40 +21,29 @@ def roundtrip(input, output):
 
     with open("WaveDB.json", 'r') as j:
         contents = json.loads(j.read())
-    content = contents[22]
-    w = createWaveletFromContent(content)
+    for content_idx, content in enumerate(contents):
+        w = createWaveletFromContent(content)
+        ci = wavedec_ezw(data, w, 5)
+        ress = waverec_ezw(ci, w, np.array(data.tensor.shape))
+        iio.imwrite(output, np.clip(ress.tensor, 0, 255).astype(np.uint8))
+        iio.imwrite('diff.png', np.clip(np.abs(ress.tensor - data.tensor) * 3e15, 0, 255).astype(np.uint8))
+        psnr_res = psnr(data.tensor, ress.tensor)
+        if psnr_res < 300:
+            print(f"Low PSNR! Content:{content_idx}, PSNR={psnr_res}")
+        #print("PSNR:", psnr(data.tensor, ress.tensor))
+        # print("entropy:", entropy)
+        # iio.imwrite('ress.png', np.clip(ci[0], 0, 255).astype(np.uint8))
+        # iio.imwrite('resss.png', np.clip(ress, 0, 255).astype(np.uint8))
+        # iio.imwrite('ress_.png', np.clip(ci_[0].matrix, 0, 255).astype(np.uint8))
+        # for dd in d:
+        #    for ddd in dd:
+        #
+        #
+        # iio.imwrite('a.png', np.clip(ai.matrix, 0, 255).astype(np.uint8))
+        # for i, di in enumerate(d):
+        #    for j, dij in enumerate(di):
+        #        iio.imwrite(f'd{i}-{j}.png', np.clip(dij.matrix * (w.m ** (5 -i )), 0, 255).astype(np.uint8))
+        #
+        # a = waverec(ai, d, w, data.matrix.shape)
 
-    print(w)
-    # ci_ = wavedec(data, 1, w)
-    ci = wavedec_period(data, w, 5)
-    # entropy = uniform_entropy(ci)
-
-    # clamp(ci)
-    # ci = roundtrip_kmeans(ci, 8)
-
-    # res_classic = waverec(ci_, w, np.array([5, 5]))
-    ress = waverec_period(ci, w, np.array(data.tensor.shape))
-    # print(res_classic)
-    print("recovered:", ress.tensor)
-    print("original:", data.tensor)
-    #print("diff:", ress.tensor - data.tensor)
-    # ress = waverec(ci_, w, [5, 5])
-    iio.imwrite(output, np.clip(ress.tensor, 0, 255).astype(np.uint8))
-    iio.imwrite('diff.png', np.clip(np.abs(ress.tensor - data.tensor) * 3e15, 0, 255).astype(np.uint8))
-    print("PSNR:", psnr(data.tensor, ress.tensor))
-    # print("entropy:", entropy)
-    # iio.imwrite('ress.png', np.clip(ci[0], 0, 255).astype(np.uint8))
-    # iio.imwrite('resss.png', np.clip(ress, 0, 255).astype(np.uint8))
-    # iio.imwrite('ress_.png', np.clip(ci_[0].matrix, 0, 255).astype(np.uint8))
-    # for dd in d:
-    #    for ddd in dd:
-    #
-    #
-    # iio.imwrite('a.png', np.clip(ai.matrix, 0, 255).astype(np.uint8))
-    # for i, di in enumerate(d):
-    #    for j, dij in enumerate(di):
-    #        iio.imwrite(f'd{i}-{j}.png', np.clip(dij.matrix * (w.m ** (5 -i )), 0, 255).astype(np.uint8))
-    #
-    # a = waverec(ai, d, w, data.matrix.shape)
-
-    # iio.imwrite('restored.png', np.clip(a, 0, 255).astype(np.uint8))
+        # iio.imwrite('restored.png', np.clip(a, 0, 255).astype(np.uint8))

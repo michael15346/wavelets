@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 
 from db import createWaveletFromContent, checkContent, PRP_check
+from ezw.wave import waverec_ezw, wavedec_ezw
 from metrics import psnr
 from offset_tensor import OffsetTensor
 from periodic.wave import waverec_period, wavedec_period
@@ -32,15 +33,15 @@ def benchmark(content):
             #data = data.mean(axis=2)
         iio.imwrite("results/{}/{}.png".format(content["Index"], file.split('.')[0]), data.astype(np.uint8))
         data = OffsetTensor(data, np.array([0, 0]))
-        for level in range(1, 7):
-            ci = wavedec_period(data, w, level)
-            res_true = waverec_period(ci, w, np.array(data.tensor.shape))
+        for level in (5,):
+            ci = wavedec_ezw(data, w, level)
+            res_true = waverec_ezw(ci, w, np.array(data.tensor.shape))
             iio.imwrite("results/{}/{}-true-l{}.png".format(content["Index"],
                                                                   file.split('.')[0],
                                                                   level
                                                                   ),
                         np.clip(res_true.tensor, 0, 255).astype(np.uint8))
-            for log_clusters in range(1,9):
+            for log_clusters in (10,):
                 row['Index'] = content['Index']
                 row['WaveletSystemType'] = content['WaveletSystemType']
                 row['RefinableMaskInfo'] = content['RefinableMaskInfo']
@@ -60,7 +61,7 @@ def benchmark(content):
                 row['Entropy_KMeans'] = entropy_kmeans
 
                 ci_kmeans = decode_kmeans(centroids_kmeans, cluster_kmeans, w, data.tensor.shape, level)
-                res_kmeans = waverec_period(ci_kmeans, w, np.array(data.tensor.shape))
+                res_kmeans = waverec_ezw(ci_kmeans, w, np.array(data.tensor.shape))
                 iio.imwrite("results/{}/{}-kmeans-l{}-c{}.png".format(content["Index"],
                                                                       file.split('.')[0],
                                                                       level,

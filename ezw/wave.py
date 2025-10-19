@@ -2,37 +2,18 @@ import numpy as np
 import scipy
 
 from classic.wave import subdivision
+from ezw.operators import subdivision_ezw, transition_ezw, gen_coords_ezw
 from offset_tensor import OffsetTensor
-from vector.operators import upsample_vector, downsample_vector
 from wavelet import Wavelet
 
 
-def transition_period(a: OffsetTensor, mask: OffsetTensor, M: np.ndarray):
-    mask = mask.conjugate()
-    return downsample_vector(convolve_period(a, mask), M)
 
-
-def subdivision_period(a: OffsetTensor, mask: OffsetTensor, M: np.ndarray, original_shape, original_offset):
-    u = upsample_vector(a,M, original_shape, original_offset)
-    c = convolve_period(u, mask)
-    return c
-
-def convolve_period(a: OffsetTensor, b: OffsetTensor):
-    new_offset = a.offset + b.offset
-    origin = (-(np.array(b.tensor.shape) // 2)).tolist()
-
-    new_tensor = scipy.ndimage.convolve(a.tensor.astype(np.float64), b.tensor.astype(np.float64),
-                                        mode='wrap', origin=origin)
-    # периодический сдвиг, чтобы (0,0) координата была в индексе (0,0)
-    # origin в scipy.ndimage.convolve не умеет сдвигать больше, чем на пол-ядра относительно центра
-    new_tensor = np.roll(new_tensor, tuple(new_offset.astype(np.int32)), axis=np.arange(len(a.offset)))
-    return OffsetTensor(new_tensor, np.zeros_like(a.offset))
-
-def wavedec_period(data: OffsetTensor, w: Wavelet, level: int):
+def wavedec_ezw(data: OffsetTensor, w: Wavelet, level: int):
     shape = np.array(data.tensor.shape)
     pad_up_to = np.rint(w.m ** level).astype(int)
     padding = np.array([np.zeros_like(shape), np.ceil(shape / pad_up_to) * pad_up_to - shape], dtype=int).T
     data_padded = OffsetTensor(np.pad(data.tensor, padding, mode="wrap"), data.offset)
+    padded_shape = np.array(data_padded.tensor.shape)
     masks = [list(w.gdual)]
 
     for i in range(1, level):
@@ -53,20 +34,23 @@ def wavedec_period(data: OffsetTensor, w: Wavelet, level: int):
         ref_mask = w.hdual
 
     details = []
-    cur_M = np.eye(w.M.shape[0], dtype=int)
-    for mask in masks:
-        cur_M = cur_M @ w.M
+    #cur_M = np.eye(w.M.shape[0], dtype=int)
+    ezw_coords = gen_coords_ezw(padded_shape, data_padded.offset, level, w.M)
+    for level, mask in enumerate(masks):
+        #cur_M = cur_M @ w.M
         tmp_list = list()
         for m in mask:
-            tmp_list.append(transition_period(data_padded, m, cur_M.copy()))
+            tmp_list.append(transition_ezw(data_padded, m, ezw_coords[level]))
         details.append(tmp_list)
-    details.append(transition_period(data_padded, ref_mask, cur_M))
+    details.append(transition_ezw(data_padded, ref_mask, ezw_coords[-1]))
     details.reverse()
 
 
     return details
 
-def waverec_period(c: list, w: Wavelet, original_shape, original_offset=np.array([0,0])):
+
+
+def waverec_ezw(c: list, w: Wavelet, original_shape, original_offset=np.array([0,0])):
 
     a = c[0]
     d = c[1:]
@@ -81,9 +65,10 @@ def waverec_period(c: list, w: Wavelet, original_shape, original_offset=np.array
     m = w.m
     wmasks = [OffsetTensor(wmask.tensor * m, wmask.offset) for wmask in w.g]
     cur_M = w.M.copy()
+    ezw_coords = gen_coords_ezw(padded_shape, original_offset, level, w.M)
     for i, di in enumerate(d):
         for j, dij in enumerate(di):
-            res += subdivision_period(dij, wmasks[j], cur_M, padded_shape, original_offset)
+            res += subdivision_ezw(dij, wmasks[j], ezw_coords[i], padded_shape, original_offset)
             wmasks[j] = subdivision(wmasks[j], w.h, w.M)
             wmasks[j].tensor = wmasks[j].tensor * m
         cur_M = cur_M @ w.M
@@ -95,7 +80,7 @@ def waverec_period(c: list, w: Wavelet, original_shape, original_offset=np.array
         mask_h.tensor = mask_h.tensor * m
         cur_M = cur_M @ w.M
 
-    res += subdivision_period(a, mask_h, cur_M, padded_shape, original_offset)
+    res += subdivision_ezw(a, mask_h, ezw_coords[-1], padded_shape, original_offset)
 
     slices = tuple(slice(-o, -o + s) for s, o in zip(original_shape, res.offset))
 

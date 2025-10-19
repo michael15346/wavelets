@@ -21,15 +21,15 @@ def downsample_vector(a: OffsetTensor, M: np.ndarray):
     return a.tensor[*lattice_coords]
 
 def upsample_vector(a, M: np.ndarray, original_shape, original_offset):
-    # This not only needs to create lattice_coords like original_shape,
-    # but also add borders introduced by convolution
 
     upsampled = OffsetTensor(np.zeros(original_shape, dtype=np.float64), np.array(original_offset))
 
     slices = tuple(slice(o, o + s) for s, o in zip(original_shape, original_offset))
 
     lattice_coords = np.mgrid[slices].reshape(original_shape.shape[0], -1)
-    Minv_pre = np.array([[M[1,1],-M[0,1]],[-M[1,0],M[0,0]]])
+    m = round(np.abs(np.linalg.det(M)))
+    Minv = np.linalg.inv(M)
+    Minv_pre = np.rint((m * Minv)).astype(np.int32)
     ups_coords = Minv_pre @ lattice_coords
     m = round(np.abs(np.linalg.det(M)))
     mask = np.all(np.mod(ups_coords, m) == 0, axis=0)
