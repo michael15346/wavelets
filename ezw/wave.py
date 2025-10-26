@@ -12,7 +12,7 @@ def wavedec_ezw(data: OffsetTensor, w: Wavelet, level: int):
     shape = np.array(data.tensor.shape)
     pad_up_to = np.rint(w.m ** level).astype(int)
     padding = np.array([np.zeros_like(shape), np.ceil(shape / pad_up_to) * pad_up_to - shape], dtype=int).T
-    data_padded = OffsetTensor(np.pad(data.tensor, padding, mode="wrap"), data.offset)
+    data_padded = OffsetTensor(np.pad(data.tensor, padding, mode="symmetric"), data.offset)
     padded_shape = np.array(data_padded.tensor.shape)
     masks = [list(w.gdual)]
 

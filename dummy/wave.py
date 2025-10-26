@@ -109,7 +109,7 @@ def wavedec_multilevel_at_once_dummy(data_shape, data_offset, w: Wavelet, level:
     return details
 
 def wavedec_periodic_dummy(data_shape, data_offset, w: Wavelet, level: int):
-    pad_up_to = np.int32(w.m ** level)
+    pad_up_to = np.rint(w.m ** level).astype(int)
     padding = np.ceil(data_shape / pad_up_to) * pad_up_to - data_shape
     data_shape += padding
     masks = [[(gd.tensor.shape, gd.offset) for gd in w.gdual]]

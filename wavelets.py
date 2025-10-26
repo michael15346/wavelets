@@ -33,7 +33,7 @@ def benchmark(content):
             #data = data.mean(axis=2)
         iio.imwrite("results/{}/{}.png".format(content["Index"], file.split('.')[0]), data.astype(np.uint8))
         data = OffsetTensor(data, np.array([0, 0]))
-        for level in (5,):
+        for level in range(2,9):
             ci = wavedec_ezw(data, w, level)
             res_true = waverec_ezw(ci, w, np.array(data.tensor.shape))
             iio.imwrite("results/{}/{}-true-l{}.png".format(content["Index"],
@@ -41,42 +41,45 @@ def benchmark(content):
                                                                   level
                                                                   ),
                         np.clip(res_true.tensor, 0, 255).astype(np.uint8))
-            for log_clusters in (10,):
+            for log_clusters in range(3, 10):
+                print(level, log_clusters)
                 row['Index'] = content['Index']
                 row['WaveletSystemType'] = content['WaveletSystemType']
                 row['RefinableMaskInfo'] = content['RefinableMaskInfo']
                 row['DualRefinableMaskInfo'] = content['DualRefinableMaskInfo']
                 row['SymmetryInfo'] = content['SymmetryInfo']
                 row['DilationMatrixInfo'] = content['DilationMatrixInfo']
+                row['WaveletMaskAmount'] = len(w.g)
                 row['SR'] = content['Mask']['SR']
                 row['DualSR'] = content['DualMask']['SR']
                 row['ValidPRP'] = PRP_check(w)[0]
                 row['SourceInfo'] = content['SourceInfo']
-                row['Quant'] = 'KMeans'
                 row['Level'] = level
                 row['Clusters'] = 2 ** log_clusters
                 row['TestImg'] = file
-                centroids_kmeans, cluster_kmeans = encode_kmeans(ci, 2 ** log_clusters)
-                entropy_kmeans = entropy(cluster_kmeans)
-                row['Entropy_KMeans'] = entropy_kmeans
 
-                ci_kmeans = decode_kmeans(centroids_kmeans, cluster_kmeans, w, data.tensor.shape, level)
-                res_kmeans = waverec_ezw(ci_kmeans, w, np.array(data.tensor.shape))
-                iio.imwrite("results/{}/{}-kmeans-l{}-c{}.png".format(content["Index"],
-                                                                      file.split('.')[0],
-                                                                      level,
-                                                                      2 ** log_clusters
-                                                                      ),
-                            np.clip(res_kmeans.tensor, 0, 255).astype(np.uint8))
-                psnr_kmeans = psnr(data.tensor, res_kmeans.tensor)
-                ssim_kmeans = ssim(data.tensor, res_kmeans.tensor, data_range=256)
-                row['PSNR_KMeans'] = psnr_kmeans
-                row['SSIM_KMeans'] = ssim_kmeans
-                quantized_uniform, n_min, n_max = encode_uniform(ci, 2 ** log_clusters)
+                #centroids_kmeans, cluster_kmeans = encode_kmeans(ci, 2 ** log_clusters)
+                #entropy_kmeans = entropy(cluster_kmeans)
+                #row['Entropy_KMeans'] = entropy_kmeans
+
+                #ci_kmeans = decode_kmeans(centroids_kmeans, cluster_kmeans, w, data.tensor.shape, level)
+                #res_kmeans = waverec_ezw(ci_kmeans, w, np.array(data.tensor.shape))
+                #iio.imwrite("results/{}/{}-kmeans-l{}-c{}.png".format(content["Index"],
+                #                                                      file.split('.')[0],
+                #                                                      level,
+                #                                                      2 ** log_clusters
+                #                                                      ),
+                #            np.clip(res_kmeans.tensor, 0, 255).astype(np.uint8))
+                #psnr_kmeans = psnr(data.tensor, res_kmeans.tensor)
+                #ssim_kmeans = ssim(data.tensor, res_kmeans.tensor, data_range=256)
+                #row['PSNR_KMeans'] = psnr_kmeans
+                #row['SSIM_KMeans'] = ssim_kmeans
+                quantized_uniform, quantized_downs_uniform, n_min, n_max, downs_min, downs_max = encode_uniform(ci,
+                                                                                                                2 ** log_clusters)
                 entropy_uniform = entropy(quantized_uniform)
                 row['Entropy_Uniform'] = entropy_uniform
-                ci_uniform = decode_uniform(quantized_uniform, n_min, n_max, 2 ** log_clusters, w, data.tensor.shape, level)
-                res_uniform = waverec_period(ci_uniform, w, np.array(data.tensor.shape))
+                ci_uniform = decode_uniform(quantized_uniform, quantized_downs_uniform, n_min, n_max, downs_min, downs_max, 2 ** log_clusters, w, data.tensor.shape, level)
+                res_uniform = waverec_ezw(ci_uniform, w, np.array(data.tensor.shape))
                 iio.imwrite("results/{}/{}-uniform-l{}-c{}.png".format(content["Index"],
                                                                        file.split('.')[0],
                                                                        level,
@@ -108,8 +111,9 @@ if __name__ == "__main__":
         #for c in contents:
 
 
-        with Pool(8) as p:
-         results_nonflat = p.map(benchmark, contents)
+        #with Pool(4) as p:
+        #    results_nonflat = p.map(benchmark, contents)
+        results_nonflat = map(benchmark, contents[26:28])
         results = list(chain(*results_nonflat))
 
         pd.DataFrame(results).to_csv('results.csv')
