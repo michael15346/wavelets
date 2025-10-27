@@ -21,7 +21,6 @@ def benchmark(content):
     os.makedirs("results/{}".format(content["Index"]), exist_ok=True)
     row = dict()
     w = createWaveletFromContent(content)
-    print(w)
     results = []
     #test_files = os.listdir('test')
     for file in ('lenna.bmp',):
@@ -33,7 +32,7 @@ def benchmark(content):
             #data = data.mean(axis=2)
         iio.imwrite("results/{}/{}.png".format(content["Index"], file.split('.')[0]), data.astype(np.uint8))
         data = OffsetTensor(data, np.array([0, 0]))
-        for level in range(2,9):
+        for level in (6,):#range(1,6):
             ci = wavedec_ezw(data, w, level)
             res_true = waverec_ezw(ci, w, np.array(data.tensor.shape))
             iio.imwrite("results/{}/{}-true-l{}.png".format(content["Index"],
@@ -42,7 +41,6 @@ def benchmark(content):
                                                                   ),
                         np.clip(res_true.tensor, 0, 255).astype(np.uint8))
             for log_clusters in range(3, 10):
-                print(level, log_clusters)
                 row['Index'] = content['Index']
                 row['WaveletSystemType'] = content['WaveletSystemType']
                 row['RefinableMaskInfo'] = content['RefinableMaskInfo']
@@ -111,9 +109,9 @@ if __name__ == "__main__":
         #for c in contents:
 
 
-        #with Pool(4) as p:
-        #    results_nonflat = p.map(benchmark, contents)
-        results_nonflat = map(benchmark, contents[26:28])
+        with Pool(8) as p:
+            results_nonflat = p.map(benchmark, contents)
+        #results_nonflat = map(benchmark, contents[26:28])
         results = list(chain(*results_nonflat))
 
         pd.DataFrame(results).to_csv('results.csv')
