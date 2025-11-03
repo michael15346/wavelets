@@ -19,7 +19,7 @@ def downsample_dummy(shape, offset, M: np.ndarray):
     xs = Minv @ np.array(corners).T
     minc = np.ceil(np.min(xs, axis=1))
     maxc = np.floor(np.max(xs, axis=1))
-    downsampled = OffsetTensor(np.zeros(maxc - minc + 1, dtype=np.float64), minc)
+    downsampled = OffsetTensor(np.zeros(np.rint(maxc - minc + 1).astype(int), dtype=np.float64), minc)
     return downsampled.tensor.shape, downsampled.offset
 
 def downsample_vector_dummy(shape, offset, M: np.ndarray):

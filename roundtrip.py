@@ -21,9 +21,10 @@ def roundtrip(input, output):
 
     with open("WaveDB.json", 'r') as j:
         contents = json.loads(j.read())
-    for content_idx, content in enumerate(contents[26:28]):
+    for content_idx, content in enumerate(contents):
         w = createWaveletFromContent(content)
-        ci = wavedec_ezw(data, w, 1)
+        ci = wavedec_ezw(data, w, 5)
+
         ress = waverec_ezw(ci, w, np.array(data.tensor.shape))
         iio.imwrite(output, np.clip(ress.tensor, 0, 255).astype(np.uint8))
         iio.imwrite('diff.png', np.clip(np.abs(ress.tensor - data.tensor) * 3e15, 0, 255).astype(np.uint8))

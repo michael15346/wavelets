@@ -26,7 +26,7 @@ def upsample_vector(a, M: np.ndarray, original_shape, original_offset):
 
     slices = tuple(slice(o, o + s) for s, o in zip(original_shape, original_offset))
 
-    lattice_coords = np.mgrid[slices].reshape(original_shape.shape[0], -1)
+    lattice_coords = np.mgrid[slices].reshape(np.array(original_shape).shape[0], -1)
     m = round(np.abs(np.linalg.det(M)))
     Minv = np.linalg.inv(M)
     Minv_pre = np.rint((m * Minv)).astype(np.int32)

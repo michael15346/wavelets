@@ -2,7 +2,8 @@ import numpy as np
 import scipy
 
 from classic.wave import subdivision
-from ezw.operators import subdivision_ezw, transition_ezw, gen_coords_ezw
+from db import SetOfDigitsFinder
+from ezw.operators import subdivision_ezw, transition_ezw, gen_coords_ezw, step_coords_ezw, init_coords_ezw
 from offset_tensor import OffsetTensor
 from wavelet import Wavelet
 
@@ -33,17 +34,27 @@ def wavedec_ezw(data: OffsetTensor, w: Wavelet, level: int):
     else:
         ref_mask = w.hdual
 
-    details = []
+
     #cur_M = np.eye(w.M.shape[0], dtype=int)
-    ezw_coords = gen_coords_ezw(padded_shape, data_padded.offset, level, w.M)
-    for level, mask in enumerate(masks):
+    ezw_coords = init_coords_ezw(padded_shape, data_padded.offset, level, w.M)
+    details = [transition_ezw(data_padded, ref_mask, ezw_coords)]
+    digits = SetOfDigitsFinder(w.M)
+    Mdigits = [w.M @ digits.T]
+    for l in range(level - 2):
+        Mdigits.append(w.M @ Mdigits[-1])
+    tmp_list = list()
+    for m in masks[-1]:
+        tmp_list.append(transition_ezw(data_padded, m, ezw_coords))
+    details.append(tmp_list)
+    for level, mask in enumerate(reversed(masks[:-1])):
+        ezw_coords = step_coords_ezw(padded_shape, ezw_coords, Mdigits[-level-1])
         #cur_M = cur_M @ w.M
         tmp_list = list()
         for m in mask:
-            tmp_list.append(transition_ezw(data_padded, m, ezw_coords[level]))
+            tmp_list.append(transition_ezw(data_padded, m, ezw_coords))
         details.append(tmp_list)
-    details.append(transition_ezw(data_padded, ref_mask, ezw_coords[-1]))
-    details.reverse()
+    # details.append()
+    # details.reverse()
 
 
     return details

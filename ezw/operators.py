@@ -26,6 +26,26 @@ def subdivision_ezw(a: OffsetTensor, mask: OffsetTensor, ezw_coords: np.ndarray,
     c = convolve_period(u, mask)
     return c
 
+def init_coords_ezw(shape, offset, level, M):
+    Mp = np.linalg.matrix_power(M, level)
+    mp = round(np.abs(np.linalg.det(Mp)))
+    Mpinv = np.linalg.inv(Mp)
+    Mpinv_pre = np.rint(mp * Mpinv).astype(np.int32)
+    slices = tuple(slice(o, o + s) for s, o in zip(shape, offset))
+    lattice_coords = np.mgrid[slices].reshape(offset.shape[0], -1)
+    downs_coords = (Mpinv_pre @ lattice_coords)
+    mask = np.all(np.mod(downs_coords, mp) == 0, axis=0)
+    lattice_coords = np.array(tuple(to_python_vect(lattice_coords.T[mask], offset)))
+    return lattice_coords
+
+def step_coords_ezw(shape, lattice_coords, Mdigits):
+
+
+    raw_coords = (lattice_coords[..., None] + Mdigits[:, None, :]).reshape(lattice_coords.shape[0], -1)
+    ezw_coords = np.mod(raw_coords, shape[..., None])
+
+    return ezw_coords
+
 def gen_coords_ezw(shape, offset, level, M):
     Mp = np.linalg.matrix_power(M, level)
     mp = round(np.abs(np.linalg.det(Mp)))
