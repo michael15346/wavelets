@@ -1,4 +1,5 @@
 import numpy as np
+from PIL import Image
 
 from offset_tensor import OffsetTensor
 
@@ -67,3 +68,23 @@ def clamp(a):
             clamped += np.sum(np.abs(dj.tensor) <= 10)
             dj.tensor = np.where(np.abs(dj.tensor) > 10, dj.tensor, 0)
 
+CONV_MAT = np.array([[0.299, 0.587, 0.114], [-0.168736, -0.331264, 0.5], [0.5, -0.4188688, -0.081312]]).T
+INV_CONV_MAT = np.linalg.inv(CONV_MAT)
+
+
+def resize(img, M, N):
+    return np.array(Image.fromarray(img).resize((N, M), resample=Image.BILINEAR))
+
+def RGB2YCbCr(im_rgb):
+    im_ycbcr = np.array([-128, 0, 0]) + im_rgb.tensor @ CONV_MAT
+    im_ycbcr = np.where(im_ycbcr > 127, 127, im_ycbcr)
+    im_ycbcr = np.where(im_ycbcr < -128, -128, im_ycbcr)
+
+    return OffsetTensor(im_ycbcr, np.zeros_like(im_ycbcr.shape))
+
+
+def YCbCr2RGB(im_ycbcr):
+    im_rgb = (np.array([128, 0, 0]) + im_ycbcr) @ INV_CONV_MAT
+    im_rgb = np.where(im_rgb > 255, 255, im_rgb)
+    im_rgb = np.where(im_rgb < 0, 0, im_rgb)
+    return OffsetTensor(im_rgb, np.zeros_like(im_rgb.shape))

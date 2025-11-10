@@ -3,13 +3,13 @@ import scipy
 
 from classic.wave import subdivision
 from offset_tensor import OffsetTensor
-from vector.operators import upsample_vector, downsample_vector
+from vector.operators import upsample_vector, downsample_vector, downsample_fast
 from wavelet import Wavelet
 
 
 def transition_period(a: OffsetTensor, mask: OffsetTensor, M: np.ndarray):
     mask = mask.conjugate()
-    return downsample_vector(convolve_period(a, mask), M)
+    return downsample_fast(convolve_period(a, mask), M)
 
 
 def subdivision_period(a: OffsetTensor, mask: OffsetTensor, M: np.ndarray, original_shape, original_offset):

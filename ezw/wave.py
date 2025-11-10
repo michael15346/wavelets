@@ -1,5 +1,4 @@
 import numpy as np
-import scipy
 
 from classic.wave import subdivision
 from db import SetOfDigitsFinder
@@ -35,7 +34,6 @@ def wavedec_ezw(data: OffsetTensor, w: Wavelet, level: int):
         ref_mask = w.hdual
 
 
-    #cur_M = np.eye(w.M.shape[0], dtype=int)
     ezw_coords = init_coords_ezw(padded_shape, data_padded.offset, level, w.M)
     details = [transition_ezw(data_padded, ref_mask, ezw_coords)]
     digits = SetOfDigitsFinder(w.M)
@@ -48,13 +46,10 @@ def wavedec_ezw(data: OffsetTensor, w: Wavelet, level: int):
     details.append(tmp_list)
     for level, mask in enumerate(reversed(masks[:-1])):
         ezw_coords = step_coords_ezw(padded_shape, ezw_coords, Mdigits[-level-1])
-        #cur_M = cur_M @ w.M
         tmp_list = list()
         for m in mask:
             tmp_list.append(transition_ezw(data_padded, m, ezw_coords))
         details.append(tmp_list)
-    # details.append()
-    # details.reverse()
 
 
     return details
