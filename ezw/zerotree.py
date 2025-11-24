@@ -111,11 +111,15 @@ class ZeroTreeScan:
 
 class ZeroTreeEncoderEZW:
     def __init__(self, wavedec_coeffs, w):
+        def waveround(coef):
+            return np.sign(coef) * np.floor(np.abs(coef))
         flat_coef = np.array(list(wavedec_coeffs[0]) + list(itertools.chain(*itertools.chain(*wavedec_coeffs[1:]))))
         self.thresh = np.power(2, np.floor(np.log2(np.max(np.abs(flat_coef)))))
 
         # в оригинале было округление до ближайшего целого в сторону от нуля (в коэффициентах не будет нулей!)
         # надо ли?
+        wavedec_coeffs[0] = waveround(wavedec_coeffs[0])
+        wavedec_coeffs[1] = [[waveround(coef) for coef in coefs] for coefs in wavedec_coeffs[1]]
         # wavedec_coeffs = np.sign(wavedec_coeffs) * np.floor(np.abs(wavedec_coeffs))
 
         self.trees = CoefficientTreeEZW.build_trees(wavedec_coeffs, w)
@@ -130,7 +134,7 @@ class ZeroTreeEncoderEZW:
 
     def __next__(self):
         if self.thresh <= 0: raise StopIteration
-        if self.thresh <= 1 and not self.perform_dominant_pass: raise StopIteration
+        if self.thresh <= 1e-6 and not self.perform_dominant_pass: raise StopIteration
 
         if self.perform_dominant_pass:
             scan, next_coeffs = self.dominant_pass()

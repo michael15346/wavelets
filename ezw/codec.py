@@ -82,6 +82,6 @@ def decodeEZW(filename, wavelet):
 
         image = np.zeros(shape)
         image = decoder.getImage()
-        image.tensor = image.tensor.astype(np.uint8)
+        #image.tensor = image.tensor.astype(np.uint8)
 
     return image

@@ -43,21 +43,22 @@ def entropy(coef: list):
 #     prob = counts / len(quantized)
 #     return -(prob * np.log2(prob)).sum()
 
-def encode_uniform(coef: list, n_cluster=16):
+def encode_uniform(coef: list, quantile: float = 0.01):
 
     flat_coef = np.array( list(itertools.chain(*itertools.chain(*coef[1:]))))
     downs_coef = np.array(list(coef[0] - 128))
-    n_min = np.min(flat_coef)
-    downs_min = np.min(downs_coef)
-    downs_max = np.max(downs_coef)
-    n_max = np.max(flat_coef)
-    quantized = np.clip((flat_coef - n_min) / (n_max - n_min) * (n_cluster - 1), 0, n_cluster - 1).astype(int)
-    quantized_downs = np.clip((downs_coef - downs_min) / (downs_max - downs_min) * (n_cluster - 1), 0, n_cluster - 1).astype(int)
-    return quantized, quantized_downs, n_min, n_max, downs_min, downs_max
+    threshold = np.quantile(np.abs(downs_coef), quantile)
+    idx = np.abs(flat_coef) >= threshold
+    flat_coef[np.abs(flat_coef) < threshold] = 0
+    flat_coef[idx] -= threshold * np.sign(flat_coef[idx])
+    threshold_downs = np.quantile(np.abs(downs_coef), quantile)
+    idx_downs = np.abs(downs_coef) >= threshold_downs
+    downs_coef[np.abs(downs_coef) < threshold_downs] = 0
+    downs_coef[idx_downs] -= threshold_downs * np.sign(downs_coef[idx_downs])
+    return flat_coef, downs_coef
 
-def decode_uniform(quantized: np.ndarray, quantized_downs: np.ndarray, n_min: float, n_max: float, downs_min: float, downs_max: float, n_cluster: int,w: Wavelet, original_shape, level: int):
-    flat_restored = np.concatenate((quantized_downs * (downs_max - downs_min) / (n_cluster - 1) + downs_min,
-                                   quantized * (n_max - n_min) / (n_cluster - 1) + n_min))
+def decode_uniform(flat_coef: np.ndarray, downs_coef: np.ndarray, w: Wavelet, original_shape, level: int):
+    flat_restored = np.concatenate((downs_coef, flat_coef))
     coef_shapes = wavedec_periodic_dummy(original_shape, np.zeros_like(original_shape), w, level)
     restored = list()
     restored.append(flat_restored[:coef_shapes[0]] + 128)
