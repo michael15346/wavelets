@@ -43,22 +43,22 @@ def entropy(coef: list):
 #     prob = counts / len(quantized)
 #     return -(prob * np.log2(prob)).sum()
 
-def encode_uniform(coef: list, quantile: float = 0.01):
+
+def encode_uniform(coef: list, n_cluster=16):
 
     flat_coef = np.array( list(itertools.chain(*itertools.chain(*coef[1:]))))
     downs_coef = np.array(list(coef[0] - 128))
-    threshold = np.quantile(np.abs(downs_coef), quantile)
-    idx = np.abs(flat_coef) >= threshold
-    flat_coef[np.abs(flat_coef) < threshold] = 0
-    flat_coef[idx] -= threshold * np.sign(flat_coef[idx])
-    threshold_downs = np.quantile(np.abs(downs_coef), quantile)
-    idx_downs = np.abs(downs_coef) >= threshold_downs
-    downs_coef[np.abs(downs_coef) < threshold_downs] = 0
-    downs_coef[idx_downs] -= threshold_downs * np.sign(downs_coef[idx_downs])
-    return flat_coef, downs_coef
+    n_min = np.min(flat_coef)
+    downs_min = np.min(downs_coef)
+    downs_max = np.max(downs_coef)
+    n_max = np.max(flat_coef)
+    quantized = np.rint(np.clip((flat_coef - n_min) / (n_max - n_min) * (n_cluster - 1), 0, n_cluster - 1)).astype(int)
+    quantized_downs = np.rint(np.clip((downs_coef - downs_min) / (downs_max - downs_min) * (n_cluster - 1), 0, n_cluster - 1)).astype(int)
+    return quantized, quantized_downs, n_min, n_max, downs_min, downs_max
 
-def decode_uniform(flat_coef: np.ndarray, downs_coef: np.ndarray, w: Wavelet, original_shape, level: int):
-    flat_restored = np.concatenate((downs_coef, flat_coef))
+def decode_uniform(quantized: np.ndarray, quantized_downs: np.ndarray, n_min: float, n_max: float, downs_min: float, downs_max: float, n_cluster: int,w: Wavelet, original_shape, level: int):
+    flat_restored = np.concatenate((quantized_downs * (downs_max - downs_min) / (n_cluster - 1) + downs_min,
+                                   quantized * (n_max - n_min) / (n_cluster - 1) + n_min))
     coef_shapes = wavedec_periodic_dummy(original_shape, np.zeros_like(original_shape), w, level)
     restored = list()
     restored.append(flat_restored[:coef_shapes[0]] + 128)
@@ -69,3 +69,49 @@ def decode_uniform(flat_coef: np.ndarray, downs_coef: np.ndarray, w: Wavelet, or
             restored[-1].append(flat_restored[idx:idx + cc])
             idx += cc
     return restored
+
+def hard_threshold(array, threshold):
+    return np.where(np.abs(array) >= threshold, array, 0)
+
+def soft_threshold(array, threshold):
+    return np.sign(array) * np.maximum(np.abs(array) - threshold, 0)
+
+def apply_threshold(wavecoef: list, quantile: float = 0.01):
+    flat_coef, coef_lens = wavecoef_to_array(wavecoef)
+    threshold = np.quantile(np.abs(flat_coef), quantile)
+
+    thres_coef = hard_threshold(flat_coef, threshold)
+    thres_wavecoef = array_to_wavecoef(thres_coef, coef_lens)
+
+    return thres_wavecoef, threshold
+
+def get_wavecoef_shape(wavecoef):
+    lengths = []
+    for item in wavecoef:
+        if isinstance(item, np.ndarray):
+            # Если элемент - массив, добавляем его длину
+            lengths.append(len(item))
+        elif isinstance(item, list):
+            # Если элемент - список, обрабатываем каждый подэлемент
+            w_lengths = []
+            for sub_item in item:
+                if isinstance(sub_item, np.ndarray):
+                    w_lengths.append(len(sub_item))
+            lengths.append(w_lengths)
+    return lengths
+
+def wavecoef_to_array(wavecoef):
+    coef_lens = get_wavecoef_shape(wavecoef)
+    flat_coef = np.concatenate([wavecoef[0], np.array(list(itertools.chain(*itertools.chain(*wavecoef[1:]))))])
+    return flat_coef, coef_lens
+
+def array_to_wavecoef(flat_coef, coef_lens):
+    wavecoef = []
+    wavecoef.append(flat_coef[:coef_lens[0]])
+    idx = coef_lens[0]
+    for wave_lens in coef_lens[1:]:
+        wavecoef.append([])
+        for wave_len in wave_lens:
+            wavecoef[-1].append(flat_coef[idx:idx + wave_len])
+            idx += wave_len
+    return wavecoef

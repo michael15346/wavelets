@@ -3,6 +3,7 @@ from itertools import product
 import numpy as np
 
 from offset_tensor import OffsetTensor
+from vector.operators import get_pad_up_to
 from wavelet import Wavelet
 from utils import to_python_vect
 
@@ -109,7 +110,7 @@ def wavedec_multilevel_at_once_dummy(data_shape, data_offset, w: Wavelet, level:
     return details
 
 def wavedec_periodic_dummy(data_shape, data_offset, w: Wavelet, level: int):
-    pad_up_to = np.rint(w.m ** level).astype(int)
+    pad_up_to = get_pad_up_to(data_shape, w.M, level)
     padding = np.ceil(data_shape / pad_up_to) * pad_up_to - data_shape
     data_shape += padding
     masks = [[(gd.tensor.shape, gd.offset) for gd in w.gdual]]

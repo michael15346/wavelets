@@ -14,7 +14,7 @@ from ezw.wave import waverec_ezw, wavedec_ezw
 from metrics import psnr
 from offset_tensor import OffsetTensor
 from periodic.wave import waverec_period, wavedec_period
-from quant import encode_kmeans, decode_kmeans, entropy, encode_uniform, decode_uniform
+from quant import encode_kmeans, decode_kmeans, entropy, encode_uniform, decode_uniform, apply_threshold
 from roundtrip import roundtrip
 from skimage.metrics import structural_similarity as ssim
 def benchmark(content):
@@ -34,16 +34,24 @@ def benchmark(content):
             #data = data.mean(axis=2)
         iio.imwrite("results/{}/{}.png".format(content["Index"], file.split('.')[0]), data.astype(np.uint8))
         data = OffsetTensor(data, np.array([0, 0]))
-        for level in (6,):#range(1,6):
 
-            ci = wavedec_ezw(data, w, level)
-            res_true = waverec_ezw(ci, w, np.array(data.tensor.shape))
+        
+        if len(w.g) == 1:
+            max_level = 9
+        elif len(w.g) == 2:
+            max_level = 6
+        else:
+            max_level = 6
+        for level in (max_level,):#range(1,6):
+
+            ci = wavedec_period(data, w, level)
+            res_true = waverec_period(ci, w, np.array(data.tensor.shape))
             iio.imwrite("results/{}/{}-true-l{}.png".format(content["Index"],
                                                                   file.split('.')[0],
                                                                   level
                                                                   ),
                         np.clip(res_true.tensor, 0, 255).astype(np.uint8))
-            for thresh_quantile in np.logspace(-8,-2,5, base=2):
+            for thresh_quantile in np.logspace(-8,0,5, base=2):
                 row['Index'] = content['Index']
                 row['WaveletSystemType'] = content['WaveletSystemType']
                 row['RefinableMaskInfo'] = content['RefinableMaskInfo']
@@ -58,38 +66,21 @@ def benchmark(content):
                 row['Level'] = level
                 row['Estimated_CR'] = thresh_quantile
                 row['TestImg'] = file
-
-                #centroids_kmeans, cluster_kmeans = encode_kmeans(ci, 2 ** log_clusters)
-                #entropy_kmeans = entropy(cluster_kmeans)
-                #row['Entropy_KMeans'] = entropy_kmeans
-
-                #ci_kmeans = decode_kmeans(centroids_kmeans, cluster_kmeans, w, data.tensor.shape, level)
-                #res_kmeans = waverec_ezw(ci_kmeans, w, np.array(data.tensor.shape))
-                #iio.imwrite("results/{}/{}-kmeans-l{}-c{}.png".format(content["Index"],
-                #                                                      file.split('.')[0],
-                #                                                      level,
-                #                                                      2 ** log_clusters
-                #                                                      ),
-                #            np.clip(res_kmeans.tensor, 0, 255).astype(np.uint8))
-                #psnr_kmeans = psnr(data.tensor, res_kmeans.tensor)
-                #ssim_kmeans = ssim(data.tensor, res_kmeans.tensor, data_range=256)
-                #row['PSNR_KMeans'] = psnr_kmeans
-                #row['SSIM_KMeans'] = ssim_kmeans
-                quantized_uniform, quantized_downs_uniform = encode_uniform(ci, thresh_quantile)
-                entropy_uniform = entropy(quantized_uniform)
-                row['Entropy_Uniform'] = entropy_uniform
-                ci_uniform = decode_uniform(quantized_uniform, quantized_downs_uniform, w, data.tensor.shape, level)
-                res_uniform = waverec_ezw(ci_uniform, w, np.array(data.tensor.shape))
-                iio.imwrite("results/{}/{}-uniform-l{}-c{}.png".format(content["Index"],
+                quantized, threshold = apply_threshold(ci, thresh_quantile)
+                #entropy_q = entropy(quantized)
+                #row['Entropy'] = entropy_q
+                res = waverec_period(quantized, w, np.array(data.tensor.shape))
+                iio.imwrite("results/{}/{}-l{}-q{}.png".format(content["Index"],
                                                                        file.split('.')[0],
                                                                        level,
                                                                        thresh_quantile),
-                            np.clip(res_uniform.tensor, 0, 255).astype(np.uint8))
-                psnr_uniform = psnr(data.tensor, res_uniform.tensor)
-                ssim_uniform = ssim(data.tensor, res_uniform.tensor, data_range=256)
-                row['PSNR_Uniform'] = psnr_uniform
-                row['SSIM_Uniform'] = ssim_uniform
+                            np.clip(res.tensor, 0, 255).astype(np.uint8))
+                psnr_uniform = psnr(data.tensor, res.tensor)
+                ssim_uniform = ssim(data.tensor, res.tensor, data_range=256)
+                row['PSNR'] = psnr_uniform
+                row['SSIM'] = ssim_uniform
                 results.append(deepcopy(row))
+                print('appended')
     return results
 
 
@@ -111,8 +102,8 @@ if __name__ == "__main__":
         #for c in contents:
 
 
-        with Pool(8) as p:
-            results_nonflat = p.map(benchmark, contents)
+        with Pool(4) as p:
+            results_nonflat = list(map(benchmark, contents))
         #results_nonflat = map(benchmark, contents[26:28])
         results = list(chain(*results_nonflat))
 

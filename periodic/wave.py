@@ -3,7 +3,7 @@ import scipy
 
 from classic.wave import subdivision
 from offset_tensor import OffsetTensor
-from vector.operators import upsample_vector, downsample_vector, downsample_fast
+from vector.operators import downsample_fast, upsample_fast, get_pad_up_to
 from wavelet import Wavelet
 
 
@@ -13,7 +13,7 @@ def transition_period(a: OffsetTensor, mask: OffsetTensor, M: np.ndarray):
 
 
 def subdivision_period(a: OffsetTensor, mask: OffsetTensor, M: np.ndarray, original_shape, original_offset):
-    u = upsample_vector(a,M, original_shape, original_offset)
+    u = upsample_fast(a,M, original_shape, original_offset)
     c = convolve_period(u, mask)
     return c
 
@@ -30,7 +30,7 @@ def convolve_period(a: OffsetTensor, b: OffsetTensor):
 
 def wavedec_period(data: OffsetTensor, w: Wavelet, level: int):
     shape = np.array(data.tensor.shape)
-    pad_up_to = np.rint(w.m ** level).astype(int)
+    pad_up_to = get_pad_up_to(shape, w.M, level)
     padding = np.array([np.zeros_like(shape), np.ceil(shape / pad_up_to) * pad_up_to - shape], dtype=int).T
     data_padded = OffsetTensor(np.pad(data.tensor, padding, mode="wrap"), data.offset)
     masks = [list(w.gdual)]
@@ -73,7 +73,7 @@ def waverec_period(c: list, w: Wavelet, original_shape, original_offset=np.array
     level = len(d)
     shape = np.array(original_shape, dtype=int)
     #padding = np.array(w.m ** level - shape % (w.m ** level), dtype=int).T
-    pad_up_to = np.rint(w.m ** level).astype(int)
+    pad_up_to = get_pad_up_to(shape, w.M, level)
     padding = np.array(np.ceil(shape / pad_up_to) * pad_up_to - shape, dtype=int).T
     padded_shape = shape + padding
     d.reverse()
