@@ -83,6 +83,8 @@ def apply_threshold(wavecoef: list, quantile: float = 0.01):
     thres_coef = hard_threshold(flat_coef, threshold)
     thres_wavecoef = array_to_wavecoef(thres_coef, coef_lens)
 
+    thres_wavecoef.insert(0, flat_coef[0])
+
     return thres_wavecoef, threshold
 
 def get_wavecoef_shape(wavecoef):
@@ -101,14 +103,14 @@ def get_wavecoef_shape(wavecoef):
     return lengths
 
 def wavecoef_to_array(wavecoef):
-    coef_lens = get_wavecoef_shape(wavecoef)
-    flat_coef = np.concatenate([wavecoef[0], np.array(list(itertools.chain(*itertools.chain(*wavecoef[1:]))))])
+    coef_lens = get_wavecoef_shape(wavecoef[1:])
+    flat_coef = np.concatenate([np.array(list(itertools.chain(*itertools.chain(*wavecoef[1:]))))])
     return flat_coef, coef_lens
 
 def array_to_wavecoef(flat_coef, coef_lens):
     wavecoef = []
-    wavecoef.append(flat_coef[:coef_lens[0]])
-    idx = coef_lens[0]
+    #wavecoef.append(flat_coef[:coef_lens[0]])
+    idx = 0
     for wave_lens in coef_lens[1:]:
         wavecoef.append([])
         for wave_len in wave_lens:

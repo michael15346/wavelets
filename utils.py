@@ -88,3 +88,12 @@ def YCbCr2RGB(im_ycbcr):
     im_rgb = np.where(im_rgb > 255, 255, im_rgb)
     im_rgb = np.where(im_rgb < 0, 0, im_rgb)
     return OffsetTensor(im_rgb, np.zeros_like(im_rgb.shape))
+
+def ci_size(a):
+    d = a[1:]
+    a = a[0]
+    total = a.size
+    for di in d:
+        for dj in di:
+            total += dj.size
+    return total
