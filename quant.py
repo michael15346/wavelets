@@ -33,16 +33,6 @@ def entropy(coef: list):
     prob = counts / len(coef)
     return -(prob * np.log2(prob)).sum()
 
-# def uniform_entropy(coef: list, n_cluster = 256):
-#     flat_coef = np.array(list(coef[0]) + list(itertools.chain(*itertools.chain(*coef[1:]))))
-#     print("before cluster")
-#     n_min = np.min(flat_coef)
-#     n_max = np.max(flat_coef)
-#     quantized = np.clip(np.round((flat_coef - n_min) / n_max * (n_cluster - 1)),0, n_cluster - 1).astype(int)
-#     val, counts = np.unique(quantized, return_counts=True)
-#     prob = counts / len(quantized)
-#     return -(prob * np.log2(prob)).sum()
-
 
 def encode_uniform(coef: list, n_cluster=16):
 
@@ -76,24 +66,27 @@ def hard_threshold(array, threshold):
 def soft_threshold(array, threshold):
     return np.sign(array) * np.maximum(np.abs(array) - threshold, 0)
 
-def apply_threshold(wavecoef: list, quantile: float = 0.01):
-    flat_coef, coef_lens = wavecoef_to_array(wavecoef)
-    threshold = np.quantile(np.abs(flat_coef), quantile)
-
+def apply_threshold(wavecoef: list, threshold: float):
+    downs_coef, flat_coef, coef_lens = wavecoef_to_array(wavecoef)
     thres_coef = hard_threshold(flat_coef, threshold)
-    thres_wavecoef = array_to_wavecoef(thres_coef, coef_lens)
+    thres_wavecoef = array_to_wavecoef(downs_coef, thres_coef, coef_lens)
 
-    thres_wavecoef.insert(0, flat_coef[0])
+    #thres_wavecoef.insert(0, flat_coef[0])
 
     return thres_wavecoef, threshold
+
+def apply_threshold_quantile(wavecoef: list, quantile: float = 0.01):
+    downs_coef, flat_coef, _ = wavecoef_to_array(wavecoef)
+    threshold = np.quantile(np.abs(flat_coef), quantile)
+    return apply_threshold(wavecoef, threshold)
 
 def get_wavecoef_shape(wavecoef):
     lengths = []
     for item in wavecoef:
-        if isinstance(item, np.ndarray):
-            # Если элемент - массив, добавляем его длину
-            lengths.append(len(item))
-        elif isinstance(item, list):
+        # if isinstance(item, np.ndarray):
+        #     # Если элемент - массив, добавляем его длину
+        #     lengths.append(len(item))
+        # elif isinstance(item, list):
             # Если элемент - список, обрабатываем каждый подэлемент
             w_lengths = []
             for sub_item in item:
@@ -105,13 +98,13 @@ def get_wavecoef_shape(wavecoef):
 def wavecoef_to_array(wavecoef):
     coef_lens = get_wavecoef_shape(wavecoef[1:])
     flat_coef = np.concatenate([np.array(list(itertools.chain(*itertools.chain(*wavecoef[1:]))))])
-    return flat_coef, coef_lens
+    downs_coef = wavecoef[0]
+    return downs_coef, flat_coef, coef_lens
 
-def array_to_wavecoef(flat_coef, coef_lens):
-    wavecoef = []
-    #wavecoef.append(flat_coef[:coef_lens[0]])
+def array_to_wavecoef(downs_coef, flat_coef, coef_lens):
+    wavecoef = [downs_coef]
     idx = 0
-    for wave_lens in coef_lens[1:]:
+    for wave_lens in coef_lens:
         wavecoef.append([])
         for wave_len in wave_lens:
             wavecoef[-1].append(flat_coef[idx:idx + wave_len])
