@@ -71,8 +71,6 @@ def apply_threshold(wavecoef: list, threshold: float):
     thres_coef = hard_threshold(flat_coef, threshold)
     thres_wavecoef = array_to_wavecoef(downs_coef, thres_coef, coef_lens)
 
-    #thres_wavecoef.insert(0, flat_coef[0])
-
     return thres_wavecoef, threshold
 
 def apply_threshold_quantile(wavecoef: list, quantile: float = 0.01):
@@ -83,16 +81,11 @@ def apply_threshold_quantile(wavecoef: list, quantile: float = 0.01):
 def get_wavecoef_shape(wavecoef):
     lengths = []
     for item in wavecoef:
-        # if isinstance(item, np.ndarray):
-        #     # Если элемент - массив, добавляем его длину
-        #     lengths.append(len(item))
-        # elif isinstance(item, list):
-            # Если элемент - список, обрабатываем каждый подэлемент
-            w_lengths = []
-            for sub_item in item:
-                if isinstance(sub_item, np.ndarray):
-                    w_lengths.append(len(sub_item))
-            lengths.append(w_lengths)
+        w_lengths = []
+        for sub_item in item:
+            if isinstance(sub_item, np.ndarray):
+                w_lengths.append(len(sub_item))
+        lengths.append(w_lengths)
     return lengths
 
 def wavecoef_to_array(wavecoef):

@@ -9,7 +9,7 @@ import pandas as pd
 import pywt
 
 from db import createWaveletFromContent, PRP_check
-from denoise import bayes_thresh, universal_thresh
+from denoise import bayes_thresh, universal_thresh, apply_bayes_thresh
 from metrics import psnr
 from offset_tensor import OffsetTensor
 from periodic.wave import waverec_period, wavedec_period
@@ -126,9 +126,9 @@ def benchmark_denoise(content):
             row['SourceInfo'] = content['SourceInfo']
             row['Level'] = level
             print(ci_size(ci))
-            thresh_bayes = bayes_thresh(ci)
+            quantized = apply_bayes_thresh(ci)
             row['TestImg'] = file
-            quantized, threshold = apply_threshold(ci, thresh_bayes)
+            #quantized, threshold = apply_threshold(ci, thresh_bayes)
             # entropy_q = entropy(quantized)
             # row['Entropy'] = entropy_q
             res = waverec_period(quantized, w, np.array(data.tensor.shape))
