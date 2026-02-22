@@ -4,7 +4,7 @@ import numpy as np
 import scipy
 
 def est_sigma(details):
-    denom = scipy.stats.norm.ppf(0.75)
+    denom = scipy.stats.norm.ppf(0.995)
     sigma = np.median(np.abs(details)) / denom
     return sigma
 
