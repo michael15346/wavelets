@@ -3,8 +3,11 @@ import itertools
 import numpy as np
 import scipy
 
+from quant import hard_threshold
+
+
 def est_sigma(details):
-    denom = scipy.stats.norm.ppf(0.995)
+    denom = scipy.stats.norm.ppf(0.75)
     sigma = np.median(np.abs(details)) / denom
     return sigma
 
@@ -14,7 +17,7 @@ def bayes_thresh(detail, var):
     dvar = np.mean(detail * detail)
     eps = np.finfo(detail.dtype).eps
     thresh = var / np.sqrt(max(dvar - var, eps))
-    return thresh
+    return hard_threshold(detail, thresh)
 
 def apply_bayes_thresh(wavecoef):
     details = wavecoef[1:]

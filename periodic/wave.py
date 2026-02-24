@@ -3,7 +3,7 @@ import scipy
 
 from classic.wave import subdivision
 from offset_tensor import OffsetTensor
-from vector.operators import downsample_fast, upsample_fast, get_pad_up_to
+from vector.operators import downsample_fast, upsample_fast, get_pad_up_to, downsample_fastest, upsample_fastest
 from wavelet import Wavelet
 
 
@@ -14,6 +14,15 @@ def transition_period(a: OffsetTensor, mask: OffsetTensor, M: np.ndarray):
 
 def subdivision_period(a: OffsetTensor, mask: OffsetTensor, M: np.ndarray, original_shape, original_offset):
     u = upsample_fast(a,M, original_shape, original_offset)
+    c = convolve_period(u, mask)
+    return c
+
+def transition_period_fastest(a: OffsetTensor, mask: OffsetTensor, M: np.ndarray):
+    mask = mask.conjugate()
+    return downsample_fastest(convolve_period(a, mask), M)
+
+def subdivision_period_fastest(a: OffsetTensor, mask: OffsetTensor, M: np.ndarray, original_shape, original_offset):
+    u = upsample_fastest(a,M, original_shape, original_offset)
     c = convolve_period(u, mask)
     return c
 
@@ -76,6 +85,81 @@ def waverec_period(c: list, w: Wavelet, original_shape, original_offset=np.array
     pad_up_to = get_pad_up_to(shape, w.M, level)
     padding = np.array(np.ceil(shape / pad_up_to) * pad_up_to - shape, dtype=int).T
     padded_shape = shape + padding
+    d.reverse()
+    res = OffsetTensor(np.zeros((1,) * len(padded_shape)), np.zeros_like(original_offset))
+    m = w.m
+    wmasks = [OffsetTensor(wmask.tensor * m, wmask.offset) for wmask in w.g]
+    cur_M = w.M.copy()
+    for i, di in enumerate(d):
+        for j, dij in enumerate(di):
+            res += subdivision_period(dij, wmasks[j], cur_M, padded_shape, original_offset)
+            wmasks[j] = subdivision(wmasks[j], w.h, w.M)
+            wmasks[j].tensor = wmasks[j].tensor * m
+        cur_M = cur_M @ w.M
+
+    mask_h = OffsetTensor(w.h.tensor * m, w.h.offset)
+    cur_M = w.M.copy()
+    for i in range(len(d)-1):
+        mask_h = subdivision(mask_h, w.h, w.M)
+        mask_h.tensor = mask_h.tensor * m
+        cur_M = cur_M @ w.M
+
+    res += subdivision_period(a, mask_h, cur_M, padded_shape, original_offset)
+
+    slices = tuple(slice(-o, -o + s) for s, o in zip(original_shape, res.offset))
+
+    res.tensor = res.tensor[slices]
+    return res
+
+def wavedec_period_fastest(data: OffsetTensor, w: Wavelet, level: int):
+    shape = np.array(data.tensor.shape)
+    pad_up_to = get_pad_up_to(shape, w.M, level)
+    padding = np.array([np.zeros_like(shape), np.ceil(shape / pad_up_to) * pad_up_to - shape], dtype=int).T
+    data_padded = OffsetTensor(np.pad(data.tensor, padding, mode="wrap"), data.offset)
+    #print("Padded up to:", data_padded.tensor.shape)
+    masks = [list(w.gdual)]
+
+    for i in range(1, level):
+        gmasks = []
+        for gdual in w.gdual:
+            cur_mask = w.hdual
+            cur_M = w.M.copy()
+            for j in range(i-1, 0, -1):
+                cur_mask = subdivision(w.hdual, cur_mask, cur_M)
+                cur_M = cur_M @ w.M
+            wave_mask = subdivision(gdual, cur_mask, cur_M)
+            gmasks.append(wave_mask)
+        masks.append(gmasks)
+    # !!!
+    if level > 1:
+        ref_mask = subdivision(w.hdual, cur_mask, cur_M)
+    else:
+        ref_mask = w.hdual
+
+    details = []
+    cur_M = np.eye(w.M.shape[0], dtype=int)
+    for mask in masks:
+        cur_M = cur_M @ w.M
+        tmp_list = list()
+        for m in mask:
+            tmp_list.append(transition_period(data_padded, m, cur_M.copy()))
+        details.append(tmp_list)
+    details.append(transition_period(data_padded, ref_mask, cur_M))
+    details.reverse()
+
+
+    return details
+
+def waverec_period_fastest(c: list, w: Wavelet, original_shape, original_offset=np.array([0,0])):
+
+    a = c[0]
+    d = c[1:]
+    level = len(d)
+    shape = np.array(original_shape, dtype=int)
+    padded_shape = get_pad_up_to(shape, w.M, level)
+    #print("Rec padded shape:", padded_shape)
+    #padding = np.array(np.ceil(shape / pad_up_to) * pad_up_to - shape, dtype=int).T
+    #padded_shape = shape + padding
     d.reverse()
     res = OffsetTensor(np.zeros((1,) * len(padded_shape)), np.zeros_like(original_offset))
     m = w.m

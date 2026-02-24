@@ -33,6 +33,21 @@ def get_pad_up_to(shape, M, level):
     return pad_up_to
 
 
+def get_M_multiples_slices(shape, offset, M):
+    Madj = get_adjugate(M)
+    m = np.rint(np.abs(np.linalg.det(M))).astype(int)
+    tile = get_tile(M)
+    d = offset.shape[0]
+
+    in_tile_coords = np.indices(tile).reshape(d, -1)
+    mask = np.all(np.mod(Madj @ in_tile_coords, m) == 0, axis=0)
+    M_vectors = (in_tile_coords[:, mask] - offset.reshape(-1, 1)).T
+    tile_shifts = shape // tile
+    M_multiples_slices = [tuple(slice(M_vec[idx], M_vec[idx] + tile[idx] * ts, tile[idx])
+                                for idx, ts in enumerate(tile_shifts))
+                          for M_vec in M_vectors]
+    return M_multiples_slices
+
 def get_M_multiples_coords(shape, offset, M):
     Madj = get_adjugate(M)
     m = np.rint(np.abs(np.linalg.det(M))).astype(int)
@@ -62,6 +77,18 @@ def upsample_fast(a, M: np.ndarray, original_shape, original_offset):
     upsampled.tensor[*M_multiples_coords] = a
     return upsampled
 
+def downsample_fastest(a: OffsetTensor, M: np.ndarray):
+    M_multiples_slices = get_M_multiples_slices(a.tensor.shape, a.offset, M)
+    #return np.array([a.tensor[slc] for slc in M_multiples_slices]), M_multiples_slices
+    return np.array([a.tensor[slc] for slc in M_multiples_slices])
+
+def upsample_fastest(a, M: np.ndarray, original_shape, original_offset, M_multiples_slices = None):
+    upsampled = OffsetTensor(np.zeros(original_shape, dtype=np.float64), np.array(original_offset))
+    if M_multiples_slices == None:
+        M_multiples_slices = get_M_multiples_slices(original_shape, original_offset, M)
+    for idx in range(len(M_multiples_slices)):
+        upsampled.tensor[M_multiples_slices[idx]] = a[idx,:,:]
+    return upsampled
 
 def downsample_vector(a: OffsetTensor, M: np.ndarray):
     m = round(np.abs(np.linalg.det(M)))
