@@ -8,12 +8,13 @@ import numpy as np
 import pandas as pd
 import pywt
 
+from batched import wavedec_period_batched
 from db import createWaveletFromContent, PRP_check
 from denoise import universal_thresh, apply_bayes_thresh
 from metrics import psnr
 from noisegen import gen_gaussian_noise, gen_snp_noise
 from offset_tensor import OffsetTensor
-from periodic.wave import wavedec_period_fastest, waverec_period_fastest
+from periodic.wave import wavedec_period_fastest, waverec_period_fastest, wavedec_period, waverec_period
 from quant import apply_threshold_quantile, apply_threshold
 from roundtrip import roundtrip
 from skimage.metrics import structural_similarity as ssim
@@ -49,8 +50,8 @@ def benchmark(content):
             max_level = 6
         for level in (5,):#range(1,6):
 
-            ci = wavedec_period_fastest(data, w, level)
-            res_true = waverec_period_fastest(ci, w, np.array(data.tensor.shape))
+            ci = wavedec_period(data, w, level)
+            res_true = waverec_period(ci, w, np.array(data.tensor.shape))
             iio.imwrite("results/{}/{}-true-l{}.png".format(content["Index"],
                                                                   file.split('.')[0],
                                                                   level
@@ -75,7 +76,7 @@ def benchmark(content):
                 quantized, threshold = apply_threshold_quantile(ci, thresh_quantile)
                 #entropy_q = entropy(quantized)
                 #row['Entropy'] = entropy_q
-                res = waverec_period_fastest(quantized, w, np.array(data.tensor.shape))
+                res = waverec_period(quantized, w, np.array(data.tensor.shape))
                 iio.imwrite("results/{}/{}-l{}-q{}.png".format(content["Index"],
                                                                        file.split('.')[0],
                                                                        level,
@@ -110,22 +111,22 @@ def benchmark_denoise(content):
         data_snp = OffsetTensor(data_snp, np.array([0,0]))
 
         for level in (5,):  # range(1,6):
-            ci = wavedec_period_fastest(data, w, level)
-            ci_gaussian = wavedec_period_fastest(data_gaussian, w, level)
-            ci_snp = wavedec_period_fastest(data_snp, w, level)
-            res_true = waverec_period_fastest(ci, w, np.array(data.tensor.shape))
+            ci = wavedec_period(data, w, level)
+            ci_gaussian = wavedec_period(data_gaussian, w, level)
+            ci_snp = wavedec_period(data_snp, w, level)
+            res_true = waverec_period(ci, w, np.array(data.tensor.shape))
             iio.imwrite("results/{}/{}-true-l{}.png".format(content["Index"],
                                                             file.split('.')[0],
                                                             level
                                                             ),
                         np.clip(res_true.tensor, 0, 255).astype(np.uint8))
-            res_gaussian = waverec_period_fastest(ci_gaussian, w, np.array(data.tensor.shape))
+            res_gaussian = waverec_period(ci_gaussian, w, np.array(data.tensor.shape))
             iio.imwrite("results/{}/{}-gaussian-l{}.png".format(content["Index"],
                                                             file.split('.')[0],
                                                             level
                                                             ),
                         np.clip(res_gaussian.tensor, 0, 255).astype(np.uint8))
-            res_snp = waverec_period_fastest(ci_snp, w, np.array(data.tensor.shape))
+            res_snp = waverec_period(ci_snp, w, np.array(data.tensor.shape))
             iio.imwrite("results/{}/{}-snp-l{}.png".format(content["Index"],
                                                                 file.split('.')[0],
                                                                 level
@@ -146,8 +147,8 @@ def benchmark_denoise(content):
             ci_gaussian_bayes = apply_bayes_thresh(ci_gaussian)
             ci_snp_bayes = apply_bayes_thresh(ci_snp)
             row['TestImg'] = file
-            res_gaussian_bayes = waverec_period_fastest(ci_gaussian_bayes, w, np.array(data.tensor.shape))
-            res_snp_bayes = waverec_period_fastest(ci_snp_bayes, w, np.array(data.tensor.shape))
+            res_gaussian_bayes = waverec_period(ci_gaussian_bayes, w, np.array(data.tensor.shape))
+            res_snp_bayes = waverec_period(ci_snp_bayes, w, np.array(data.tensor.shape))
             iio.imwrite("results/{}/{}-l{}-{}.png".format(content["Index"],
                                                            file.split('.')[0],
                                                            level,
@@ -171,8 +172,8 @@ def benchmark_denoise(content):
             row['TestImg'] = file
             ci_gaussian_visu, threshold = apply_threshold(ci, thresh_visu_gaussian)
             ci_snp_visu, threshold = apply_threshold(ci, thresh_visu_snp)
-            res_gaussian_visu = waverec_period_fastest(ci_gaussian_visu, w, np.array(data.tensor.shape))
-            res_snp_visu = waverec_period_fastest(ci_snp_visu, w, np.array(data.tensor.shape))
+            res_gaussian_visu = waverec_period(ci_gaussian_visu, w, np.array(data.tensor.shape))
+            res_snp_visu = waverec_period(ci_snp_visu, w, np.array(data.tensor.shape))
             iio.imwrite("results/{}/{}-l{}-{}.png".format(content["Index"],
                                                            file.split('.')[0],
                                                            level,
@@ -261,7 +262,7 @@ if __name__ == "__main__":
     elif args.command == 'benchmark_denoise':
         with open("WaveDB.json", 'r') as j:
             contents = json.loads(j.read())
-        results_nonflat = list(map(benchmark_denoise, contents[:1]))
+        results_nonflat = list(map(benchmark_denoise, contents))
         #discrete_wavelets = pywt.wavelist(kind='discrete')
         #results_1d = list(map(benchmark1D, discrete_wavelets))
         results = list(chain(*results_nonflat)) #+ list(chain(*results_1d))

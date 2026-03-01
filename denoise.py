@@ -7,7 +7,7 @@ from quant import hard_threshold
 
 
 def est_sigma(details):
-    denom = scipy.stats.norm.ppf(0.75)
+    denom = scipy.stats.norm.ppf(0.95)
     sigma = np.median(np.abs(details)) / denom
     return sigma
 
@@ -21,7 +21,7 @@ def bayes_thresh(detail, var):
 
 def apply_bayes_thresh(wavecoef):
     details = wavecoef[1:]
-    details_flat = np.array(list(itertools.chain(*itertools.chain(*wavecoef[1:]))))
+    details_flat = np.concatenate(list(itertools.chain(*itertools.chain(*wavecoef[1:]))), axis=None)
     sigma = est_sigma(details_flat)
     var = sigma * sigma
     denoised = [wavecoef[0]] + [[bayes_thresh(c, var) for c in level_coef] for level_coef in details]
@@ -30,7 +30,7 @@ def apply_bayes_thresh(wavecoef):
 
 def universal_thresh(img, wavecoef):
     """Universal threshold used by the VisuShrink method"""
-    details = np.array(list(itertools.chain(*itertools.chain(*wavecoef[1:]))))
+    details = np.concatenate(list(itertools.chain(*itertools.chain(*wavecoef[1:]))), axis=None)
     sigma = est_sigma(details)
     return sigma * np.sqrt(2 * np.log(img.tensor.size))
 
