@@ -84,13 +84,13 @@ def get_wavecoef_shape(wavecoef):
         w_lengths = []
         for sub_item in item:
             if isinstance(sub_item, np.ndarray):
-                w_lengths.append(len(sub_item))
+                w_lengths.append(sub_item.shape)
         lengths.append(w_lengths)
     return lengths
 
 def wavecoef_to_array(wavecoef):
     coef_lens = get_wavecoef_shape(wavecoef[1:])
-    flat_coef = np.concatenate([np.array(list(itertools.chain(*itertools.chain(*wavecoef[1:]))))])
+    flat_coef = np.concatenate(list(map(lambda x: x.reshape((-1,)), list(itertools.chain(*itertools.chain(*wavecoef[1:]))))), axis=None)
     downs_coef = wavecoef[0]
     return downs_coef, flat_coef, coef_lens
 
@@ -99,7 +99,8 @@ def array_to_wavecoef(downs_coef, flat_coef, coef_lens):
     idx = 0
     for wave_lens in coef_lens:
         wavecoef.append([])
-        for wave_len in wave_lens:
-            wavecoef[-1].append(flat_coef[idx:idx + wave_len])
+        for wave_shape in wave_lens:
+            wave_len = np.prod(wave_shape)
+            wavecoef[-1].append(flat_coef[idx:idx + wave_len].reshape(wave_shape))
             idx += wave_len
     return wavecoef
