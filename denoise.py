@@ -7,9 +7,10 @@ from quant import hard_threshold
 
 
 def est_sigma(details):
-    denom = scipy.stats.norm.ppf(0.95)
-    sigma = np.median(np.abs(details)) / denom
-    return sigma
+    return 0.1 * 127.5 # actual noise sigma
+    # denom = scipy.stats.norm.ppf(0.6)
+    # sigma = np.median(np.abs(details)) / denom
+    # return sigma
 
 def bayes_thresh(detail, var):
     """BayesShrink threshold for a zero-mean details coeff array."""

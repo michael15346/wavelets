@@ -3,6 +3,8 @@ import json
 import os
 from copy import deepcopy
 from itertools import chain
+from multiprocessing import Pool
+
 import imageio.v3 as iio
 import numpy as np
 import pandas as pd
@@ -95,7 +97,7 @@ def benchmark_denoise(content):
     w = createWaveletFromContent(content)
     results = []
     print(len(w.g))
-    for file in ('lenna.bmp',):
+    for file in ('tank2.bmp',):
         path = os.path.join('test', file)
         data = iio.imread(path)
 
@@ -108,7 +110,7 @@ def benchmark_denoise(content):
         data_gaussian = OffsetTensor(data_gaussian, np.array([0,0]))
         data_snp = OffsetTensor(data_snp, np.array([0,0]))
 
-        for level in (5,):  # range(1,6):
+        for level in (9,):  # range(1,6):
             ci = wavedec_period_fastest(data, w, level)
             ci_gaussian = wavedec_period_fastest(data_gaussian, w, level)
             ci_snp = wavedec_period_fastest(data_snp, w, level)
@@ -168,8 +170,8 @@ def benchmark_denoise(content):
             thresh_visu_gaussian = universal_thresh(data_gaussian, ci)
             thresh_visu_snp = universal_thresh(data_snp, ci)
             row['TestImg'] = file
-            ci_gaussian_visu, threshold = apply_threshold(ci, thresh_visu_gaussian)
-            ci_snp_visu, threshold = apply_threshold(ci, thresh_visu_snp)
+            ci_gaussian_visu, threshold = apply_threshold(ci_gaussian, thresh_visu_gaussian)
+            ci_snp_visu, threshold = apply_threshold(ci_snp, thresh_visu_snp)
             res_gaussian_visu = waverec_period_fastest(ci_gaussian_visu, w, np.array(data.tensor.shape))
             res_snp_visu = waverec_period_fastest(ci_snp_visu, w, np.array(data.tensor.shape))
             iio.imwrite("results/{}/{}-l{}-{}.png".format(content["Index"],
