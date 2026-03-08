@@ -144,4 +144,3 @@ def waverec_period_fastest(c: list, w: Wavelet, original_shape, original_offset=
     res.tensor = res.tensor[slices]
     return res
 
-
