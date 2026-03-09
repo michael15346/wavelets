@@ -105,7 +105,6 @@ def wavedec_period_batched(data: OffsetTensor, w: Wavelet, level: int):
     pad_width = np.array([np.zeros_like(shape), padded_shape - shape], dtype=int).T
     data_padded = OffsetTensor(np.pad(data.tensor, pad_width, mode="wrap"), data.offset)
     data = data_padded
-    wmod = deepcopy(w)
     div_list = []
     rem_list = []
     for l in range(div):
@@ -113,9 +112,7 @@ def wavedec_period_batched(data: OffsetTensor, w: Wavelet, level: int):
         div_list.append(res[1:])
         data = res[0]
     if rem > 0:
-        wmod.M = np.linalg.matrix_power(w.M, rem)
-        wmod.m = np.linalg.det(wmod.M)
-        res = wavedec_period_fastest(data, wmod, rem)
+        res = wavedec_period_fastest(data, w, rem)
         rem_list.append(res[1:])
     wave = [div_list, rem_list, [res[0]]]
     return wave
@@ -136,17 +133,11 @@ def waverec_period_batched(c: list, w: Wavelet, original_shape):
         shape //= np.abs(Mpd)
     img = c[-1]
     if rem > 0:
-        Mrem = np.linalg.matrix_power(w.M, rem)
-        remshape = shape // np.abs(Mrem.diagonal())
         coef = img + c[-2][0]
-        wmod.M = Mrem
-        wmod.m = np.linalg.det(wmod.M)
-        img = waverec_period_fastest(coef, wmod, remshape)
+        img = waverec_period_fastest(coef, w, shape)
 
-    wmod.M = Mp
-    wmod.m = np.linalg.det(wmod.M)
     for i, cc in enumerate(reversed(c[0])):
         coef = [img] + cc
-        img = waverec_period_batch(coef, wmod, shapes[-i-1])
+        img = waverec_period_batch(coef, w, shapes[-i-1])
     return img[0]
 
