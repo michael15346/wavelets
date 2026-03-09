@@ -168,5 +168,8 @@ def waverec_period_batched(c: list, w: Wavelet, original_shape):
         cc = c[idx-order:idx]
         coef = [img] + cc
         img = waverec_period_batch(coef, w, shapes[-i-1])
+    slices = tuple(slice(-o, -o + s) for s, o in zip(original_shape, img.offset))
+
+    img.tensor = img.tensor[slices]
     return img
 
