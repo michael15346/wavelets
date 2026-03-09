@@ -73,6 +73,13 @@ def apply_threshold(wavecoef: list, threshold: float):
 
     return thres_wavecoef, threshold
 
+def apply_soft_threshold(wavecoef: list, threshold: float):
+    downs_coef, flat_coef, coef_lens = wavecoef_to_array(wavecoef)
+    thres_coef = soft_threshold(flat_coef, threshold)
+    thres_wavecoef = array_to_wavecoef(downs_coef, thres_coef, coef_lens)
+
+    return thres_wavecoef, threshold
+
 def apply_threshold_quantile(wavecoef: list, quantile: float = 0.01):
     downs_coef, flat_coef, _ = wavecoef_to_array(wavecoef)
     threshold = np.quantile(np.abs(flat_coef), quantile)

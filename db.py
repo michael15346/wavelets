@@ -9,7 +9,7 @@ from wavelet import Wavelet
 
 
 def createWaveletFromContent(content):
-    M = np.array(content['DilationMatrix'])
+    M = np.array(content['DilationMatrix'], dtype=int)
     coeffs = np.array(content['Mask']['Coeffs']) / content['Mask']['CoeffsDenominator']
     coords = np.array(content['Mask']['Coords'])
     h = CoefCoords2OffsetTensor((coeffs, coords))
@@ -34,7 +34,7 @@ def createWaveletFromContent(content):
         gdual.append(CoefCoords2OffsetTensor((coeffs, coords)))
     gdual = tuple(gdual)
 
-    return Wavelet(h, g, hdual, gdual, M, abs(np.linalg.det(M)))
+    return Wavelet(h, g, hdual, gdual, M, np.rint(abs(np.linalg.det(M))).astype(int))
 
 
 def DeltaN(n, d):

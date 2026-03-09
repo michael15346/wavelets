@@ -110,12 +110,13 @@ def wavedec_period_fastest(data: OffsetTensor, w: Wavelet, level: int):
     masks, Ms = create_dwt_fb(w.hdual, w.gdual, w.M, level)
 
     dwt_coefs = []
-    for gmasks, cur_M in zip(masks[1:], Ms[1:]):
+    for cur_level, gmasks, cur_M in zip(range(level, 0, -1), masks[1:], Ms[1:]):
         tmp_list = []
+        mod = w.m ** (cur_level / 2)
         for gmask in gmasks:
-            tmp_list.append(transition_period_fastest(data_padded, gmask, cur_M))
+            tmp_list.append(transition_period_fastest(data_padded * mod, gmask, cur_M))
         dwt_coefs.append(tmp_list)
-    dwt_coefs.insert(0, transition_period_fastest(data_padded, masks[0], Ms[0]))
+    dwt_coefs.insert(0, transition_period_fastest(data_padded * (w.m ** (level / 2)), masks[0], Ms[0]))
 
     return dwt_coefs
 
@@ -132,12 +133,13 @@ def waverec_period_fastest(c: list, w: Wavelet, original_shape, original_offset=
     res = OffsetTensor(np.zeros((1,) * len(padded_shape)), np.zeros_like(original_offset))
     m = w.m
     for cur_level, d_coefs, wave_masks, cur_M in zip(range(level, 0, -1), c[1:], masks[1:], Ms[1:]):
+        mod = m ** (cur_level / 2)
         for wave_mask, d_coef in zip(wave_masks, d_coefs):
             tmp = subdivision_period_fastest(d_coef, wave_mask, cur_M, padded_shape, original_offset)
-            res += OffsetTensor(tmp.tensor * (m ** cur_level), tmp.offset)
+            res += OffsetTensor(tmp.tensor * mod, tmp.offset)
 
     tmp = subdivision_period_fastest(c[0], masks[0], Ms[0], padded_shape, original_offset)
-    res += OffsetTensor(tmp.tensor * (m ** level), tmp.offset)
+    res += OffsetTensor(tmp.tensor * (m ** (level / 2)), tmp.offset)
 
     slices = tuple(slice(-o, -o + s) for s, o in zip(original_shape, res.offset))
 
