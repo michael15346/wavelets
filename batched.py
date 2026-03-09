@@ -148,6 +148,7 @@ def waverec_period_batched(c: list, w: Wavelet, original_shape):
     if not order:
         div = 0
         rem = level
+        order = level
     else:
         div = level // order
         rem = level % order
@@ -163,7 +164,6 @@ def waverec_period_batched(c: list, w: Wavelet, original_shape):
         coef = [img] + c[-rem:]
         img = waverec_period_fastest(coef, w, shape)
 
-    #for i, cc in enumerate(reversed(c[:-rem])):
     for i, idx in enumerate(range(len(c) - rem, 1, -order)):
         cc = c[idx-order:idx]
         coef = [img] + cc

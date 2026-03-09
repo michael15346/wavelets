@@ -97,7 +97,7 @@ def benchmark_denoise(content):
     w = createWaveletFromContent(content)
     results = []
     print(len(w.g))
-    for file in ('Sunrise.bmp',):
+    for file in ('tank2.bmp',):
         path = os.path.join('test', file)
         data = iio.imread(path)
 
@@ -110,7 +110,7 @@ def benchmark_denoise(content):
         data_gaussian = OffsetTensor(data_gaussian, np.array([0,0]))
         data_snp = OffsetTensor(data_snp, np.array([0,0]))
 
-        for level in (6,):  # range(1,6):
+        for level in (5,):  # range(1,6):
             ci = wavedec_period_batched(data, w, level)
             ci_gaussian = wavedec_period_batched(data_gaussian, w, level)
             ci_snp = wavedec_period_batched(data_snp, w, level)
