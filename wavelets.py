@@ -193,7 +193,8 @@ def benchmark_denoise(content):
 
 def benchmark1D(wavename):
     results = []
-    for file in ('lenna.bmp',):
+    test_files = os.listdir('test')
+    for file in test_files:
         path = os.path.join('test', file)
         data = iio.imread(path)
         if data.ndim == 3:  # rgb
@@ -213,15 +214,19 @@ def benchmark1D(wavename):
                 row['TestImg'] = file
 
 
-                threshold = np.percentile(np.abs(arr.ravel()), 100*thresh_quantile)
+                threshold = np.quantile(np.abs(arr.ravel()), thresh_quantile)
                 arr_thresholded = pywt.threshold(arr, threshold, mode='hard')
 
                 coeffs_from_arr = pywt.array_to_coeffs(arr_thresholded, coeff_slices, output_format='wavedec2')
                 coeffs_from_arr[0] = lf_coef
                 compressed_img = pywt.waverec2(coeffs_from_arr, wavename, mode = 'periodization')
-                psnr_uniform = psnr(data, compressed_img)
+                slices = tuple(slice(0, s) for s in data.shape)
 
+                compressed_img = compressed_img[slices]
+                psnr_uniform = psnr(data, compressed_img)
+                ssim_uniform = ssim(data, compressed_img, data_range=256)
                 row['PSNR_Uniform'] = psnr_uniform
+                row['SSIM_Uniform'] = ssim_uniform
                 results.append(row)
 
     return results
