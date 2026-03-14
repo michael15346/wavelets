@@ -43,17 +43,10 @@ def benchmark(content):
         iio.imwrite("results/{}/{}.png".format(content["Index"], file.split('.')[0]), data.astype(np.uint8))
         data = OffsetTensor(data, np.array([0, 0]))
 
-        
-        if len(w.g) == 1:
-            max_level = 8
-        elif len(w.g) == 2:
-            max_level = 6
-        else:
-            max_level = 6
-        for level in (5,):#range(1,6):
+        for level in (13,):#range(1,6):
 
-            ci = wavedec_period_fastest(data, w, level)
-            res_true = waverec_period_fastest(ci, w, np.array(data.tensor.shape))
+            ci = wavedec_period_batched(data, w, level)
+            res_true = waverec_period_batched(ci, w, np.array(data.tensor.shape))
             iio.imwrite("results/{}/{}-true-l{}.png".format(content["Index"],
                                                                   file.split('.')[0],
                                                                   level
@@ -76,7 +69,7 @@ def benchmark(content):
                 row['Estimated_CR'] = data.tensor.size * (1 - thresh_quantile) / (ci_size(ci))
                 row['TestImg'] = file
                 quantized, threshold = apply_threshold_quantile(ci, thresh_quantile)
-                res = waverec_period_fastest(quantized, w, np.array(data.tensor.shape))
+                res = waverec_period_batched(quantized, w, np.array(data.tensor.shape))
                 iio.imwrite("results/{}/{}-l{}-q{}.png".format(content["Index"],
                                                                        file.split('.')[0],
                                                                        level,
