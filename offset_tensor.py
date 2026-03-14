@@ -41,3 +41,7 @@ class OffsetTensor:
         a_conj.tensor = np.flip(a_conj.tensor)
         a_conj.offset = -(self.offset + self.tensor.shape - 1)
         return a_conj
+
+    @property
+    def size(self):
+        return self.tensor.size
