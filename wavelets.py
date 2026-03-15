@@ -232,6 +232,7 @@ def benchmark1D(wavename):
     return results
 
 def benchmark1D_denoise(wavename):
+    os.makedirs("results/{}".format(wavename), exist_ok=True)
     results = []
     test_files = os.listdir('test')
     for file in test_files:
@@ -248,7 +249,7 @@ def benchmark1D_denoise(wavename):
             coeffs_snp = pywt.wavedecn(data_snp, wavename, level=level, mode='periodization')
 
             row = dict()
-            row['Wavename'] = wavename
+            row['Index'] = wavename
             row['Level'] = level
             row['TestImg'] = file
 
@@ -261,6 +262,16 @@ def benchmark1D_denoise(wavename):
 
             img_gaussian_bayes = img_gaussian_bayes[slices]
             img_snp_bayes = img_snp_bayes[slices]
+            iio.imwrite("results/{}/{}-l{}-{}.png".format(wavename,
+                                                          file.split('.')[0],
+                                                          level,
+                                                          "gaussian-bayes"),
+                        np.clip(img_gaussian_bayes, 0, 255).astype(np.uint8))
+            iio.imwrite("results/{}/{}-l{}-{}.png".format(wavename,
+                                                          file.split('.')[0],
+                                                          level,
+                                                          "snp-bayes"),
+                        np.clip(img_snp_bayes, 0, 255).astype(np.uint8))
             psnr_gaussian_bayes = psnr(data, img_gaussian_bayes)
             ssim_gaussian_bayes = ssim(data, img_gaussian_bayes, data_range=256)
             psnr_snp_bayes = psnr(data, img_snp_bayes)
@@ -290,6 +301,16 @@ def benchmark1D_denoise(wavename):
             img_snp_visu = pywt.waverecn(coeffs_snp_visu, wavename, mode='periodization')
             img_gaussian_visu = img_gaussian_visu[slices]
             img_snp_visu = img_snp_visu[slices]
+            iio.imwrite("results/{}/{}-l{}-{}.png".format(wavename,
+                                                          file.split('.')[0],
+                                                          level,
+                                                          "gaussian-visu"),
+                        np.clip(img_gaussian_visu, 0, 255).astype(np.uint8))
+            iio.imwrite("results/{}/{}-l{}-{}.png".format(wavename,
+                                                          file.split('.')[0],
+                                                          level,
+                                                          "snp-visu"),
+                        np.clip(img_snp_visu, 0, 255).astype(np.uint8))
             psnr_gaussian_visu = psnr(data, img_gaussian_visu)
             ssim_gaussian_visu = ssim(data, img_gaussian_visu, data_range=256)
             psnr_snp_visu = psnr(data, img_snp_visu)
@@ -335,8 +356,8 @@ if __name__ == "__main__":
         results_nonflat = list(map(benchmark_denoise, contents))
         discrete_wavelets = pywt.wavelist(kind='discrete')
         results_1d = list(map(benchmark1D_denoise, discrete_wavelets))
-        #results = list(chain(*results_nonflat)) #+ list(chain(*results_1d))
-        results = list(chain(*results_1d))
+        results = list(chain(*results_nonflat)) + list(chain(*results_1d))
+        #results = list(chain(*results_1d))
 
         pd.DataFrame(results).to_csv('results-denoise.csv')
 
