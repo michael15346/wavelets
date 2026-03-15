@@ -244,7 +244,7 @@ def benchmark1D_denoise(wavename):
 
         data_gaussian = gen_gaussian_noise(data)
         data_snp = gen_snp_noise(data)
-        for level in (2,3,):#range(1,6):
+        for level in (10,):#range(1,6):
             coeffs_gaussian = pywt.wavedecn(data_gaussian, wavename, level=level, mode='periodization')
             coeffs_snp = pywt.wavedecn(data_snp, wavename, level=level, mode='periodization')
 
