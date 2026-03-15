@@ -12,7 +12,7 @@ import pywt
 
 from batched import waverec_period_batched, wavedec_period_batched
 from db import createWaveletFromContent, PRP_check
-from denoise import universal_thresh, apply_bayes_thresh
+from denoise import universal_thresh, apply_bayes_thresh, apply_bayes_thresh_1d, universal_thresh_1d
 from metrics import psnr
 from noisegen import gen_gaussian_noise, gen_snp_noise
 from offset_tensor import OffsetTensor
@@ -231,6 +231,78 @@ def benchmark1D(wavename):
 
     return results
 
+def benchmark1D_denoise(wavename):
+    results = []
+    test_files = os.listdir('test')
+    for file in test_files:
+        path = os.path.join('test', file)
+        data = iio.imread(path)
+        if data.ndim == 3:  # rgb
+            data = data[:, :, 0] * 0.299 + data[:, :, 1] * 0.587 + data[:, :, 2] * 0.114
+            #data = data.mean(axis=2)
+
+        data_gaussian = gen_gaussian_noise(data)
+        data_snp = gen_snp_noise(data)
+        for level in (2,3,):#range(1,6):
+            coeffs_gaussian = pywt.wavedecn(data_gaussian, wavename, level=level, mode='periodization')
+            coeffs_snp = pywt.wavedecn(data_snp, wavename, level=level, mode='periodization')
+
+            row = dict()
+            row['Wavename'] = wavename
+            row['Level'] = level
+            row['TestImg'] = file
+
+            ci_gaussian_bayes = apply_bayes_thresh_1d(coeffs_gaussian)
+            ci_snp_bayes = apply_bayes_thresh_1d(coeffs_snp)
+
+            img_gaussian_bayes = pywt.waverecn(ci_gaussian_bayes, wavename, mode = 'periodization')
+            img_snp_bayes = pywt.waverecn(ci_snp_bayes, wavename, mode='periodization')
+            slices = tuple(slice(0, s) for s in data.shape)
+
+            img_gaussian_bayes = img_gaussian_bayes[slices]
+            img_snp_bayes = img_snp_bayes[slices]
+            psnr_gaussian_bayes = psnr(data, img_gaussian_bayes)
+            ssim_gaussian_bayes = ssim(data, img_gaussian_bayes, data_range=256)
+            psnr_snp_bayes = psnr(data, img_snp_bayes)
+            ssim_snp_bayes = ssim(data, img_snp_bayes, data_range=256)
+            row['PSNR_gaussian_bayes'] = psnr_gaussian_bayes
+            row['SSIM_gaussian_bayes'] = ssim_gaussian_bayes
+            row['PSNR_snp_bayes'] = psnr_snp_bayes
+            row['SSIM_snp_bayes'] = ssim_snp_bayes
+
+            thresh_gaussian_visu = universal_thresh_1d(data_gaussian, coeffs_gaussian)
+            thresh_snp_visu = universal_thresh_1d(data_snp, coeffs_snp)
+
+            coeffs_gaussian_visu = [coeffs_gaussian[0]] + [
+                {
+                    key: pywt.threshold(level[key], value=thresh_gaussian_visu, mode='soft')
+                    for key in level
+                }
+                for level in coeffs_gaussian[1:]]
+            coeffs_snp_visu = [coeffs_snp[0]] + [
+                {
+                    key: pywt.threshold(level[key], value=thresh_snp_visu, mode='soft')
+                    for key in level
+                }
+                for level in coeffs_snp[1:]]
+
+            img_gaussian_visu = pywt.waverecn(coeffs_gaussian_visu, wavename, mode='periodization')
+            img_snp_visu = pywt.waverecn(coeffs_snp_visu, wavename, mode='periodization')
+            img_gaussian_visu = img_gaussian_visu[slices]
+            img_snp_visu = img_snp_visu[slices]
+            psnr_gaussian_visu = psnr(data, img_gaussian_visu)
+            ssim_gaussian_visu = ssim(data, img_gaussian_visu, data_range=256)
+            psnr_snp_visu = psnr(data, img_snp_visu)
+            ssim_snp_visu = ssim(data, img_snp_visu, data_range=256)
+            row['PSNR_gaussian_visu'] = psnr_gaussian_visu
+            row['SSIM_gaussian_visu'] = ssim_gaussian_visu
+            row['PSNR_snp_visu'] = psnr_snp_visu
+            row['SSIM_snp_visu'] = ssim_snp_visu
+            print('appended')
+            results.append(row)
+
+    return results
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -260,10 +332,11 @@ if __name__ == "__main__":
     elif args.command == 'benchmark_denoise':
         with open("WaveDB.json", 'r') as j:
             contents = json.loads(j.read())
-        results_nonflat = list(map(benchmark_denoise, contents[101:]))
-        #discrete_wavelets = pywt.wavelist(kind='discrete')
-        #results_1d = list(map(benchmark1D, discrete_wavelets))
-        results = list(chain(*results_nonflat)) #+ list(chain(*results_1d))
+        #results_nonflat = list(map(benchmark_denoise, contents[101:]))
+        discrete_wavelets = pywt.wavelist(kind='discrete')
+        results_1d = list(map(benchmark1D_denoise, discrete_wavelets))
+        #results = list(chain(*results_nonflat)) #+ list(chain(*results_1d))
+        results = list(chain(*results_1d))
 
         pd.DataFrame(results).to_csv('results-denoise.csv')
 
