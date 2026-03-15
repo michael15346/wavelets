@@ -29,7 +29,7 @@ def bayes_thresh(detail, var):
 
 def apply_bayes_thresh(wavecoef):
     details = wavecoef[1:]
-    details_flat = np.concatenate(list(itertools.chain(*itertools.chain(*wavecoef[1:]))), axis=None)
+    details_flat = np.concatenate(list(itertools.chain(*itertools.chain(*wavecoef[-1:]))), axis=None)
     sigma = est_sigma(details_flat)
     var = sigma * sigma
     denoised = [wavecoef[0]] + [[bayes_thresh(c, var) for c in level_coef] for level_coef in details]
@@ -49,7 +49,7 @@ def universal_thresh(img, wavecoef):
     return sigma * np.sqrt(2 * np.log(img.tensor.size))
 
 def universal_thresh_1d(img, wavecoef):
-    details = wavecoef[1:]
+    details = wavecoef[-1:]
     sigma = est_sigma_1d(details)
     return sigma * np.sqrt(2 * np.log(img.size))
 

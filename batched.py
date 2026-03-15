@@ -133,11 +133,11 @@ def wavedec_period_batched(data: OffsetTensor, w: Wavelet, level: int):
     wave = []
     for l in range(div):
         res = wavedec_period_batch(data, w, order)
-        wave.extend(res[1:])
+        wave[:0] = res[1:]
         data = res[0]
     if rem > 0:
         res = wavedec_period_fastest(data, w, rem)
-        wave.extend(res[1:])
+        wave[:0] = res[1:]
     wave.insert(0, res[0])
     return wave
 
@@ -161,11 +161,11 @@ def waverec_period_batched(c: list, w: Wavelet, original_shape):
         shape //= np.abs(Mpd)
     img = c[0]
     if rem > 0:
-        coef = [img] + c[-rem:]
+        coef = [img] + c[1:1+rem]
         img = waverec_period_fastest(coef, w, shape)
 
-    for i, idx in enumerate(range(len(c) - rem, 1, -order)):
-        cc = c[idx-order:idx]
+    for i, idx in enumerate(range(1+rem, len(c), order)):
+        cc = c[idx:idx+order]
         coef = [img] + cc
         img = waverec_period_batch(coef, w, shapes[-i-1])
     slices = tuple(slice(-o, -o + s) for s, o in zip(original_shape, img.offset))
