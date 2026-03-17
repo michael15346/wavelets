@@ -55,7 +55,7 @@ def apply_bayes_thresh_1d(wavecoef):
 
 def universal_thresh(img, wavecoef):
     """Universal threshold used by the VisuShrink method"""
-    details = np.concatenate(list(itertools.chain(*itertools.chain(*wavecoef[1:]))), axis=None)
+    details = np.concatenate(list(itertools.chain(*itertools.chain(*wavecoef[-1:]))), axis=None)
     sigma = est_sigma(details)
     return sigma * np.sqrt(2 * np.log(img.tensor.size))
 

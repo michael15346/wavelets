@@ -91,7 +91,7 @@ def simple_downsample(data: OffsetTensor, M):
 
     res_tensor = data.tensor[tuple(slices)] if M_is_diag else data.tensor[tuple(slices)].T
     roll_axis = np.arange(d) if M_is_diag else np.arange(d)[::-1]
-    res_tensor = np.roll(res_tensor, tuple(M_diag < 0), axis=roll_axis)
+    #res_tensor = np.roll(res_tensor, tuple(M_diag < 0), axis=roll_axis)
 
     return OffsetTensor(res_tensor, data.offset)
 
@@ -103,7 +103,7 @@ def simple_upsample(data: OffsetTensor, M):
     M_diag = np.diag(M) if M_is_diag else np.diag(M[:, ::-1])
     roll_axis = np.arange(d) if M_is_diag else np.arange(d)[::-1]
 
-    data.tensor = np.roll(data.tensor, tuple(-1 * (M_diag < 0)), axis=roll_axis)
+    #data.tensor = np.roll(data.tensor, tuple(-1 * (M_diag < 0)), axis=roll_axis)
     new_shape = np.abs(M @ shape).astype(int)
     upsampled = OffsetTensor(np.zeros(new_shape), np.zeros_like(shape))
 

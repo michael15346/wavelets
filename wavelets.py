@@ -103,7 +103,7 @@ def benchmark_denoise(content):
         data_gaussian = OffsetTensor(data_gaussian, np.array([0,0]))
         data_snp = OffsetTensor(data_snp, np.array([0,0]))
 
-        for level in (13,):  # range(1,6):
+        for level in (4,):  # range(1,6):
             ci = wavedec_period_batched(data, w, level)
             ci_gaussian = wavedec_period_batched(data_gaussian, w, level)
             ci_snp = wavedec_period_batched(data_snp, w, level)
@@ -353,10 +353,10 @@ if __name__ == "__main__":
     elif args.command == 'benchmark_denoise':
         with open("WaveDB.json", 'r') as j:
             contents = json.loads(j.read())
-        results_nonflat = list(map(benchmark_denoise, contents))
-        discrete_wavelets = pywt.wavelist(kind='discrete')
-        results_1d = list(map(benchmark1D_denoise, discrete_wavelets))
-        results = list(chain(*results_nonflat)) + list(chain(*results_1d))
+        results_nonflat = list(map(benchmark_denoise, contents[10:11]))
+        #discrete_wavelets = pywt.wavelist(kind='discrete')
+        #results_1d = list(map(benchmark1D_denoise, discrete_wavelets))
+        results = list(chain(*results_nonflat))# + list(chain(*results_1d))
         #results = list(chain(*results_1d))
 
         pd.DataFrame(results).to_csv('results-denoise.csv')
