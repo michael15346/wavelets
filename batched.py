@@ -153,13 +153,12 @@ def waverec_period_batched(c: list, w: Wavelet, original_shape):
     else:
         div = level // order
         rem = level % order
-        Mpd = Mp.diagonal()
     shapes = []
-
+    Mpinv = np.linalg.inv(Mp)
     shape = get_pad_up_to(original_shape, np.linalg.matrix_power(w.M, level))
     for l in range(div):
         shapes.append(deepcopy(shape))
-        shape //= np.abs(Mpd)
+        shape = Mpinv @ shape
     img = c[0]
     if rem > 0:
         coef = [img] + c[1:1+rem]
