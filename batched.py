@@ -11,17 +11,18 @@ from wavelet import Wavelet
 def is_diag(M: np.ndarray):
     return np.all(M == np.diag(np.diagonal(M)))
 
-def get_matrix_order(M: np.ndarray, max_level):
+def is_antidiag(M: np.ndarray):
+    return is_diag(M[::-1])
+
+def get_matrix_order(M: np.ndarray, max_iter = 1000):
     Mp = M.copy()
     order = 1
-    while not(is_diag(Mp)):
-        if order == max_level:
-            print("Max levels learched without diagonal")
-            print(M)
-            return None, None
+    while not(is_diag(Mp) or is_antidiag(Mp)):
         order += 1
         Mp = Mp @ M
-
+        if order > max_iter:
+            print(f"Matrix has order higher than {max_iter}.")
+            break
     return order, Mp
 
 
