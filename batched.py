@@ -158,7 +158,7 @@ def waverec_period_batched(c: list, w: Wavelet, original_shape):
     shape = get_pad_up_to(original_shape, np.linalg.matrix_power(w.M, level))
     for l in range(div):
         shapes.append(deepcopy(shape))
-        shape = Mpinv @ shape
+        shape = np.abs(Mpinv @ shape)
     img = c[0]
     if rem > 0:
         coef = [img] + c[1:1+rem]
