@@ -36,64 +36,6 @@ def createWaveletFromContent(content):
 
     return Wavelet(h, g, hdual, gdual, M, np.rint(abs(np.linalg.det(M))).astype(int))
 
-
-def DeltaN(n, d):
-    cube = direct_product(range(n), repeat=d)
-    result = []
-    for coord in cube:
-        if sum(coord) < n:
-            result.append(list(coord))
-    return result
-
-
-def PlaneN(n, d):
-    cube = direct_product(range(n), repeat=d)
-    result = []
-    for coord in cube:
-        if sum(coord) == n - 1:
-            result.append(list(coord))
-    return result
-
-
-def MatrixOfPowers(aCoords, bPowers):
-    matrix = np.zeros((len(aCoords), len(bPowers)))
-    for i, ai in enumerate(aCoords):
-        for j, bj in enumerate(bPowers):
-            matrix[i, j] = np.prod(np.power(ai, bj))
-    return matrix
-
-
-def VM(wmask: OffsetTensor, tolerance=1e-6, max_vm=None):
-    """
-    Calculate the order of vanishing moments a wavelet filter.
-
-    Args:
-        wmask (OffsetTensor): Wavelet filter in the OffsetTensor form.
-        tolerance (float, optional): Numerical tolerance to consider sum as zero. Defaults to 1e-6.
-        max_vm (int, optional): Maximum order to check. Defaults to the length of coefficients.
-
-    Returns:
-        int: Order of vanishing moments.
-    """
-    (coefs, coords) = OffsetTensor2CoefCoords(wmask)
-    d = len(wmask.offset)
-    vm = 1
-    if max_vm is None:
-        max_vm = len(coefs)
-
-    while vm <= max_vm:
-        bPowers = PlaneN(vm, d)
-        MatrixOfPowers(coords, bPowers)
-        vm_check = np.dot(coefs, MatrixOfPowers(coords, bPowers))
-
-        if sum(abs(vm_check)) < tolerance:
-            vm += 1
-        else:
-            break
-
-    return vm - 1
-
-
 def SetOfDigitsFinder(M):
     dim = len(M)
     Minv = np.linalg.inv(M)
@@ -136,49 +78,6 @@ def Mask2Polyphase(mask: OffsetTensor, M, digits=None):
     return polyphases
 
 
-def SR(mask: OffsetTensor, M, digits=None, tolerance=1e-6, max_sr=None):
-    """
-    Calculate the order of sum rule of filter.
-
-    Args:
-        mask (OffsetTensor): Wavelet filter in the OffsetTensor form.
-        M: matrix dilation.
-        digits: the set of digits
-        tolerance (float, optional): Numerical tolerance to consider sum as zero. Defaults to 1e-6.
-        max_sr (int, optional): Maximum order to check. Defaults to the length of coefficients.
-
-    Returns:
-        int: Order of sum rule.
-    """
-    if digits is None:
-        digits = SetOfDigitsFinder(M)
-    polyphases = Mask2Polyphase(mask, M)
-    d = len(M)
-    sr = 1
-    if max_sr is None:
-        max_sr = 20
-
-    while sr <= max_sr:
-        bPowers = PlaneN(sr, d)
-        sr_check = None
-        sr_stop = False
-        for digit, polyphase in zip(digits, polyphases):
-            (poly_coefs, poly_coords) = OffsetTensor2CoefCoords(polyphase)
-            poly_coords = (poly_coords @ M.T) + digit
-            if sr_check is None:
-                sr_check = np.dot(poly_coefs, MatrixOfPowers(poly_coords, bPowers))
-            else:
-                if not np.allclose(sr_check, np.dot(poly_coefs, MatrixOfPowers(poly_coords, bPowers)), atol=tolerance):
-                    sr_stop = True
-        if sr_stop:
-            break
-        sr = sr + 1
-        if sr > max_sr:
-            break
-
-    return sr - 1
-
-
 def PRP_check(w: Wavelet, digits=None, tolerance=1e-6):
     if digits is None:
         digits = SetOfDigitsFinder(w.M)
@@ -215,36 +114,3 @@ def PRP_check(w: Wavelet, digits=None, tolerance=1e-6):
 
             PRP_matrix[i].append(tmp)
     return PRP_valid, PRP_matrix
-
-
-def checkContent(content):
-    w = createWaveletFromContent(content)
-    if SR(w.h, w.M) == content['Mask']['SR']:
-        print("Mask SR OK")
-    else:
-        print("Mask SR wrong: by checker SR = ", SR(w.h, w.M),
-              ", by Database SR = ", content['Mask']['SR'])
-    if SR(w.hdual, w.M) == content['DualMask']['SR']:
-        print("Dual Mask SR OK")
-    else:
-        print("Dual Mask SR wrong: by checker SR = ", SR(w.h, w.M),
-              ", by Database SR = ", content['DualMask']['SR'])
-
-    for wmask in w.g:
-        if VM(wmask) >= content['WaveletMasksVM']:
-            print("Wavelet Mask VM OK")
-        else:
-            print("Wavelet Mask VM wrong: by checker VM = ", VM(wmask),
-                  ", by Database VM = ", content['WaveletMasksVM'])
-
-    for wmask in w.gdual:
-        if VM(wmask) >= content['DualWaveletMasksVM']:
-            print("Dual Wavelet Mask VM OK")
-        else:
-            print("Dual Wavelet Mask VM wrong: by checker VM = ", VM(wmask),
-                  ", by Database VM = ", content['DualWaveletMasksVM'])
-    PRP_valid, _ = PRP_check(w)
-    if PRP_valid:
-        print("PRP check OK")
-    else:
-        print("PRP check Wrong")

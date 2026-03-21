@@ -9,20 +9,16 @@ from offset_tensor import OffsetTensor
 import imageio.v3 as iio
 import cv2
 
-from periodic.wave import waverec_period
 
 
 def roundtrip(ii, oo):
     data = iio.imread(ii).astype(np.float32)
-    #data = OffsetTensor(, np.array([0, 0]))
-    # data = OffsetTensor(28. * np.array([[1, 2, 3, 4, 5, 6], [2, 3, 4, 5, 6, 7], [3, 4, 5, 6, 7, 8], [4, 5, 6, 7, 8, 9], [5, 6, 7, 8, 9, 10], [6, 7, 8, 9, 10, 11]]), np.array([0,0]))
     dataYCC = cv2.cvtColor(data, cv2.COLOR_RGB2YCR_CB)
     data_restored = np.zeros_like(data)
 
     with open("WaveDB.json", 'r') as j:
         contents = json.loads(j.read())
 
-    print(contents[26])
     for content_idx, content in enumerate(contents):
 
         w = createWaveletFromContent(content)

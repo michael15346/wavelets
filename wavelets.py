@@ -3,12 +3,12 @@ import json
 import os
 from copy import deepcopy
 from itertools import chain
-from multiprocessing import Pool
 
 import imageio.v3 as iio
 import numpy as np
 import pandas as pd
 import pywt
+from skimage.metrics import structural_similarity as ssim
 
 from batched import waverec_period_batched, wavedec_period_batched
 from db import createWaveletFromContent, PRP_check
@@ -16,11 +16,8 @@ from denoise import universal_thresh, apply_bayes_thresh, apply_bayes_thresh_1d,
 from metrics import psnr
 from noisegen import gen_gaussian_noise, gen_snp_noise
 from offset_tensor import OffsetTensor
-from periodic.wave import wavedec_period_fastest, waverec_period_fastest
-from quant import apply_threshold_quantile, apply_threshold, apply_soft_threshold
+from quant import apply_threshold_quantile, apply_soft_threshold
 from roundtrip import roundtrip
-from skimage.metrics import structural_similarity as ssim
-
 from utils import ci_size
 
 
@@ -32,14 +29,13 @@ def benchmark(content):
     if len(w.g) > np.rint(w.m).astype(int) - 1:
         return []
     print(len(w.g))
-    #test_files = os.listdir('test')
-    for file in ('lenna.bmp',):
+    test_files = os.listdir('test')
+    for file in test_files:
         path = os.path.join('test', file)
         data = iio.imread(path)
 
         if data.ndim == 3:  # rgb
             data = data[:, :, 0] * 0.299 + data[:, :, 1] * 0.587 + data[:, :, 2] * 0.114
-            #data = data.mean(axis=2)
         iio.imwrite("results/{}/{}.png".format(content["Index"], file.split('.')[0]), data.astype(np.uint8))
         data = OffsetTensor(data, np.array([0, 0]))
 
@@ -337,16 +333,9 @@ if __name__ == "__main__":
     elif args.command == 'benchmark':
         with open("WaveDB.json", 'r') as j:
             contents = json.loads(j.read())
-        #results_nonflat = []
-        #results_nonflat.append(benchmark(contents[0]))
-        #for c in contents:
-
-
-        #with Pool(1) as p:
         results_nonflat = list(map(benchmark, contents))
         discrete_wavelets = pywt.wavelist(kind='discrete')
         results_1d = list(map(benchmark1D, discrete_wavelets))
-        #results_nonflat = map(benchmark, contents[26:28])
         results = list(chain(*results_nonflat)) + list(chain(*results_1d))
 
         pd.DataFrame(results).to_csv('results.csv')
@@ -354,10 +343,10 @@ if __name__ == "__main__":
         with open("WaveDB.json", 'r') as j:
             contents = json.loads(j.read())
         results_nonflat = list(map(benchmark_denoise, contents[10:11]))
-        #discrete_wavelets = pywt.wavelist(kind='discrete')
-        #results_1d = list(map(benchmark1D_denoise, discrete_wavelets))
-        results = list(chain(*results_nonflat))# + list(chain(*results_1d))
-        #results = list(chain(*results_1d))
+        discrete_wavelets = pywt.wavelist(kind='discrete')
+        results_1d = list(map(benchmark1D_denoise, discrete_wavelets))
+        results = list(chain(*results_nonflat)) + list(chain(*results_1d))
+
 
         pd.DataFrame(results).to_csv('results-denoise.csv')
 

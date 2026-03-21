@@ -3,19 +3,8 @@ import scipy
 
 from classic.wave import subdivision
 from offset_tensor import OffsetTensor
-from vector.operators import downsample_fast, upsample_fast, get_pad_up_to, downsample_fastest, upsample_fastest
+from vector.operators import get_pad_up_to, downsample_fastest, upsample_fastest
 from wavelet import Wavelet
-
-
-def transition_period(a: OffsetTensor, mask: OffsetTensor, M: np.ndarray):
-    mask = mask.conjugate()
-    return downsample_fast(convolve_period(a, mask), M)
-
-
-def subdivision_period(a: OffsetTensor, mask: OffsetTensor, M: np.ndarray, original_shape, original_offset):
-    u = upsample_fast(a,M, original_shape, original_offset)
-    c = convolve_period(u, mask)
-    return c
 
 def transition_period_fastest(a: OffsetTensor, mask: OffsetTensor, M: np.ndarray):
     mask = mask.conjugate()
@@ -57,50 +46,6 @@ def create_dwt_fb(ref_mask, wave_masks, M, level: int):
     masks.insert(0, cur_mask)
     Ms.insert(0, cur_M)
     return masks, Ms
-
-
-def wavedec_period(data: OffsetTensor, w: Wavelet, level: int):
-    shape = np.array(data.tensor.shape)
-    padded_shape = get_pad_up_to(shape, np.linalg.matrix_power(w.M, level))
-    pad_width = np.array([np.zeros_like(shape), padded_shape - shape], dtype=int).T
-    data_padded = OffsetTensor(np.pad(data.tensor, pad_width, mode="wrap"), data.offset)
-    masks, Ms = create_dwt_fb(w.hdual, w.gdual, w.M, level)
-
-    dwt_coefs = []
-    for gmasks, cur_M in zip(masks[1:], Ms[1:]):
-        tmp_list = []
-        for gmask in gmasks:
-            tmp_list.append(transition_period(data_padded, gmask, cur_M))
-        dwt_coefs.append(tmp_list)
-    dwt_coefs.insert(0, transition_period(data_padded, masks[0], Ms[0]))
-
-    return dwt_coefs
-
-def waverec_period(c: list, w: Wavelet, original_shape, original_offset=np.array([0,0])):
-    if original_offset is None:
-        original_offset = np.zeros_like(original_shape)
-
-    level = len(c) - 1
-    shape = np.array(original_shape, dtype=int)
-    padded_shape = get_pad_up_to(shape, np.linalg.matrix_power(w.M, level))
-
-    masks, Ms = create_dwt_fb(w.h, w.g, w.M, level)
-
-    res = OffsetTensor(np.zeros((1,) * len(padded_shape)), np.zeros_like(original_offset))
-    m = w.m
-    wmasks = masks[1:]
-    for cur_level, d_coefs, wave_masks, cur_M in zip(range(level, 0, -1), c[1:], masks[1:], Ms[1:]):
-        for wave_mask, d_coef in zip(wave_masks, d_coefs):
-            tmp = subdivision_period(d_coef, wave_mask, cur_M, padded_shape, original_offset)
-            res += OffsetTensor(tmp.tensor * (m ** cur_level), tmp.offset)
-
-    tmp = subdivision_period(c[0], masks[0], Ms[0], padded_shape, original_offset)
-    res += OffsetTensor(tmp.tensor * (m ** level), tmp.offset)
-
-    slices = tuple(slice(-o, -o + s) for s, o in zip(original_shape, res.offset))
-
-    res.tensor = res.tensor[slices]
-    return res
 
 def wavedec_period_fastest(data: OffsetTensor, w: Wavelet, level: int):
     shape = np.array(data.tensor.shape)

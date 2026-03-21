@@ -30,7 +30,7 @@ def transition_batched_simple_downs(a: OffsetTensor, mask: OffsetTensor, M: np.n
     mask = mask.conjugate()
     return simple_downsample(convolve_period(a, mask), M)
 
-def subdivision_batched_simple_ups(a: OffsetTensor, mask: OffsetTensor, M: np.ndarray, original_shape, original_offset):
+def subdivision_batched_simple_ups(a: OffsetTensor, mask: OffsetTensor, M: np.ndarray):
     u = simple_upsample(a,M)
     c = convolve_period(u, mask)
     return c
@@ -68,7 +68,7 @@ def waverec_period_batch(c: list, w: Wavelet, original_shape, original_offset=np
             tmp = subdivision_period_fastest(d_coef, wave_mask, cur_M, shape, original_offset)
             res += OffsetTensor(tmp.tensor * mod, tmp.offset)
 
-    tmp = subdivision_batched_simple_ups(c[0], masks[0], Ms[0], shape, original_offset)
+    tmp = subdivision_batched_simple_ups(c[0], masks[0], Ms[0])
     res += OffsetTensor(tmp.tensor * (m ** (level / 2)), tmp.offset)
 
     slices = tuple(slice(-o, -o + s) for s, o in zip(original_shape, res.offset))
@@ -79,7 +79,6 @@ def waverec_period_batch(c: list, w: Wavelet, original_shape, original_offset=np
 
 def simple_downsample(data: OffsetTensor, M):
     shape = data.tensor.shape
-    d = len(shape)
     M_is_diag = is_diag(M)
     M_diag = np.diag(M) if M_is_diag else np.diag(M[:, ::-1])
 
@@ -91,20 +90,14 @@ def simple_downsample(data: OffsetTensor, M):
             slices.append(slice(shape[idx] + value, None, value))
 
     res_tensor = data.tensor[tuple(slices)] if M_is_diag else data.tensor[tuple(slices)].T
-    roll_axis = np.arange(d) if M_is_diag else np.arange(d)[::-1]
-    #res_tensor = np.roll(res_tensor, tuple(M_diag < 0), axis=roll_axis)
 
     return OffsetTensor(res_tensor, data.offset)
 
 
 def simple_upsample(data: OffsetTensor, M):
     shape = data.tensor.shape
-    d = len(shape)
     M_is_diag = is_diag(M)
     M_diag = np.diag(M) if M_is_diag else np.diag(M[:, ::-1])
-    roll_axis = np.arange(d) if M_is_diag else np.arange(d)[::-1]
-
-    #data.tensor = np.roll(data.tensor, tuple(-1 * (M_diag < 0)), axis=roll_axis)
     new_shape = np.abs(M @ shape).astype(int)
     upsampled = OffsetTensor(np.zeros(new_shape), np.zeros_like(shape))
 
