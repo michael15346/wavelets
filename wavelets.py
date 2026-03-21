@@ -28,7 +28,6 @@ def benchmark(content):
     results = []
     if len(w.g) > np.rint(w.m).astype(int) - 1:
         return []
-    print(len(w.g))
     test_files = os.listdir('test')
     for file in test_files:
         path = os.path.join('test', file)
@@ -39,7 +38,7 @@ def benchmark(content):
         iio.imwrite("results/{}/{}.png".format(content["Index"], file.split('.')[0]), data.astype(np.uint8))
         data = OffsetTensor(data, np.array([0, 0]))
 
-        for level in (13,):#range(1,6):
+        for level in range(1,8):
 
             ci = wavedec_period_batched(data, w, level)
             res_true = waverec_period_batched(ci, w, np.array(data.tensor.shape))
@@ -85,8 +84,8 @@ def benchmark_denoise(content):
     row = dict()
     w = createWaveletFromContent(content)
     results = []
-    print(len(w.g))
-    for file in ('tank2.bmp',):
+    test_files = os.listdir('test')
+    for file in test_files:
         path = os.path.join('test', file)
         data = iio.imread(path)
 
@@ -99,7 +98,7 @@ def benchmark_denoise(content):
         data_gaussian = OffsetTensor(data_gaussian, np.array([0,0]))
         data_snp = OffsetTensor(data_snp, np.array([0,0]))
 
-        for level in (4,):  # range(1,6):
+        for level in range(1,8):
             ci = wavedec_period_batched(data, w, level)
             ci_gaussian = wavedec_period_batched(data_gaussian, w, level)
             ci_snp = wavedec_period_batched(data_snp, w, level)
@@ -196,7 +195,7 @@ def benchmark1D(wavename):
         if data.ndim == 3:  # rgb
             data = data[:, :, 0] * 0.299 + data[:, :, 1] * 0.587 + data[:, :, 2] * 0.114
             #data = data.mean(axis=2)
-        for level in (2,3,):#range(1,6):
+        for level in range(1,8):
             coeffs = pywt.wavedec2(data, wavename, level= level, mode = 'periodization')
             lf_coef = coeffs[0]
             coeffs[0] = np.full_like(coeffs[0], 5000)
@@ -236,11 +235,10 @@ def benchmark1D_denoise(wavename):
         data = iio.imread(path)
         if data.ndim == 3:  # rgb
             data = data[:, :, 0] * 0.299 + data[:, :, 1] * 0.587 + data[:, :, 2] * 0.114
-            #data = data.mean(axis=2)
 
         data_gaussian = gen_gaussian_noise(data)
         data_snp = gen_snp_noise(data)
-        for level in (10,):#range(1,6):
+        for level in range(1,8):
             coeffs_gaussian = pywt.wavedecn(data_gaussian, wavename, level=level, mode='periodization')
             coeffs_snp = pywt.wavedecn(data_snp, wavename, level=level, mode='periodization')
 
@@ -342,7 +340,7 @@ if __name__ == "__main__":
     elif args.command == 'benchmark_denoise':
         with open("WaveDB.json", 'r') as j:
             contents = json.loads(j.read())
-        results_nonflat = list(map(benchmark_denoise, contents[10:11]))
+        results_nonflat = list(map(benchmark_denoise, contents))
         discrete_wavelets = pywt.wavelist(kind='discrete')
         results_1d = list(map(benchmark1D_denoise, discrete_wavelets))
         results = list(chain(*results_nonflat)) + list(chain(*results_1d))
