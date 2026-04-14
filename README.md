@@ -1,4 +1,5 @@
-# Usage
+# Wavelets-CPS2026
+## Usage
 
 Run an image compression benchmark:
 ```
