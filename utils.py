@@ -69,3 +69,16 @@ def ci_size(a):
         for dj in di:
             total += dj.size
     return total
+
+def energy(s: np.ndarray) -> float:
+    return np.sum(np.abs(s) ** 2)
+
+def decide_class(wavecoef):
+    ll = wavecoef[0]
+    h = wavecoef[1]
+    freq = energy(ll) / energy(h)
+    if freq <= 0.92:
+        return "hf"
+    if freq <= 0.96:
+        return "mf"
+    return "lf"

@@ -21,7 +21,7 @@ from quant import apply_threshold_quantile, apply_threshold, apply_soft_threshol
 from roundtrip import roundtrip
 from skimage.metrics import structural_similarity as ssim
 
-from utils import ci_size
+from utils import ci_size, decide_class
 
 
 def benchmark(content):
@@ -40,6 +40,8 @@ def benchmark(content):
         if data.ndim == 3:  # rgb
             data = data[:, :, 0] * 0.299 + data[:, :, 1] * 0.587 + data[:, :, 2] * 0.114
             #data = data.mean(axis=2)
+        ci_class = pywt.wavedec2(data, "bior4.4", level=1, mode='periodization')
+        img_class = decide_class(ci_class)
         iio.imwrite("results/{}/{}.png".format(content["Index"], file.split('.')[0]), data.astype(np.uint8))
         data = OffsetTensor(data, np.array([0, 0]))
 
@@ -68,6 +70,7 @@ def benchmark(content):
                 print(ci_size(ci))
                 row['Estimated_CR'] = data.tensor.size * (1 - thresh_quantile) / (ci_size(ci))
                 row['TestImg'] = file
+                row['ImgClass'] = img_class
                 quantized, threshold = apply_threshold_quantile(ci, thresh_quantile)
                 res = waverec_period_batched(quantized, w, np.array(data.tensor.shape))
                 iio.imwrite("results/{}/{}-l{}-q{}.png".format(content["Index"],
@@ -96,6 +99,10 @@ def benchmark_denoise(content):
 
         if data.ndim == 3:  # rgb
             data = data[:, :, 0] * 0.299 + data[:, :, 1] * 0.587 + data[:, :, 2] * 0.114
+
+        ci_class = pywt.wavedec2(data, "bior4.4", level=1, mode ='periodization')
+        img_class = decide_class(ci_class)
+
         data_gaussian = gen_gaussian_noise(data)
         data_snp = gen_snp_noise(data)
         iio.imwrite("results/{}/{}.png".format(content["Index"], file.split('.')[0]), data.astype(np.uint8))
@@ -137,6 +144,7 @@ def benchmark_denoise(content):
             row['ValidPRP'] = PRP_check(w)[0]
             row['SourceInfo'] = content['SourceInfo']
             row['Level'] = level
+            row['ImgClass'] = img_class
             ci_gaussian_bayes = apply_bayes_thresh(ci_gaussian)
             ci_snp_bayes = apply_bayes_thresh(ci_snp)
             row['TestImg'] = file
