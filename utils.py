@@ -73,12 +73,19 @@ def ci_size(a):
 def energy(s: np.ndarray) -> float:
     return np.sum(np.abs(s) ** 2)
 
-def decide_class(wavecoef):
-    ll = wavecoef[0]
+def get_energy_pt(wavecoef):
+    ll = wavecoef[0] - 256
     h = wavecoef[1]
-    freq = energy(ll) / energy(h)
-    if freq <= 0.92:
+    return energy(ll) / (energy(ll) + energy(h))
+
+def decide_class(energy_pt):
+
+    if energy_pt <= 0.92:
         return "hf"
-    if freq <= 0.96:
+    if energy_pt <= 0.96:
         return "mf"
     return "lf"
+
+def sym_pad(a):
+    pad_width = [(0, s) for s in a.shape]
+    return np.pad(a, pad_width, mode='symmetric')
