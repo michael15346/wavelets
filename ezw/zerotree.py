@@ -59,14 +59,14 @@ class CoefficientTreeEZW:
             m = round(np.abs(np.linalg.det(w.M)))
 
             child_locs = list(range(m * loc, m * (loc + 1)))
-            children = []
+            node_children = []
             for cloc in child_locs:
                 if cloc >= coeffs[level][hp_filter_index].shape[0]:
                     continue
                 node = CoefficientTreeEZW(coeffs[level][hp_filter_index][cloc], level, hp_filter_index, cloc)
                 node.children = build_children(level + 1, cloc, hp_filter_index)
-                children.append(node)
-            return children
+                node_children.append(node)
+            return node_children
 
         LL = coeffs[0]
 
@@ -80,11 +80,17 @@ class CoefficientTreeEZW:
         return LL_trees
 
 
+def code_bits(code):
+    bitarr = bitarray()
+    bitarr.encode(PREFIX_FREE_CODE, code)
+    return bitarr
+
+
 class ZeroTreeScan:
     def __init__(self, code, isDominant):
         self.isDominant = isDominant
         self.code = code
-        self.bits = code if not isDominant else self.code_bits(code)
+        self.bits = code if not isDominant else code_bits(code)
 
     def __len__(self):
         return len(self.bits)
@@ -97,11 +103,6 @@ class ZeroTreeScan:
 
         bits = bytestuff(bits)
         bits.tofile(file)
-
-    def code_bits(self, code):
-        bitarr = bitarray()
-        bitarr.encode(PREFIX_FREE_CODE, code)
-        return bitarr
 
     @staticmethod
     def from_bits(bits, isDominant):

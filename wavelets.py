@@ -17,17 +17,16 @@ from metrics import psnr
 from noisegen import gen_gaussian_noise, gen_snp_noise
 from offset_tensor import OffsetTensor
 from quant import apply_threshold_quantile, apply_soft_threshold
-from roundtrip import roundtrip
 from skimage.metrics import structural_similarity as ssim
 
-from utils import ci_size, decide_class, get_energy_pt, sym_pad
+from utils import ci_size, decide_class, get_energy_pt
 
 
 def benchmark(content):
     os.makedirs("results/{}".format(content["Index"]), exist_ok=True)
     row = dict()
     w = createWaveletFromContent(content)
-    results = []
+    result_table = []
     if len(w.g) > np.rint(w.m).astype(int) - 1:
         return []
     test_files = os.listdir('test')
@@ -80,15 +79,15 @@ def benchmark(content):
                 ssim_uniform = ssim(data.tensor, res.tensor, data_range=256)
                 row['PSNR'] = psnr_uniform
                 row['SSIM'] = ssim_uniform
-                results.append(deepcopy(row))
-    return results
+                result_table.append(deepcopy(row))
+    return result_table
 
 
 def benchmark_denoise(content):
     os.makedirs("results/{}".format(content["Index"]), exist_ok=True)
     row = dict()
     w = createWaveletFromContent(content)
-    results = []
+    result_table = []
     test_files = os.listdir('test')
     for file in test_files :
         path = os.path.join('test', file)
@@ -141,8 +140,8 @@ def benchmark_denoise(content):
                                                            level,
                                                            "gaussian-bayes"),
                         np.clip(res_gaussian_bayes.tensor, 0, 255).astype(np.uint8))
-            psnr_gaussian_bayes = psnr(data.tensor, res_gaussian_bayes)
-            ssim_gaussian_bayes = ssim(data.tensor, res_gaussian_bayes, data_range=256)
+            psnr_gaussian_bayes = psnr(data.tensor, res_gaussian_bayes.tensor)
+            ssim_gaussian_bayes = ssim(data.tensor, res_gaussian_bayes.tensor, data_range=256)
             row['PSNR_gaussian_bayes'] = psnr_gaussian_bayes
             row['SSIM_gaussian_bayes'] = ssim_gaussian_bayes
             iio.imwrite("results/{}/{}-l{}-{}.png".format(content["Index"],
@@ -180,12 +179,12 @@ def benchmark_denoise(content):
             row['PSNR_snp_visu'] = psnr_snp_visu
             row['SSIM_snp_visu'] = ssim_snp_visu
 
-            results.append(deepcopy(row))
-    return results
+            result_table.append(deepcopy(row))
+    return result_table
 
 
 def benchmark1D(wavename):
-    results = []
+    result_table = []
     test_files = os.listdir('test')
     for file in test_files:
         path = os.path.join('test', file)
@@ -224,13 +223,13 @@ def benchmark1D(wavename):
                 ssim_uniform = ssim(data, compressed_img, data_range=256)
                 row['PSNR'] = psnr_uniform
                 row['SSIM'] = ssim_uniform
-                results.append(row)
+                result_table.append(row)
 
-    return results
+    return result_table
 
 def benchmark1D_denoise(wavename):
     os.makedirs("results/{}".format(wavename), exist_ok=True)
-    results = []
+    result_table = []
     test_files = os.listdir('test')
 
     for file in test_files:
@@ -251,13 +250,12 @@ def benchmark1D_denoise(wavename):
             row['Index'] = wavename
             row['Level'] = level
             row['TestImg'] = file
-
+            row['ImgClass'] = img_class
             ci_gaussian_bayes = apply_bayes_thresh_1d(coeffs_gaussian)
             ci_snp_bayes = apply_bayes_thresh_1d(coeffs_snp)
 
             img_gaussian_bayes = pywt.waverecn(ci_gaussian_bayes, wavename, mode = 'periodization')
             img_snp_bayes = pywt.waverecn(ci_snp_bayes, wavename, mode='periodization')
-            img_snp_bayes = img_snp_bayes[slices]
             iio.imwrite("results/{}/{}-l{}-{}.png".format(wavename,
                                                           file.split('.')[0],
                                                           level,
@@ -295,8 +293,6 @@ def benchmark1D_denoise(wavename):
 
             img_gaussian_visu = pywt.waverecn(coeffs_gaussian_visu, wavename, mode='periodization')
             img_snp_visu = pywt.waverecn(coeffs_snp_visu, wavename, mode='periodization')
-            img_gaussian_visu = img_gaussian_visu[slices]
-            img_snp_visu = img_snp_visu[slices]
             iio.imwrite("results/{}/{}-l{}-{}.png".format(wavename,
                                                           file.split('.')[0],
                                                           level,
@@ -315,9 +311,9 @@ def benchmark1D_denoise(wavename):
             row['SSIM_gaussian_visu'] = ssim_gaussian_visu
             row['PSNR_snp_visu'] = psnr_snp_visu
             row['SSIM_snp_visu'] = ssim_snp_visu
-            results.append(row)
+            result_table.append(row)
 
-    return results
+    return result_table
 
 
 if __name__ == "__main__":
@@ -327,10 +323,8 @@ if __name__ == "__main__":
     parser.add_argument('-i')
     parser.add_argument('-o')
     args = parser.parse_args()
-    nthreads = os.sched_getaffinity(0)
-    if args.command == 'roundtrip':
-        roundtrip(args.i, args.o)
-    elif args.command == 'benchmark':
+    nthreads = len(os.sched_getaffinity(0))
+    if args.command == 'benchmark':
         with open("WaveDB.json", 'r') as j:
             contents = json.loads(j.read())
 
@@ -358,4 +352,4 @@ if __name__ == "__main__":
 
 
     else:
-        print("Unknown command. Supported commands: roundtrip, benchmark, benchmark_denoise")
+        print("Unknown command. Supported commands: benchmark, benchmark_denoise")

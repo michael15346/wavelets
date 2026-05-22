@@ -1,9 +1,8 @@
 import numpy as np
 
-from classic.wave import convolve
 from db import SetOfDigitsFinder
 from offset_tensor import OffsetTensor
-from periodic.wave import convolve_period
+from wave import convolve_period
 from utils import to_python_vect
 
 

@@ -2,7 +2,7 @@ from itertools import product as direct_product
 
 import numpy as np
 
-from classic.wave import convolve
+from classic import convolve
 from offset_tensor import OffsetTensor
 from utils import CoefCoords2OffsetTensor, OffsetTensor2CoefCoords
 from wavelet import Wavelet
@@ -172,7 +172,7 @@ def SR(mask: OffsetTensor, M, digits=None, tolerance=1e-6, max_sr=None):
                     sr_stop = True
         if sr_stop:
             break
-        sr = sr + 1
+        sr += 1
         if sr > max_sr:
             break
 

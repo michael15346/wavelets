@@ -1,6 +1,6 @@
 import numpy as np
 
-from classic.wave import subdivision
+from wave import subdivision
 from db import SetOfDigitsFinder
 from ezw.operators import subdivision_ezw, transition_ezw, gen_coords_ezw, step_coords_ezw, init_coords_ezw
 from offset_tensor import OffsetTensor
@@ -76,14 +76,14 @@ def waverec_ezw(c: list, w: Wavelet, original_shape, original_offset=np.array([0
         for j, dij in enumerate(di):
             res += subdivision_ezw(dij, wmasks[j], ezw_coords[i], padded_shape, original_offset)
             wmasks[j] = subdivision(wmasks[j], w.h, w.M)
-            wmasks[j].tensor = wmasks[j].tensor * m
+            wmasks[j].tensor *= m
         cur_M = cur_M @ w.M
 
     mask_h = OffsetTensor(w.h.tensor * m, w.h.offset)
     cur_M = w.M.copy()
     for i in range(len(d)-1):
         mask_h = subdivision(mask_h, w.h, w.M)
-        mask_h.tensor = mask_h.tensor * m
+        mask_h.tensor *= m
         cur_M = cur_M @ w.M
 
     res += subdivision_ezw(a, mask_h, ezw_coords[-1], padded_shape, original_offset)
