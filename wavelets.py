@@ -24,15 +24,12 @@ from utils import ci_size, decide_class, get_energy_pt, sym_pad
 
 
 def benchmark(content):
-    if content['Index'] not in ('SD_IN_13_R3_BI_D2_FR', 'SD_IN_03_HL_BI_D2_FR'):
-        return []
     os.makedirs("results/{}".format(content["Index"]), exist_ok=True)
     row = dict()
     w = createWaveletFromContent(content)
     results = []
     if len(w.g) > np.rint(w.m).astype(int) - 1:
         return []
-    print(len(w.g))
     test_files = os.listdir('test')
     for file in test_files:
         path = os.path.join('test', file)
@@ -40,7 +37,6 @@ def benchmark(content):
 
         if data.ndim == 3:  # rgb
             data = data[:, :, 0] * 0.299 + data[:, :, 1] * 0.587 + data[:, :, 2] * 0.114
-            #data = data.mean(axis=2)
         ci_class = pywt.wavedec2(data, "bior4.4", level=1, mode='periodization')
         energy_pt = get_energy_pt(ci_class)
         img_class = decide_class(energy_pt)
@@ -69,7 +65,6 @@ def benchmark(content):
                 row['ValidPRP'] = PRP_check(w)[0]
                 row['SourceInfo'] = content['SourceInfo']
                 row['Level'] = level
-                print(ci_size(ci))
                 row['Estimated_CR'] = data.tensor.size * (1 - thresh_quantile) / (ci_size(ci))
                 row['TestImg'] = file
                 row['ImgClass'] = img_class
@@ -86,7 +81,6 @@ def benchmark(content):
                 row['PSNR'] = psnr_uniform
                 row['SSIM'] = ssim_uniform
                 results.append(deepcopy(row))
-                print('appended')
     return results
 
 
@@ -95,7 +89,6 @@ def benchmark_denoise(content):
     row = dict()
     w = createWaveletFromContent(content)
     results = []
-    print(len(w.g))
     test_files = os.listdir('test')
     for file in test_files :
         path = os.path.join('test', file)
@@ -106,39 +99,25 @@ def benchmark_denoise(content):
         ci_class = pywt.wavedec2(data, "bior4.4", level=1, mode ='periodization')
         energy_pt = get_energy_pt(ci_class)
         img_class = decide_class(energy_pt)
-        if img_class != 'mf':
-            continue
         data_gaussian = gen_gaussian_noise(data)
-        #data_snp = gen_snp_noise(data)
-        #iio.imwrite("results/{}/{}.png".format(content["Index"], file.split('.')[0]), data.astype(np.uint8))
+        data_snp = gen_snp_noise(data)
+        iio.imwrite("results/{}/{}.png".format(content["Index"], file.split('.')[0]), data.astype(np.uint8))
         data = OffsetTensor(data, np.array([0, 0]))
         data_gaussian = OffsetTensor(data_gaussian, np.array([0,0]))
-        # data_snp = OffsetTensor(data_snp, np.array([0,0]))
+        data_snp = OffsetTensor(data_snp, np.array([0,0]))
         row['EnergyPt'] = energy_pt
         row['ImgClass'] = img_class
         row['TestImg'] = file
         for level in range(1,8):
-            #ci = wavedec_period_batched(data, w, level)
+            ci = wavedec_period_batched(data, w, level)
             ci_gaussian = wavedec_period_batched(data_gaussian, w, level)
-            # ci_snp = wavedec_period_batched(data_snp, w, level)
-            #res_true = waverec_period_batched(ci, w, np.array(data.tensor.shape))
-            # iio.imwrite("results/{}/{}-true-l{}.png".format(content["Index"],
-            #                                                 file.split('.')[0],
-            #                                                 level
-            #                                                 ),
-            #             np.clip(res_true.tensor, 0, 255).astype(np.uint8))
-            res_gaussian = waverec_period_batched(ci_gaussian, w, np.array(data.tensor.shape))
-            # iio.imwrite("results/{}/{}-gaussian-l{}.png".format(content["Index"],
-            #                                                 file.split('.')[0],
-            #                                                 level
-            #                                                 ),
-            #             np.clip(res_gaussian.tensor, 0, 255).astype(np.uint8))
-            # res_snp = waverec_period_batched(ci_snp, w, np.array(data.tensor.shape))
-            # iio.imwrite("results/{}/{}-snp-l{}.png".format(content["Index"],
-            #                                                     file.split('.')[0],
-            #                                                     level
-            #                                                     ),
-            #             np.clip(res_snp.tensor, 0, 255).astype(np.uint8))
+            ci_snp = wavedec_period_batched(data_snp, w, level)
+            res_true = waverec_period_batched(ci, w, np.array(data.tensor.shape))
+            iio.imwrite("results/{}/{}-true-l{}.png".format(content["Index"],
+                                                            file.split('.')[0],
+                                                            level
+                                                            ),
+                        np.clip(res_true.tensor, 0, 255).astype(np.uint8))
             row['Index'] = content['Index']
             row['WaveletSystemType'] = content['WaveletSystemType']
             row['RefinableMaskInfo'] = content['RefinableMaskInfo']
@@ -153,62 +132,59 @@ def benchmark_denoise(content):
             row['Level'] = level
             row['ImgClass'] = img_class
             ci_gaussian_bayes = apply_bayes_thresh(ci_gaussian)
-            # ci_snp_bayes = apply_bayes_thresh(ci_snp)
+            ci_snp_bayes = apply_bayes_thresh(ci_snp)
             row['TestImg'] = file
             res_gaussian_bayes = waverec_period_batched(ci_gaussian_bayes, w, np.array(data.tensor.shape))
-            #res_snp_bayes = waverec_period_batched(ci_snp_bayes, w, np.array(data.tensor.shape))
-            # iio.imwrite("results/{}/{}-l{}-{}.png".format(content["Index"],
-            #                                                file.split('.')[0],
-            #                                                level,
-            #                                                "gaussian-bayes"),
-            #             np.clip(res_gaussian_bayes.tensor, 0, 255).astype(np.uint8))
+            res_snp_bayes = waverec_period_batched(ci_snp_bayes, w, np.array(data.tensor.shape))
+            iio.imwrite("results/{}/{}-l{}-{}.png".format(content["Index"],
+                                                           file.split('.')[0],
+                                                           level,
+                                                           "gaussian-bayes"),
+                        np.clip(res_gaussian_bayes.tensor, 0, 255).astype(np.uint8))
             psnr_gaussian_bayes = psnr(data.tensor, res_gaussian_bayes)
             ssim_gaussian_bayes = ssim(data.tensor, res_gaussian_bayes, data_range=256)
             row['PSNR_gaussian_bayes'] = psnr_gaussian_bayes
             row['SSIM_gaussian_bayes'] = ssim_gaussian_bayes
-            # iio.imwrite("results/{}/{}-l{}-{}.png".format(content["Index"],
-            #                                               file.split('.')[0],
-            #                                               level,
-            #                                               "snp-bayes"),
-            #             np.clip(res_snp_bayes.tensor, 0, 255).astype(np.uint8))
-            # psnr_snp_bayes = psnr(data.tensor, res_snp_bayes.tensor)
-            # ssim_snp_bayes = ssim(data.tensor, res_snp_bayes.tensor, data_range=256)
-            # row['PSNR_snp_bayes'] = psnr_snp_bayes
-            # row['SSIM_snp_bayes'] = ssim_snp_bayes
-            # thresh_visu_gaussian = universal_thresh(data_gaussian, ci)
-            # thresh_visu_snp = universal_thresh(data_snp, ci)
+            iio.imwrite("results/{}/{}-l{}-{}.png".format(content["Index"],
+                                                          file.split('.')[0],
+                                                          level,
+                                                          "snp-bayes"),
+                        np.clip(res_snp_bayes.tensor, 0, 255).astype(np.uint8))
+            psnr_snp_bayes = psnr(data.tensor, res_snp_bayes.tensor)
+            ssim_snp_bayes = ssim(data.tensor, res_snp_bayes.tensor, data_range=256)
+            row['PSNR_snp_bayes'] = psnr_snp_bayes
+            row['SSIM_snp_bayes'] = ssim_snp_bayes
+            thresh_visu_gaussian = universal_thresh(data_gaussian, ci)
+            thresh_visu_snp = universal_thresh(data_snp, ci)
             row['TestImg'] = file
-            # ci_gaussian_visu, threshold = apply_soft_threshold(ci_gaussian, thresh_visu_gaussian)
-            # ci_snp_visu, threshold = apply_soft_threshold(ci_snp, thresh_visu_snp)
-            # res_gaussian_visu = waverec_period_batched(ci_gaussian_visu, w, np.array(data.tensor.shape))
-            # res_snp_visu = waverec_period_batched(ci_snp_visu, w, np.array(data.tensor.shape))
-            # iio.imwrite("results/{}/{}-l{}-{}.png".format(content["Index"],
-            #                                                file.split('.')[0],
-            #                                                level,
-            #                                                "gaussian-visu"),
-            #             np.clip(res_gaussian_visu.tensor, 0, 255).astype(np.uint8))
-            # iio.imwrite("results/{}/{}-l{}-{}.png".format(content["Index"],
-            #                                               file.split('.')[0],
-            #                                               level,
-            #                                               "snp-visu"),
-            #             np.clip(res_snp_visu.tensor, 0, 255).astype(np.uint8))
-            # psnr_gaussian_visu = psnr(data.tensor, res_gaussian_visu.tensor)
-            # ssim_gaussian_visu = ssim(data.tensor, res_gaussian_visu.tensor, data_range=256)
-            # psnr_snp_visu = psnr(data.tensor, res_snp_visu.tensor)
-            # ssim_snp_visu = ssim(data.tensor, res_snp_visu.tensor, data_range=256)
-            # row['PSNR_gaussian_visu'] = psnr_gaussian_visu
-            # row['SSIM_gaussian_visu'] = ssim_gaussian_visu
-            # row['PSNR_snp_visu'] = psnr_snp_visu
-            # row['SSIM_snp_visu'] = ssim_snp_visu
+            ci_gaussian_visu, threshold = apply_soft_threshold(ci_gaussian, thresh_visu_gaussian)
+            ci_snp_visu, threshold = apply_soft_threshold(ci_snp, thresh_visu_snp)
+            res_gaussian_visu = waverec_period_batched(ci_gaussian_visu, w, np.array(data.tensor.shape))
+            res_snp_visu = waverec_period_batched(ci_snp_visu, w, np.array(data.tensor.shape))
+            iio.imwrite("results/{}/{}-l{}-{}.png".format(content["Index"],
+                                                           file.split('.')[0],
+                                                           level,
+                                                           "gaussian-visu"),
+                        np.clip(res_gaussian_visu.tensor, 0, 255).astype(np.uint8))
+            iio.imwrite("results/{}/{}-l{}-{}.png".format(content["Index"],
+                                                          file.split('.')[0],
+                                                          level,
+                                                          "snp-visu"),
+                        np.clip(res_snp_visu.tensor, 0, 255).astype(np.uint8))
+            psnr_gaussian_visu = psnr(data.tensor, res_gaussian_visu.tensor)
+            ssim_gaussian_visu = ssim(data.tensor, res_gaussian_visu.tensor, data_range=256)
+            psnr_snp_visu = psnr(data.tensor, res_snp_visu.tensor)
+            ssim_snp_visu = ssim(data.tensor, res_snp_visu.tensor, data_range=256)
+            row['PSNR_gaussian_visu'] = psnr_gaussian_visu
+            row['SSIM_gaussian_visu'] = ssim_gaussian_visu
+            row['PSNR_snp_visu'] = psnr_snp_visu
+            row['SSIM_snp_visu'] = ssim_snp_visu
 
             results.append(deepcopy(row))
-            print('appended')
     return results
 
 
 def benchmark1D(wavename):
-    if wavename not in ('bior4.4', 'bior6.8'):
-        return []
     results = []
     test_files = os.listdir('test')
     for file in test_files:
@@ -217,7 +193,6 @@ def benchmark1D(wavename):
 
         if data.ndim == 3:  # rgb
             data = data[:, :, 0] * 0.299 + data[:, :, 1] * 0.587 + data[:, :, 2] * 0.114
-            #data = data.mean(axis=2)
         ci_class = pywt.wavedec2(data, "bior4.4", level=1, mode='periodization')
         energy_pt = get_energy_pt(ci_class)
         img_class = decide_class(energy_pt)
@@ -233,6 +208,7 @@ def benchmark1D(wavename):
                 row['Level'] = level
                 row['Estimated_CR'] = thresh_quantile
                 row['TestImg'] = file
+                row['ImgClass'] = img_class
 
 
                 threshold = np.quantile(np.abs(arr.ravel()), thresh_quantile)
@@ -262,17 +238,14 @@ def benchmark1D_denoise(wavename):
         data = iio.imread(path)
         if data.ndim == 3:  # rgb
             data = data[:, :, 0] * 0.299 + data[:, :, 1] * 0.587 + data[:, :, 2] * 0.114
-            #data = data.mean(axis=2)
         ci_class = pywt.wavedec2(data, "bior4.4", level=1, mode='periodization')
         energy_pt = get_energy_pt(ci_class)
         img_class = decide_class(energy_pt)
-        if img_class != 'mf':
-            continue
         data_gaussian = gen_gaussian_noise(data)
-        # data_snp = gen_snp_noise(data)
+        data_snp = gen_snp_noise(data)
         for level in range(1,8):
             coeffs_gaussian = pywt.wavedecn(data_gaussian, wavename, level=level, mode='periodization')
-            # coeffs_snp = pywt.wavedecn(data_snp, wavename, level=level, mode='periodization')
+            coeffs_snp = pywt.wavedecn(data_snp, wavename, level=level, mode='periodization')
 
             row = dict()
             row['Index'] = wavename
@@ -280,69 +253,68 @@ def benchmark1D_denoise(wavename):
             row['TestImg'] = file
 
             ci_gaussian_bayes = apply_bayes_thresh_1d(coeffs_gaussian)
-            # ci_snp_bayes = apply_bayes_thresh_1d(coeffs_snp)
+            ci_snp_bayes = apply_bayes_thresh_1d(coeffs_snp)
 
             img_gaussian_bayes = pywt.waverecn(ci_gaussian_bayes, wavename, mode = 'periodization')
-            # img_snp_bayes = pywt.waverecn(ci_snp_bayes, wavename, mode='periodization')
-            # img_snp_bayes = img_snp_bayes[slices]
-            # iio.imwrite("results/{}/{}-l{}-{}.png".format(wavename,
-            #                                               file.split('.')[0],
-            #                                               level,
-            #                                               "gaussian-bayes"),
-            #             np.clip(img_gaussian_bayes, 0, 255).astype(np.uint8))
-            # iio.imwrite("results/{}/{}-l{}-{}.png".format(wavename,
-            #                                               file.split('.')[0],
-            #                                               level,
-            #                                               "snp-bayes"),
-            #             np.clip(img_snp_bayes, 0, 255).astype(np.uint8))
+            img_snp_bayes = pywt.waverecn(ci_snp_bayes, wavename, mode='periodization')
+            img_snp_bayes = img_snp_bayes[slices]
+            iio.imwrite("results/{}/{}-l{}-{}.png".format(wavename,
+                                                          file.split('.')[0],
+                                                          level,
+                                                          "gaussian-bayes"),
+                        np.clip(img_gaussian_bayes, 0, 255).astype(np.uint8))
+            iio.imwrite("results/{}/{}-l{}-{}.png".format(wavename,
+                                                          file.split('.')[0],
+                                                          level,
+                                                          "snp-bayes"),
+                        np.clip(img_snp_bayes, 0, 255).astype(np.uint8))
             psnr_gaussian_bayes = psnr(data.tensor, img_gaussian_bayes)
             ssim_gaussian_bayes = ssim(data.tensor, img_gaussian_bayes, data_range=256)
-            # psnr_snp_bayes = psnr(data, img_snp_bayes)
-            # ssim_snp_bayes = ssim(data, img_snp_bayes, data_range=256)
+            psnr_snp_bayes = psnr(data, img_snp_bayes)
+            ssim_snp_bayes = ssim(data, img_snp_bayes, data_range=256)
             row['PSNR_gaussian_bayes'] = psnr_gaussian_bayes
             row['SSIM_gaussian_bayes'] = ssim_gaussian_bayes
-            # row['PSNR_snp_bayes'] = psnr_snp_bayes
-            # row['SSIM_snp_bayes'] = ssim_snp_bayes
+            row['PSNR_snp_bayes'] = psnr_snp_bayes
+            row['SSIM_snp_bayes'] = ssim_snp_bayes
 
-            # thresh_gaussian_visu = universal_thresh_1d(data_gaussian, coeffs_gaussian)
-            # thresh_snp_visu = universal_thresh_1d(data_snp, coeffs_snp)
+            thresh_gaussian_visu = universal_thresh_1d(data_gaussian, coeffs_gaussian)
+            thresh_snp_visu = universal_thresh_1d(data_snp, coeffs_snp)
 
-            # coeffs_gaussian_visu = [coeffs_gaussian[0]] + [
-            #     {
-            #         key: pywt.threshold(level[key], value=thresh_gaussian_visu, mode='soft')
-            #         for key in level
-            #     }
-            #     for level in coeffs_gaussian[1:]]
-            # coeffs_snp_visu = [coeffs_snp[0]] + [
-            #     {
-            #         key: pywt.threshold(level[key], value=thresh_snp_visu, mode='soft')
-            #         for key in level
-            #     }
-            #     for level in coeffs_snp[1:]]
-            #
-            # img_gaussian_visu = pywt.waverecn(coeffs_gaussian_visu, wavename, mode='periodization')
-            # img_snp_visu = pywt.waverecn(coeffs_snp_visu, wavename, mode='periodization')
-            # img_gaussian_visu = img_gaussian_visu[slices]
-            # img_snp_visu = img_snp_visu[slices]
-            # iio.imwrite("results/{}/{}-l{}-{}.png".format(wavename,
-            #                                               file.split('.')[0],
-            #                                               level,
-            #                                               "gaussian-visu"),
-            #             np.clip(img_gaussian_visu, 0, 255).astype(np.uint8))
-            # iio.imwrite("results/{}/{}-l{}-{}.png".format(wavename,
-            #                                               file.split('.')[0],
-            #                                               level,
-            #                                               "snp-visu"),
-            #             np.clip(img_snp_visu, 0, 255).astype(np.uint8))
-            # psnr_gaussian_visu = psnr(data, img_gaussian_visu)
-            # ssim_gaussian_visu = ssim(data, img_gaussian_visu, data_range=256)
-            # psnr_snp_visu = psnr(data, img_snp_visu)
-            # ssim_snp_visu = ssim(data, img_snp_visu, data_range=256)
-            # row['PSNR_gaussian_visu'] = psnr_gaussian_visu
-            # row['SSIM_gaussian_visu'] = ssim_gaussian_visu
-            # row['PSNR_snp_visu'] = psnr_snp_visu
-            # row['SSIM_snp_visu'] = ssim_snp_visu
-            print('appended')
+            coeffs_gaussian_visu = [coeffs_gaussian[0]] + [
+                {
+                    key: pywt.threshold(level[key], value=thresh_gaussian_visu, mode='soft')
+                    for key in level
+                }
+                for level in coeffs_gaussian[1:]]
+            coeffs_snp_visu = [coeffs_snp[0]] + [
+                {
+                    key: pywt.threshold(level[key], value=thresh_snp_visu, mode='soft')
+                    for key in level
+                }
+                for level in coeffs_snp[1:]]
+
+            img_gaussian_visu = pywt.waverecn(coeffs_gaussian_visu, wavename, mode='periodization')
+            img_snp_visu = pywt.waverecn(coeffs_snp_visu, wavename, mode='periodization')
+            img_gaussian_visu = img_gaussian_visu[slices]
+            img_snp_visu = img_snp_visu[slices]
+            iio.imwrite("results/{}/{}-l{}-{}.png".format(wavename,
+                                                          file.split('.')[0],
+                                                          level,
+                                                          "gaussian-visu"),
+                        np.clip(img_gaussian_visu, 0, 255).astype(np.uint8))
+            iio.imwrite("results/{}/{}-l{}-{}.png".format(wavename,
+                                                          file.split('.')[0],
+                                                          level,
+                                                          "snp-visu"),
+                        np.clip(img_snp_visu, 0, 255).astype(np.uint8))
+            psnr_gaussian_visu = psnr(data, img_gaussian_visu)
+            ssim_gaussian_visu = ssim(data, img_gaussian_visu, data_range=256)
+            psnr_snp_visu = psnr(data, img_snp_visu)
+            ssim_snp_visu = ssim(data, img_snp_visu, data_range=256)
+            row['PSNR_gaussian_visu'] = psnr_gaussian_visu
+            row['SSIM_gaussian_visu'] = ssim_gaussian_visu
+            row['PSNR_snp_visu'] = psnr_snp_visu
+            row['SSIM_snp_visu'] = ssim_snp_visu
             results.append(row)
 
     return results
@@ -355,35 +327,31 @@ if __name__ == "__main__":
     parser.add_argument('-i')
     parser.add_argument('-o')
     args = parser.parse_args()
+    nthreads = os.sched_getaffinity(0)
     if args.command == 'roundtrip':
         roundtrip(args.i, args.o)
     elif args.command == 'benchmark':
         with open("WaveDB.json", 'r') as j:
             contents = json.loads(j.read())
-        #results_nonflat = []
-        #results_nonflat.append(benchmark(contents[0]))
-        #for c in contents:
 
 
-        with Pool(8) as p:
+        with Pool(nthreads) as p:
             results_nonflat = list(p.map(benchmark, contents))
         discrete_wavelets = pywt.wavelist(kind='discrete')
-        with Pool(8) as p:
+        with Pool(nthreads) as p:
             results_1d = list(p.map(benchmark1D, discrete_wavelets))
-        #results_nonflat = map(benchmark, contents[26:28])
         results = list(chain(*results_nonflat)) + list(chain(*results_1d))
 
         pd.DataFrame(results).to_csv('results.csv')
     elif args.command == 'benchmark_denoise':
         with open("WaveDB.json", 'r') as j:
             contents = json.loads(j.read())
-        with Pool(4) as p:
+        with Pool(nthreads) as p:
             results_nonflat = list(p.map(benchmark_denoise, contents))
         discrete_wavelets = pywt.wavelist(kind='discrete')
-        with Pool(4) as p:
+        with Pool(nthreads) as p:
             results_1d = list(p.map(benchmark1D_denoise, discrete_wavelets))
         results = list(chain(*results_nonflat)) + list(chain(*results_1d))
-        #results = list(chain(*results_1d))
 
         pd.DataFrame(results).to_csv('results-denoise.csv')
 
